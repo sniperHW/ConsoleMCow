@@ -9,12 +9,12 @@ class CCard
 {
 public:
 	
-	int m_nCardPoint;	// µãÊı
-	Suit m_cardSuit;	// »¨É«
-	std::string m_sSymbol;	// ±êÊ¶,Àı¡°Ah¡±
+	int m_nCardPoint;	// ç‚¹æ•°
+	Suit m_cardSuit;	// èŠ±è‰²
+	std::string m_sSymbol;	// æ ‡è¯†,ä¾‹â€œAhâ€
 
 	CCard();
-	CCard(const std::string& sSymbol);	//¹¹Ôìº¯Êı
+	CCard(const std::string& sSymbol);	//æ„é€ å‡½æ•°
 };
 
 #endif // !CCCARD_H_

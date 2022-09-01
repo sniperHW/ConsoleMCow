@@ -24,14 +24,14 @@ private:
 	SuitReplace m_suitReplace;
 
 public:
-	void SetFlop(const std::string & sSymbol); //Í¬Ê±ÉèÖÃÍ¬¹¹Ãæ
-	void SetTurn(const std::string & sSymbol); //Í¬Ê±ÉèÖÃÍ¬¹¹Ãæ
+	void SetFlop(const std::string & sSymbol); //åŒæ—¶è®¾ç½®åŒæ„é¢
+	void SetTurn(const std::string & sSymbol); //åŒæ—¶è®¾ç½®åŒæ„é¢
 	void SetRiver(const std::string & sSymbol);
-	std::string GetBoardSymbol(); //°´roundÆ´½Ó
+	std::string GetBoardSymbol(); //æŒ‰roundæ‹¼æ¥
 
-	void ConvetIsomorphism();  //È¡µÃboardµÄÍ¬¹¹Ãæ£¬ÌîĞ´m_sIsomorphismBoardºÍm_suitReplace
-	const std::string & GetIsomorphismSymbol(); //Í¬¹¹ºóµÄ±ê¼Ç
-	const SuitReplace & GetIsomorphismSuitReplace(); //»¨É«Ìæ»»
+	void ConvetIsomorphism();  //å–å¾—boardçš„åŒæ„é¢ï¼Œå¡«å†™m_sIsomorphismBoardå’Œm_suitReplace
+	const std::string & GetIsomorphismSymbol(); //åŒæ„åçš„æ ‡è®°
+	const SuitReplace & GetIsomorphismSuitReplace(); //èŠ±è‰²æ›¿æ¢
 };
 
 #endif

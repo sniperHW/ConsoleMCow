@@ -20,13 +20,13 @@ public:
 
 
 private:
-	std::string m_sWholeNodeName; //ÍêÕû½ÚµãÃû
-	std::string m_sCurStreetNodeName; //µ±Ç°½ÖµÄ½ÚµãÃû³Æ
-	std::string m_sPreflopType; //½ÚµãÀàĞÍ£¬ÓÃÓÚsolverÆ¥Åä²ßÂÔÊ÷ÉèÖÃ
+	std::string m_sWholeNodeName; //å®Œæ•´èŠ‚ç‚¹å
+	std::string m_sCurStreetNodeName; //å½“å‰è¡—çš„èŠ‚ç‚¹åç§°
+	std::string m_sPreflopType; //èŠ‚ç‚¹ç±»å‹ï¼Œç”¨äºsolveråŒ¹é…ç­–ç•¥æ ‘è®¾ç½®
 
 	CGame m_game;
-	Json::Value m_solverResult; //µ±Ç°½ÖµÄsolver½â
-	bool m_blIsSolverPresave; //µ±Ç°½ÖÊÇ·ñÊ¹ÓÃÔ¤´æsolver½â
+	Json::Value m_solverResult; //å½“å‰è¡—çš„solverè§£
+	bool m_blIsSolverPresave; //å½“å‰è¡—æ˜¯å¦ä½¿ç”¨é¢„å­˜solverè§£
 	CActionLine m_actionLine;
 	CDataFrom m_dataFrom;
 

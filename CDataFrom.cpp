@@ -3,8 +3,8 @@
 using namespace std;
 
 /*
-Êı¾İ°´GameTypeÎª¸ùÄ¿Â¼´æ·Å
-´æÔÚflopºÍturnÓÃÁíÒ»Éî¶ÈµÄÊı¾İ£¬°´Êµ¼ÊÀ´È¡
+æ•°æ®æŒ‰GameTypeä¸ºæ ¹ç›®å½•å­˜æ”¾
+å­˜åœ¨flopå’Œturnç”¨å¦ä¸€æ·±åº¦çš„æ•°æ®ï¼ŒæŒ‰å®é™…æ¥å–
 */
 
 string CDataFrom::GetWizardFilePath(GameType gmType, const string& sNodeName, int nStackDepth, Round round)

@@ -14,7 +14,7 @@ public:
 	GameType m_gmType;
 	float m_sBBSize;
 
-	float m_fPot; //°´¶àÉÙ¸ö´óÃ¤¼Æ
+	float m_fPot; //æŒ‰å¤šå°‘ä¸ªå¤§ç›²è®¡
 	Round m_round;
 	CBoard m_board;
 	std::list<CPlayer> m_players;

@@ -13,7 +13,7 @@ class CStrategyNodeConfig
 public:
 	std::map<std::string, std::shared_ptr<CStrategyNodeConfigItem>> m_configItems;
 
-	bool Init(GameType gmType); //从配置文件中加载
+	bool Init(GameType gmType); //浠庨厤缃枃浠朵腑鍔犺浇
 	const std::shared_ptr<CStrategyNodeConfigItem> GetItemByName(const std::string & sNodeName) const;
 };
 

@@ -8,13 +8,13 @@
 class CActionLine
 {
 private:
-	std::string m_sReserve; //µ±Ç°½ÖÒÑ¾­½âÎöµÄ
+	std::string m_sReserve; //å½“å‰è¡—å·²ç»è§£æçš„
 	std::string m_sPreflopType; 
 
 	bool MatchPreflopNode(const std::string& sAbbrLine, std::string& sNodeName);
 
 public:
-	bool Parse(const std::string& sActionLine, ActionLineMode msgMode, std::string & sNodeName, CGame & game); //offline»ò¶àÈË·µ»Øfalse,¸üĞÂgameÏà¹Ø£¬È¡µÃNodeName, ¼ÇÂ¼raisesize£¬¼ÇÂ¼preflopÀàĞÍ£¬sActionLineÎªÔöÁ¿
+	bool Parse(const std::string& sActionLine, ActionLineMode msgMode, std::string & sNodeName, CGame & game); //offlineæˆ–å¤šäººè¿”å›false,æ›´æ–°gameç›¸å…³ï¼Œå–å¾—NodeName, è®°å½•raisesizeï¼Œè®°å½•preflopç±»å‹ï¼ŒsActionLineä¸ºå¢é‡
 	const std::string & GetPreflopType();
 	void ChangeRound();
 
