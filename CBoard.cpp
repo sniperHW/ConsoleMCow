@@ -2,7 +2,6 @@
 #include "CBoard.h"
 using namespace std;
 
-//看到中文吗
 
 void CBoard::SetFlop(const string& sSymbol)
 {
