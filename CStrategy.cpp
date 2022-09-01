@@ -2,38 +2,38 @@
 #include "CStrategy.h"
 using namespace std;
 
-//´Ówizard¶ÁÈ¡
+//ä»wizardè¯»å–
 bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-	//sNodeNameÎªÍêÕûÃû³Æ£¬½âÎö³öµ±Ç°round£¬ºÍflopµ±Ç°½ÖÃû³Æ
+	//sNodeNameä¸ºå®Œæ•´åç§°ï¼Œè§£æå‡ºå½“å‰roundï¼Œå’Œflopå½“å‰è¡—åç§°
 	// 
-	//flopĞèÒª´¦ÀíÍ¬¹¹£¬´æÔÚÍ¬¹¹Ìæ»»ÔòÌæ»»½ÚµãÃû³ÆÖĞµÄboard²¿·Ö
+	//flopéœ€è¦å¤„ç†åŒæ„ï¼Œå­˜åœ¨åŒæ„æ›¿æ¢åˆ™æ›¿æ¢èŠ‚ç‚¹åç§°ä¸­çš„boardéƒ¨åˆ†
 
-	//flopĞèÒªÆ¥ÅäÌæ»»×îºóÒ»¸öbetsize,ĞŞ¸Ä½ÚµãÃû³Æ
+	//flopéœ€è¦åŒ¹é…æ›¿æ¢æœ€åä¸€ä¸ªbetsize,ä¿®æ”¹èŠ‚ç‚¹åç§°
 
-	//´Ó²ßÂÔÅäÖÃÖĞ»ñÈ¡Ìæ»»ºÍspecialÉèÖÃ£¬´æÔÚÌæ»»ÔòÆôÓÃÌæ»»µÄÃû³Æ£¬turnÓÃÍ¨ÅäÆ¥Åä·¨
+	//ä»ç­–ç•¥é…ç½®ä¸­è·å–æ›¿æ¢å’Œspecialè®¾ç½®ï¼Œå­˜åœ¨æ›¿æ¢åˆ™å¯ç”¨æ›¿æ¢çš„åç§°ï¼Œturnç”¨é€šé…åŒ¹é…æ³•
 
-	//»ñÈ¡½ÚµãÃû³Æ¶ÔÓ¦µÄÎÄ¼şÂ·¾¶£¬Î´ÕÒµ½Ôò·µ»Øfalse,´ú±íoffline
+	//è·å–èŠ‚ç‚¹åç§°å¯¹åº”çš„æ–‡ä»¶è·¯å¾„ï¼Œæœªæ‰¾åˆ°åˆ™è¿”å›false,ä»£è¡¨offline
 
-	//¼ÓÔØÊı¾İµ½m_strategy£¨code X:check,RAI:allin,R*:raise,F:fold,C:call£©(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
+	//åŠ è½½æ•°æ®åˆ°m_strategyï¼ˆcode X:check,RAI:allin,R*:raise,F:fold,C:callï¼‰(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 
-	//´¦Àíspecial
+	//å¤„ç†special
 
-	//Í¬¹¹×ª»»
+	//åŒæ„è½¬æ¢
 
 	return true;
 }
 
-//´Ósolver¶ÁÈ¡
+//ä»solverè¯»å–
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const SuitReplace& suitReplace)
 {
-	//°´sActionSquenceÖğ²ã¶¨Î»µ½ĞèÒªÑ¡ÔñµÄ½Úµã£¬ÎŞºòÑ¡Ôò·µ»Øfalse,´ú±íoffline
+	//æŒ‰sActionSquenceé€å±‚å®šä½åˆ°éœ€è¦é€‰æ‹©çš„èŠ‚ç‚¹ï¼Œæ— å€™é€‰åˆ™è¿”å›false,ä»£è¡¨offline
 	// 
-	//´æÔÚ¶à¸öÑ¡Ôñ£¬Ôò°´ºòÑ¡betsizeµÄÆ¥ÅäÑ¡Ôñ½Úµã
+	//å­˜åœ¨å¤šä¸ªé€‰æ‹©ï¼Œåˆ™æŒ‰å€™é€‰betsizeçš„åŒ¹é…é€‰æ‹©èŠ‚ç‚¹
 	// 
-	//¼ÓÔØÊı¾İµ½m_strategy
+	//åŠ è½½æ•°æ®åˆ°m_strategy
 	// 
-	//Í¬¹¹×ª»»
+	//åŒæ„è½¬æ¢
 
 	return true;
 }

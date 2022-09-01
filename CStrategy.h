@@ -12,17 +12,17 @@ class CStrategy
 public:
 	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 
-	bool Load(GameType gmType, const std::string & sNodeName, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取
-	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const SuitReplace & suitReplace); //从solver读取
+	bool Load(GameType gmType, const std::string & sNodeName, const SuitReplace & suitReplace, const std::string & sIsoBoard); //浠巜izard璇诲彇
+	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const SuitReplace & suitReplace); //浠巗olver璇诲彇
 
 	void AlignmentByBetsize(float fBase, float fActually);
 	void AlignmentByStackDepth(float fBase, float fActually);
 	void AlignmentByexploit();
 
 private:
-	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
-	void SpecialProcessing(); //按spcial配置处理m_strategy
-	double MatchBetSize(double fActually, const std::set<double>&candidates); //匹配betsize
+	void ConvertIsomorphism(const SuitReplace & suitReplace); //灏唌_strategy杩涜鍚屾瀯杞崲
+	void SpecialProcessing(); //鎸塻pcial閰嶇疆澶勭悊m_strategy
+	double MatchBetSize(double fActually, const std::set<double>&candidates); //鍖归厤betsize
 };
 
 #endif

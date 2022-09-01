@@ -7,8 +7,8 @@
 class CSolver
 {
 public:
-	int ToSolve(int nGameID, const CSolverConfig & config, Json::Value & result); //·µ»ØÎ´¶¨Òå
-	void ToStop(int nGameID); //Í£Ö¹ÔËËã£¬µ±turn¶Ô¿¹½áÊø£¬solver»¹Ã»³ı½á¹ûÊ±
+	int ToSolve(int nGameID, const CSolverConfig & config, Json::Value & result); //è¿”å›æœªå®šä¹‰
+	void ToStop(int nGameID); //åœæ­¢è¿ç®—ï¼Œå½“turnå¯¹æŠ—ç»“æŸï¼Œsolverè¿˜æ²¡é™¤ç»“æœæ—¶
 
 private:
 	int m_nDefaultThreadNum;
@@ -16,7 +16,7 @@ private:
 	int m_nDefaultRaiseLimit;
 	float m_fDefaultAllinThreshold; //0.85
 	float m_fDefaultAccuracy; //0.5
-	//Èº¼¯Ïà¹Ø
+	//ç¾¤é›†ç›¸å…³
 
 	void MakeConfigFile(int nGameID, const CSolverConfig& config);
 };

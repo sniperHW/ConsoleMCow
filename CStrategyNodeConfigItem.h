@@ -9,7 +9,7 @@ class CStrategyNodeConfigItem
 {
 public:
 	std::string m_sReplaceNodeName;
-	std::string m_sSpecialProcessing; //´ý¶¨
+	std::string m_sSpecialProcessing; //å¾…å®š
 	Round m_round;
 
 	CStrategyNodeConfigItem(std::string sReplaceNodeName, std::string sSpecialProcessing, Round round);

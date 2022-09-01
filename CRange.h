@@ -16,16 +16,16 @@ public:
 
 	CRange(RelativePosition heroRelativePosition);
 
-	bool Load(GameType gmType, const std::string & sNodeName, const CBoard & boardNext); //fileÄ£Ê½£¬Í¬Ê±ÅÅ³ı¹«ÅÆ
-	bool Load(GameType gmType, const std::string & sNodeName, const CBoard & boardNext, bool blIsWizard); //wizardÄ£Ê½£¬Í¬¹¹×ª»»£¬ÅÅ³ı¹«ÅÆ£¬ºöÂÔblIsWizard
-	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const CBoard & boardNext); //solverÄ£Ê½£¬Í¬¹¹×ª»»£¬ÅÅ³ı¹«ÅÆ
+	bool Load(GameType gmType, const std::string & sNodeName, const CBoard & boardNext); //fileæ¨¡å¼ï¼ŒåŒæ—¶æ’é™¤å…¬ç‰Œ
+	bool Load(GameType gmType, const std::string & sNodeName, const CBoard & boardNext, bool blIsWizard); //wizardæ¨¡å¼ï¼ŒåŒæ„è½¬æ¢ï¼Œæ’é™¤å…¬ç‰Œï¼Œå¿½ç•¥blIsWizard
+	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const CBoard & boardNext); //solveræ¨¡å¼ï¼ŒåŒæ„è½¬æ¢ï¼Œæ’é™¤å…¬ç‰Œ
 
-	std::string GetRangeStr(); //×ªÎªsolverÅäÖÃÎÄ¼şĞèÒªµÄ¸ñÊ½
+	std::string GetRangeStr(); //è½¬ä¸ºsolveré…ç½®æ–‡ä»¶éœ€è¦çš„æ ¼å¼
 	void Clear();
 
 private:
-	void ConvertIsomorphism(const SuitReplace & suitReplace); //×ª»»Í¬¹¹
-	void RemoveComboByBoard(const CBoard & pBoard); //ÅÅ³ı¹«ÅÆÏà¹ØµÄ×éºÏ
+	void ConvertIsomorphism(const SuitReplace & suitReplace); //è½¬æ¢åŒæ„
+	void RemoveComboByBoard(const CBoard & pBoard); //æ’é™¤å…¬ç‰Œç›¸å…³çš„ç»„åˆ
 };
 
 #endif
