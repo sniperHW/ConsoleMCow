@@ -21,6 +21,7 @@ map<GameType, CTurnDataFromWizardConfig> g_turnDataFromWizardConfigs; //trunç­–ç
 int main()
 {
 	cout << "hello";
+	cout << "by xu";
 
 }
 
