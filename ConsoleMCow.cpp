@@ -7,6 +7,7 @@
 #include "CRangeNodeConfig.h"
 #include "CStrategyTreeConfig.h"
 #include "CTurnDataFromWizardConfig.h"
+#include "CStrategy.h"
 
 using namespace std;
 
@@ -20,8 +21,14 @@ map<GameType, CTurnDataFromWizardConfig> g_turnDataFromWizardConfigs; //trunç­–ç
 
 int main()
 {
+
+	{
+		CStrategy strategy;
+		strategy.Load(Max6_NL50_SD150, "test",SuitReplace{}, "test"); 
+	}
+
 	cout << "hello";
-	cout << "by xu";
+	cout << "by xu" << endl;
 
 }
 

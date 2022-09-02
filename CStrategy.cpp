@@ -1,5 +1,9 @@
 //#include "pch.h"
 #include "CStrategy.h"
+#include "util.h"
+#include <fstream>
+#include <iostream>
+
 using namespace std;
 
 //从wizard读取
@@ -16,7 +20,42 @@ bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 
 	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
+	Json::Value root;
+  	std::ifstream ifs;
+  	ifs.open("./test/2h2d2c.json");
 
+  	Json::CharReaderBuilder builder;
+  	//builder["collectComments"] = true;
+  	JSONCPP_STRING errs;
+  	if (!parseFromStream(builder, ifs, &root, &errs)) {
+    	std::cout << errs << std::endl;
+    	return false;
+  	} else {
+  		Json::Value solutions = root["solutions"];
+		for(auto it = solutions.begin();it != solutions.end();++it){
+			std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+			auto action = (*it)["action"];
+			strategyItem->m_action.actionType = str2ActionType(action["type"].asString());
+			strategyItem->m_action.fBetSize = stringToNum<float>(action["betsize"].asString());
+			strategyItem->m_action.fBetSizeByPot = stringToNum<float>(action["betsize_by_pot"].asString());
+			auto strategy = (*it)["strategy"];
+			for(int i = 0;i<strategy.size();i++){
+				auto name = ComboMapping[i];
+				auto value = strategy[i].asDouble();
+				strategyItem->m_strategyData[name] = value;
+				cout << name << "," << value << endl;
+			}
+
+			auto evs = (*it)["evs"];
+			for(int i = 0;i<evs.size();i++){
+				auto name = ComboMapping[i];
+				auto value = evs[i].asDouble();
+				strategyItem->m_evData[name] = value;
+				cout << name << "," << value << endl;
+			}
+			m_strategy.push_back(strategyItem);
+		}
+  	} 
 	//处理special
 
 	//同构转换

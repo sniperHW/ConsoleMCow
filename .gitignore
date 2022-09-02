@@ -5,3 +5,5 @@ jsoncpp.lib
 x64/
 ConsoleMCow.sln
 /.vs
+*.o
+mac

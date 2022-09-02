@@ -3,7 +3,7 @@
 #ifndef CSTRATEGY_TREE_CONFIG_H_
 #define CSTRATEGY_TREE_CONFIG_H_
 
-#include "./json/include/json.h"
+#include "json/json.h"
 #include"globledef.h"
 
 class CStrategyTreeConfig

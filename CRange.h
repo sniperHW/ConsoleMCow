@@ -4,7 +4,7 @@
 #define CRANGE_H_
 
 #include "globledef.h"
-#include "./json/include/json.h"
+#include "json/json.h"
 #include "CBoard.h"
 
 class CRange

@@ -5,7 +5,7 @@
 
 #include "globledef.h"
 #include "CStrategyItem.h"
-#include "./json/include/json.h"
+#include "json/json.h"
 
 class CStrategy
 {

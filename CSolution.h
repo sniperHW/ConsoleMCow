@@ -7,7 +7,7 @@
 #include "CGame.h"
 #include "CActionLine.h"
 #include "CDataFrom.h"
-#include "./json/include/json.h"
+#include "json/json.h"
 #include "CStrategy.h"
 
 class CSolution

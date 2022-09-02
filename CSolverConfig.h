@@ -4,7 +4,7 @@
 #define CSOLVER_CONFIG_H_
 
 #include "globledef.h"
-#include "./json/include/json.h"
+#include "json/json.h"
 #include "CRange.h"
 
 class CSolverConfig
