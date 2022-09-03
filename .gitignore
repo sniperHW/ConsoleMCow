@@ -7,3 +7,5 @@ ConsoleMCow.sln
 /.vs
 *.o
 mac
+/win/json
+/Debug
