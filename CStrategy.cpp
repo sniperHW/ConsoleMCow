@@ -39,7 +39,7 @@ bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace
 			strategyItem->m_action.fBetSize = stringToNum<float>(action["betsize"].asString());
 			strategyItem->m_action.fBetSizeByPot = stringToNum<float>(action["betsize_by_pot"].asString());
 			auto strategy = (*it)["strategy"];
-			for(int i = 0;i<strategy.size();i++){
+			for(Json::ArrayIndex i = 0;i<strategy.size();i++){
 				auto name = ComboMapping[i];
 				auto value = strategy[i].asDouble();
 				strategyItem->m_strategyData[name] = value;
@@ -47,7 +47,7 @@ bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace
 			}
 
 			auto evs = (*it)["evs"];
-			for(int i = 0;i<evs.size();i++){
+			for(Json::ArrayIndex i = 0;i<evs.size();i++){
 				auto name = ComboMapping[i];
 				auto value = evs[i].asDouble();
 				strategyItem->m_evData[name] = value;
