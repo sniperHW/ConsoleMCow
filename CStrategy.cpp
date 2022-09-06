@@ -7,7 +7,7 @@
 using namespace std;
 
 //从wizard读取
-bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace& suitReplace, const string& sIsoBoard)
+bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 	//sNodeName为完整名称，解析出当前round，和flop当前街名称
 	// 
@@ -60,18 +60,46 @@ bool CStrategy::Load(GameType gmType, const string& sNodeName, const SuitReplace
 
 	//同构转换
 
+	//flop后更新sNodeName
+
 	return true;
 }
 
-//从solver读取
-bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const SuitReplace& suitReplace)
+
+	/*
+	ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
+	O
+	R
+	RR
+	RRR
+	RRRR
+	RRRRA
+	A
+	RA
+	RRA
+	RRRA
+	X
+	XR
+	XRR
+	XRRR
+	XRRRR
+	XRRRRA
+	XA
+	XRA
+	XRRA
+	XRRRA
+	R
+	*/
+	//从solver读取
+bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
-	//按sActionSquence逐层定位到需要选择的节点，无候选则返回false,代表offline
-	// 
-	//存在多个选择，则按候选betsize的匹配选择节点
-	// 
-	//加载数据到m_strategy
-	// 
+	//解析ActionSquence,取最后一个<>后的序列sCSquence
+	//sCSquence为“O”，则目标节点为根节点
+	//对每个“-”分割的动作sAction，逐层匹配子节点，如果sAction = X,则选择CHECK子节点为目标节点，如果sAction = A,则选择BET(最大值)为目标节点
+	//	如果sAction = R？，则所有子节点为BET* 的，将*依次放入vector<double>& candidates，调用MatchBetSize(?,candidates),返回的序号既选择该子节点
+	//目标节点后无子节点则返回false
+	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)
+
 	//同构转换
 
 	return true;
@@ -84,10 +112,17 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 
 void CStrategy::SpecialProcessing()
 {
-
+	
 }
 
-double CStrategy::MatchBetSize(double fActually, const set<double>& candidates)
+//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的序号
+int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack)
+{
+	return 0;
+}
+
+//按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的序号
+int  CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, GameType gmType, const StackByStrategy& stack)
 {
 	return 0;
 }

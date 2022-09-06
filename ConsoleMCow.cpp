@@ -24,7 +24,8 @@ int main()
 
 	{
 		CStrategy strategy;
-		strategy.Load(Max6_NL50_SD150, "test",SuitReplace{}, "test"); 
+		StackByStrategy stactTest;
+		strategy.Load(Max6_NL50_SD150, "sTest", stactTest, SuitReplace{}, "test");
 	}
 
 	cout << "hello";

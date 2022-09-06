@@ -45,4 +45,10 @@ typedef struct tagSuitReplace {
 	Suit s2; //s转为
 }SuitReplace;
 
+//策略对应的筹码
+typedef struct tagStackByStrategy {
+	float fEStack;	//有效筹码
+	float fPot;	//底池
+}StackByStrategy;
+
 #endif // !GLOBLEDEF_H_
