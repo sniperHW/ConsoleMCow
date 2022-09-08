@@ -77,11 +77,19 @@ std::vector<Action> parseActionSquence(const string& sActionSquence) {
 						case 'X':
 							ret.push_back(Action{check});
 						break;
-						case 'R':
-							ret.push_back(Action{actionType:raise,fBetSize:stringToNum<float>((*it).substr(1, (*it).size()))});
+						case 'R':{
+							Action action;
+							action.actionType = raise;
+							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
+							ret.push_back(action);
+							}
 						break;
-						case 'B':
-							ret.push_back(Action{actionType:bet,fBetSize:stringToNum<float>((*it).substr(1, (*it).size()))});
+						case 'B':{
+							Action action;
+							action.actionType = bet;
+							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
+							ret.push_back(action);
+						}
 						break;						
 						case 'A':
 							ret.push_back(Action{allin});
@@ -114,7 +122,7 @@ float getBet(const string &str) {
 }
 
 Action getActionByStr(const string &str) {
-	Action a = Action{actionType:none};
+	Action a = Action{none};
 	auto v = split(str,' ');
 	if(v.size() > 0 ) {
 		a.actionType = str2ActionType(v[0]);
