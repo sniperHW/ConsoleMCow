@@ -20,6 +20,8 @@ public:
 	void AlignmentByexploit();
 
 private:
+	void load(const Json::Value& node,std::vector<Action> &actions,int pos);
+
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	void SpecialProcessing(); //按spcial配置处理m_strategy
 
