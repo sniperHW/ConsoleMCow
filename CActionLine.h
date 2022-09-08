@@ -19,7 +19,7 @@ public:
 	const std::string & GetNodeType();
 	void ChangeRound();
 	//
-	//
+	////
 };
 
 #endif
