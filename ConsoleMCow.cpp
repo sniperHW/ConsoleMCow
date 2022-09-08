@@ -8,6 +8,7 @@
 #include "CStrategyTreeConfig.h"
 #include "CTurnDataFromWizardConfig.h"
 #include "CStrategy.h"
+#include <fstream>
 
 using namespace std;
 
@@ -22,10 +23,31 @@ map<GameType, CTurnDataFromWizardConfig> g_turnDataFromWizardConfigs; //trunç­–ç
 int main()
 {
 
-	{
+	/*{
 		CStrategy strategy;
-		StackByStrategy stactTest;
-		strategy.Load(Max6_NL50_SD150, "sTest", stactTest, SuitReplace{}, "test");
+		StackByStrategy stackTest;
+		strategy.Load(Max6_NL50_SD150, "sTest", stackTest, SuitReplace{}, "test");
+	}*/
+
+	{
+		Json::Value root;
+  		std::ifstream ifs;
+  		ifs.open("./test/output_result_dump1.json");
+
+  		Json::CharReaderBuilder builder;
+  		JSONCPP_STRING errs;
+  		if (!parseFromStream(builder, ifs, &root, &errs)) {
+    		std::cout << errs << std::endl;
+    		return -1;
+  		} else {
+  			CStrategy strategy;
+  			StackByStrategy stackTest;
+  			strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O-X-R15-A",stackTest, SuitReplace{});
+  			//strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O",stackTest, SuitReplace{});
+  			for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
+  				cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
+  			}
+  		}
 	}
 
 	cout << "hello";
