@@ -77,19 +77,11 @@ std::vector<Action> parseActionSquence(const string& sActionSquence) {
 						case 'X':
 							ret.push_back(Action{check});
 						break;
-						case 'R':{
-							Action action;
-							action.actionType = raise;
-							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
-							ret.push_back(action);
-							}
+						case 'R':
+							ret.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
 						break;
-						case 'B':{
-							Action action;
-							action.actionType = bet;
-							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
-							ret.push_back(action);
-						}
+						case 'B':
+							ret.push_back(Action{bet,stringToNum<float>((*it).substr(1, (*it).size()))});
 						break;						
 						case 'A':
 							ret.push_back(Action{allin});
@@ -112,7 +104,7 @@ std::vector<Action> parseActionSquence(const string& sActionSquence) {
 	return ret;
 }
 
-float getBet(const string &str) {
+float getBetByStr(const string &str) {
 	auto v = split(str,' ');
 	if(v.size()==2){
 		return stringToNum<float>(v[1]);
@@ -136,7 +128,6 @@ Action getActionByStr(const string &str) {
 }
 
 const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
-	cout << "getActionNode " << action.actionType << endl; 
 	if(action.actionType == none){
 		return &node;
 	} else {
@@ -167,7 +158,7 @@ const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
 				case raise:
 				case bet:
 					if((*it).find("BET") != string::npos || (*it).find("RAISE") != string::npos) {
-						auto bet = getBet(*it);
+						auto bet = getBetByStr(*it);
 						if(action.actionType==allin) {
 							if(bet>=maxBet){
 								maxBet=bet;
@@ -195,58 +186,31 @@ const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
 	return nullptr;
 }
 
-void CStrategy::load(const Json::Value& node,std::vector<Action> &actions,int pos) {
-	//cout << "load:" << pos << "," << actions[pos].actionType << "," << actions[pos].fBetSize <<endl ;
-	if(pos == int(actions.size())) {
-		//加载strategy
-		Json::Value nodeStrategy = node["strategy"];
-		Json::Value nodeActions = nodeStrategy["actions"];
-		for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
-			std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
-			auto a = getActionByStr(nodeActions[i].asString());
-			strategyItem->m_action.actionType = a.actionType;
-			strategyItem->m_action.fBetSize = a.fBetSize;
-			auto members = nodeStrategy["strategy"].getMemberNames();
-			for(auto it = members.begin();it != members.end();++it){
-				strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
-			}
-			m_strategy.push_back(strategyItem);
-		}	
-	} else {
-		auto next = getActionNode(node,actions[pos]); 
-		if(next != nullptr) {
-			load(*next,actions,pos+1);
-		} else {
-			cout << "nullptr" << endl;
-		}
-	}
-}
-
-	/*
-	ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
-	O
-	R
-	RR
-	RRR
-	RRRR
-	RRRRA
-	A
-	RA
-	RRA
-	RRRA
-	X
-	XR
-	XRR
-	XRRR
-	XRRRR
-	XRRRRA
-	XA
-	XRA
-	XRRA
-	XRRRA
-	R
-	*/
-	//从solver读取
+/*
+ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
+O
+R
+RR
+RRR
+RRRR
+RRRRA
+A
+RA
+RRA
+RRRA
+X
+XR
+XRR
+XRRR
+XRRRR
+XRRRRA
+XA
+XRA
+XRRA
+XRRRA
+R
+*/
+//从solver读取
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
@@ -256,7 +220,24 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//	如果sAction = R？，则所有子节点为BET* 的，将*依次放入vector<double>& candidates，调用MatchBetSize(?,candidates),返回的序号既选择该子节点
 	//目标节点后无子节点则返回false
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)
-	load(root,actions,0);
+	const Json::Value *node = &root;
+	for(auto it = actions.begin();it != actions.end();it++) {
+		node = getActionNode(*node,*it);
+	}
+
+	Json::Value nodeStrategy = (*node)["strategy"];
+	Json::Value nodeActions = nodeStrategy["actions"];
+	for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
+		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+		auto a = getActionByStr(nodeActions[i].asString());
+		strategyItem->m_action.actionType = a.actionType;
+		strategyItem->m_action.fBetSize = a.fBetSize;
+		auto members = nodeStrategy["strategy"].getMemberNames();
+		for(auto it = members.begin();it != members.end();++it){
+			strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
+		}
+		m_strategy.push_back(strategyItem);
+	}
 	//同构转换
 
 	return true;
