@@ -148,17 +148,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//对每个“-”分割的动作sAction，逐层匹配子节点，如果sAction = X,则选择CHECK子节点为目标节点，如果sAction = A,则选择BET(最大值)为目标节点
 	//	如果sAction = R？，则所有子节点为BET* 的，将*依次放入vector<double>& candidates，调用MatchBetSize(?,candidates),返回的序号既选择该子节点
 	//目标节点后无子节点则返回false
-	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)
-
-	auto MatchBetSize = [](float bet,vector<float>  &bets)->int {
-		for(auto i = 0;i<int(bets.size());i++) {
-			if(abs(bet-bets[i]) < 0.1){
-				return i;
-			}
-		}
-		return -1;
-	};
-	
+	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
 	for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
 		const Json::Value *next; 
@@ -189,14 +179,14 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 			}
 		} else if (it->actionType == raise) {
 			vector<string> names;
-			vector<float>  bets;
+			vector<double>  bets;
 			for(auto it2 = members.begin();it2 != members.end();++it2){
 				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 					names.push_back(*it2);
 					bets.push_back(getBetByStr(*it2));
 				}
 			}
-			auto i = MatchBetSize(it->fBetSize,bets);
+			auto i = MatchBetSize(it->fBetSize,bets,gmType,stack);
 			if(i>=0){
 				next = &((*node)["childrens"][names[i]]);
 				cout << names[i] << endl;
@@ -241,7 +231,12 @@ void CStrategy::SpecialProcessing()
 //按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的序号
 int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack)
 {
-	return 0;
+	for(auto i = 0;i<int(candidateSizes.size());i++) {
+		if(abs(dActuallySize-candidateSizes[i]) < 0.1){
+			return i;
+		}
+	}
+	return -1;
 }
 
 //按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的序号
