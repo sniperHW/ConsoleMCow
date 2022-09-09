@@ -40,13 +40,23 @@ int main()
     		std::cout << errs << std::endl;
     		return -1;
   		} else {
-  			CStrategy strategy;
-  			StackByStrategy stackTest;
-  			strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O-X-R15-A",stackTest, SuitReplace{});
-  			//strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O",stackTest, SuitReplace{});
-  			for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
-  				cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
-  			}
+			{
+				CStrategy strategy;
+				StackByStrategy stackTest;
+				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>X-R15-A",stackTest, SuitReplace{});
+				for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
+					cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
+				}
+			}
+
+			{
+				CStrategy strategy;
+  				StackByStrategy stackTest;
+  				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O",stackTest, SuitReplace{});
+  				for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
+  					cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
+  				}
+			}
   		}
 	}
 

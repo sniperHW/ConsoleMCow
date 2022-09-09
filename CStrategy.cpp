@@ -65,127 +65,6 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 	return true;
 }
 
-
-std::vector<Action> parseActionSquence(const string& sActionSquence) {
-	vector<Action> ret; 
-	for(auto i = sActionSquence.size()-1;i >=0;i--) {
-		if(sActionSquence[i] == '>'){
-			auto v = split(sActionSquence.substr(i+1,sActionSquence.size()),'-');
-			for(auto it = v.begin();it != v.end();it++) {
-				if((*it).size() > 0) {
-					switch((*it)[0]) {
-						case 'X':
-							ret.push_back(Action{check});
-						break;
-						case 'R':
-							ret.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
-						break;
-						case 'B':
-							ret.push_back(Action{bet,stringToNum<float>((*it).substr(1, (*it).size()))});
-						break;						
-						case 'A':
-							ret.push_back(Action{allin});
-						break;
-						case 'F':
-							ret.push_back(Action{fold});
-						break;
-						case 'C':
-							ret.push_back(Action{call});
-						break;																		
-						case 'O':
-						ret.push_back(Action{none});
-						break;
-					}
-				} 	
-			}
-			break;
-		}
-	}
-	return ret;
-}
-
-float getBetByStr(const string &str) {
-	auto v = split(str,' ');
-	if(v.size()==2){
-		return stringToNum<float>(v[1]);
-	} else {
-		return 0;
-	}
-}
-
-Action getActionByStr(const string &str) {
-	Action a = Action{none};
-	auto v = split(str,' ');
-	if(v.size() > 0 ) {
-		a.actionType = str2ActionType(v[0]);
-	}
-
-	if(v.size() > 1) {
-		a.fBetSize = stringToNum<float>(v[1]);
-	}
-
-	return a;
-}
-
-const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
-	if(action.actionType == none){
-		return &node;
-	} else {
-		auto members = node["childrens"].getMemberNames();
-		string maxName = "";
-		float  maxBet = 0.0f;
-		for(auto it = members.begin();it != members.end();++it){
-			switch(action.actionType) {
-				case check:
-					if(*it=="CHECK"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;
-				case fold:
-					if(*it=="FOLD"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;
-				case call:
-					if(*it=="CALL"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;				
-				case allin:
-				case raise:
-				case bet:
-					if((*it).find("BET") != string::npos || (*it).find("RAISE") != string::npos) {
-						auto bet = getBetByStr(*it);
-						if(action.actionType==allin) {
-							if(bet>=maxBet){
-								maxBet=bet;
-								maxName=*it;
-							}
-						} else {
-							if(abs(action.fBetSize-bet) < 0.1){
-								cout << *it << endl;
-								return &(node["childrens"][*it]); 
-							}
-						} 
-					}
-				break;
-				default:
-				break;
-			}	
-		}
-
-		if(maxName != "") {
-			cout << maxName << endl;
-			return &(node["childrens"][maxName]); 
-		}
-	}
-
-	return nullptr;
-}
-
 /*
 ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
 O
@@ -214,15 +93,121 @@ R
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
-	auto actions = parseActionSquence(sActionSquence);
+	vector<Action> actionSquence;
+	auto pos = sActionSquence.find('>');
+	if(pos == string::npos) {
+		//找不到>
+		return false;
+	}else if(pos == sActionSquence.size()-1) {
+		return false;
+	} else {
+		auto str = sActionSquence.substr(pos+1,sActionSquence.size());
+		cout << "---------------\n" << str << endl;
+		auto v = split(str,'-');
+		for(auto it = v.begin();it != v.end();it++) {
+			auto c = (*it)[0];
+			if(c == 'X') {
+				actionSquence.push_back(Action{check});
+			} else if(c == 'R') {
+				actionSquence.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
+			} else if(c == 'A') {
+				actionSquence.push_back(Action{allin});
+			} else if(c == 'O') {
+				break;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	cout << "size," << actionSquence.size() << endl; 
+	auto getBetByStr = [](const string &str)->float{ 
+		auto v = split(str,' ');
+		if(v.size()==2){
+			return stringToNum<float>(v[1]);
+		} else {
+			return 0;
+		}
+    }; 
+
+	auto getActionByStr = [] (const string &str) -> Action {
+		Action a = Action{none};
+		auto v = split(str,' ');
+		if(v.size() > 0 ) {
+			a.actionType = str2ActionType(v[0]);
+		}
+
+		if(v.size() > 1) {
+			a.fBetSize = stringToNum<float>(v[1]);
+		}
+
+		return a;
+	};
+		
 	//sCSquence为“O”，则目标节点为根节点
 	//对每个“-”分割的动作sAction，逐层匹配子节点，如果sAction = X,则选择CHECK子节点为目标节点，如果sAction = A,则选择BET(最大值)为目标节点
 	//	如果sAction = R？，则所有子节点为BET* 的，将*依次放入vector<double>& candidates，调用MatchBetSize(?,candidates),返回的序号既选择该子节点
 	//目标节点后无子节点则返回false
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)
+
+	auto MatchBetSize = [](float bet,vector<float>  &bets)->int {
+		for(auto i = 0;i<int(bets.size());i++) {
+			if(abs(bet-bets[i]) < 0.1){
+				return i;
+			}
+		}
+		return -1;
+	};
+	
 	const Json::Value *node = &root;
-	for(auto it = actions.begin();it != actions.end();it++) {
-		node = getActionNode(*node,*it);
+	for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
+		const Json::Value *next; 
+		auto members = (*node)["childrens"].getMemberNames();
+		if(it->actionType == check) {
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if(*it2 == "CHECK") {
+					next = &((*node)["childrens"][*it2]);
+					cout << *it2 << endl;
+					break;
+				}
+			}
+		} else if (it->actionType == allin) {
+			float  maxBet = 0.0f;
+			string maxName = "";
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+					auto bet = getBetByStr(*it2);
+					if(bet>=maxBet){
+						maxBet=bet;
+						maxName=*it2;
+						next=&((*node)["childrens"][*it2]);
+					}
+				}				
+			}
+			if(maxName != "") {
+				cout << maxName << endl;
+			}
+		} else if (it->actionType == raise) {
+			vector<string> names;
+			vector<float>  bets;
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+					names.push_back(*it2);
+					bets.push_back(getBetByStr(*it2));
+				}
+			}
+			auto i = MatchBetSize(it->fBetSize,bets);
+			if(i>=0){
+				next = &((*node)["childrens"][names[i]]);
+				cout << names[i] << endl;
+			}
+		}
+
+		if(next == nullptr){
+			return false;
+		}else{
+			node = next;
+		}
 	}
 
 	Json::Value nodeStrategy = (*node)["strategy"];
