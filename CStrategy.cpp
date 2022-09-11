@@ -63,18 +63,115 @@ static bool  parseActionSquence(const string& sActionSquence, string& sPrefix, R
 	return true;
 }
 
+//生成wizard用的NodeName （未测试）
+string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stack, const vector<Action>& actions, const string& sPrefix)
+{
+	string sSquence, sPreflopName;
+	OOPX oopx = OOPA;
+	Json::Value StrategyTreeItem;
+	int nCount = 0;	//当前处理的actions的序号，1开始
+	double dActuallyRatio = 0;	//实际下注比例
+	double dHeroStackSum, dRivalStackSum = 0;	//hero和对手总筹码投入
+	double dEstack = 0;	//有效筹码，为实际有效筹码，非策略对应筹码
+	vector<double> candidateRatios;	//比例候选集合，对应策略数设置
+
+	if (actions.empty()) {	//无代表本街hero第一个行动
+		sSquence = sPrefix + "O";
+		return sSquence;
+	}
+
+	auto idx = sPrefix.find('<');
+	if (idx != string::npos)
+		sPreflopName = sPrefix.substr(0, idx);
+	//oopx = g_strategyNodeConfigs[gmType].GetConfigItem(sPreflopName).m_oopx;
+	//StrategyTreeItem = g_strategyTreeConfigs[gmType].GetConfigItem(sPreflopName);
+
+	for (auto action : actions) {
+		nCount++;
+
+		switch (action.actionType) {	//（只有X,R,A），X对应check, A对应allin
+			case check:
+				nCount > 1 ? sSquence += "-X" : sSquence += "X";
+				break;
+			case allin:
+				nCount > 1 ? sSquence += "-A" : sSquence += "A";
+				break;
+			case raise:{
+		
+				candidateRatios.clear();
+				dEstack = 0;
+				if (nCount == actions.size()) {	//R最后一个需要判断是否会转为allin，将size转为比例，MatchBetRatio中EStack非0则会判断是否转allin
+					dEstack = stack.fEStack;
+				}
+
+				//选择比例候选范围
+				if (nCount == 1) {	//R第一个需要判断OOPA/OOPD以决定用donk还是bet下注空间
+					if (oopx == OOPD) {
+						//取donk下注空间，测试donk下注空间用{33}
+						candidateRatios = { 33 }; //for test
+					}
+					else if (oopx == OOPA) {
+						//取bet下注空间，测试donk下注空间用{33,50,75,125}
+						candidateRatios = { 33,50,75,125 };  //for test
+					}
+				}
+				else {
+					if (nCount == 2 && actions[0].actionType == check) {
+						//如果是XR，则获取bet下注空间, 测试下注空间用{33,50,75,125}
+						candidateRatios = { 33,50,75,125 };  //for test
+					}
+					else {
+						//获取raise下注空间, 测试下注空间用{50,100}
+						candidateRatios = { 50,100 };  //for test
+					}
+				}
+
+				//计算dActuallyRatio
+				dHeroStackSum = 0; dRivalStackSum = 0; //计算双方下注总额，用于计算比例
+				for (int i = nCount - 1; i >= 0; i -= 2 ) {
+					if (actions[i].actionType == raise) { dRivalStackSum += actions[i].fBetSize; }
+				}
+				for (int i = nCount - 2; i >= 0; i -= 2) {
+					if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
+				}
+				dActuallyRatio = (dRivalStackSum - dHeroStackSum) / (stack.fPot + 2 * dHeroStackSum) * 100;
+
+				int iMatchedIndex = MatchBetRatio(dActuallyRatio, candidateRatios, dEstack);
+
+				if(iMatchedIndex == -1)	//转为allin
+					nCount > 1 ? sSquence = "-A" : sSquence = "A";
+				else
+					nCount > 1 ? sSquence = "-R" + to_string(candidateRatios[iMatchedIndex]) : sSquence = "R" + to_string(candidateRatios[iMatchedIndex]);
+
+			} //end of case raise
+		} //end of switch
+	}// end of for
+
+	sSquence = sPrefix + sSquence;
+	return sSquence;
+}
+
 //从wizard读取
 bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-	////解析sActionSquence，得到sNodeName和Round
+	//获取NodeName
+	Round curRound;
+	string sPrefix, actionStr, sNodeName;
+	vector<Action> actions;
+
+	parseActionSquence(sActionSquence, sPrefix, curRound, actions, actionStr);
+
+	if (curRound == preflop)
+		sNodeName = sPrefix;
+	else if (curRound == flop)
+		sNodeName = getNodeName(gmType, stack, actions, sPrefix);	
+		
 	
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 
 	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-
-	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 
 	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 	Json::Value root;
@@ -192,7 +289,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
 	for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
-		const Json::Value *next; 
+		const Json::Value *next = nullptr; 
 		auto members = (*node)["childrens"].getMemberNames();
 		if(it->actionType == check) {
 			for(auto it2 = members.begin();it2 != members.end();++it2){
@@ -280,8 +377,8 @@ int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidat
 	return -1;
 }
 
-//按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的序号
-int  CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, GameType gmType, const StackByStrategy& stack)
+//返回匹配的序号，dEStatck非0则需要匹配allin, allin则返回-1,
+int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, const double dEStatck)
 {
 	return 0;
 }

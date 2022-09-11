@@ -20,15 +20,15 @@ public:
 	void AlignmentByexploit();
 
 private:
-	void load(const Json::Value& node,std::vector<Action> &actions,int pos);
 
+	std::string getNodeName(const GameType gmType, const StackByStrategy& stack, const std::vector<Action>& actions, const std::string& sPrefix);
+	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	void SpecialProcessing(); //按spcial配置处理m_strategy
 
 	
 	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack);	//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的siz
-	int MatchBetRatio(double dActuallyRatio, const std::vector<double>& candidateRatios, GameType gmType, const StackByStrategy& stack);	//按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的比例
-
+	int MatchBetRatio(double dActuallyRatio, const std::vector<double>&candidateRatios, const double dEStatck);
 };
 
 #endif
