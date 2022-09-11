@@ -64,6 +64,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 }
 
 /*
+<<<<<<< HEAD
 by xzy: 
 只可能有"O,X,R,A",其他的记录下错误日志，程序退出
 */
@@ -247,17 +248,132 @@ void CStrategy::load(const Json::Value& node,vector<Action> &actions,int pos) {
 	XRRRA
 	R
 	*/
-	//从solver读取
+
+//从solver读取
+
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
-	auto actions = parseActionSquence(sActionSquence);
+	vector<Action> actionSquence;
+	auto pos = sActionSquence.rfind('>');
+	if(pos == string::npos) {
+		//找不到>
+		return false;
+	}else if(pos == sActionSquence.size()-1) {
+		return false;
+	} else {
+		auto str = sActionSquence.substr(pos+1,sActionSquence.size());
+		cout << "---------------\n" << str << endl;
+		auto v = split(str,'-');
+		for(auto it = v.begin();it != v.end();it++) {
+			auto c = (*it)[0];
+			if(c == 'X') {
+				actionSquence.push_back(Action{check});
+			} else if(c == 'R') {
+				actionSquence.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
+			} else if(c == 'A') {
+				actionSquence.push_back(Action{allin});
+			} else if(c == 'O') {
+				break;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	cout << "size," << actionSquence.size() << endl; 
+	auto getBetByStr = [](const string &str)->float{ 
+		auto v = split(str,' ');
+		if(v.size()==2){
+			return stringToNum<float>(v[1]);
+		} else {
+			return 0;
+		}
+    }; 
+
+	auto getActionByStr = [] (const string &str) -> Action {
+		Action a = Action{none};
+		auto v = split(str,' ');
+		if(v.size() > 0 ) {
+			a.actionType = str2ActionType(v[0]);
+		}
+
+		if(v.size() > 1) {
+			a.fBetSize = stringToNum<float>(v[1]);
+		}
+
+		return a;
+	};
+		
 	//sCSquence为“O”，则目标节点为根节点
 	//对每个“-”分割的动作sAction，逐层匹配子节点，如果sAction = X,则选择CHECK子节点为目标节点，如果sAction = A,则选择BET(最大值)为目标节点
 	//	如果sAction = R？，则所有子节点为BET* 的，将*依次放入vector<double>& candidates，调用MatchBetSize(?,candidates),返回的序号既选择该子节点
 	//目标节点后无子节点则返回false
-	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)
-	load(root,actions,0);
+	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
+	const Json::Value *node = &root;
+	for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
+		const Json::Value *next; 
+		auto members = (*node)["childrens"].getMemberNames();
+		if(it->actionType == check) {
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if(*it2 == "CHECK") {
+					next = &((*node)["childrens"][*it2]);
+					cout << *it2 << endl;
+					break;
+				}
+			}
+		} else if (it->actionType == allin) {
+			float  maxBet = 0.0f;
+			string maxName = "";
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+					auto bet = getBetByStr(*it2);
+					if(bet>=maxBet){
+						maxBet=bet;
+						maxName=*it2;
+						next=&((*node)["childrens"][*it2]);
+					}
+				}				
+			}
+			if(maxName != "") {
+				cout << maxName << endl;
+			}
+		} else if (it->actionType == raise) {
+			vector<string> names;
+			vector<double>  bets;
+			for(auto it2 = members.begin();it2 != members.end();++it2){
+				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+					names.push_back(*it2);
+					bets.push_back(getBetByStr(*it2));
+				}
+			}
+			auto i = MatchBetSize(it->fBetSize,bets,gmType,stack);
+			if(i>=0){
+				next = &((*node)["childrens"][names[i]]);
+				cout << names[i] << endl;
+			}
+		}
+
+		if(next == nullptr){
+			return false;
+		}else{
+			node = next;
+		}
+	}
+
+	Json::Value nodeStrategy = (*node)["strategy"];
+	Json::Value nodeActions = nodeStrategy["actions"];
+	for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
+		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+		auto a = getActionByStr(nodeActions[i].asString());
+		strategyItem->m_action.actionType = a.actionType;
+		strategyItem->m_action.fBetSize = a.fBetSize;
+		auto members = nodeStrategy["strategy"].getMemberNames();
+		for(auto it = members.begin();it != members.end();++it){
+			strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
+		}
+		m_strategy.push_back(strategyItem);
+	}
 	//同构转换
 
 	return true;
@@ -276,7 +392,12 @@ void CStrategy::SpecialProcessing()
 //按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的序号
 int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack)
 {
-	return 0;
+	for(auto i = 0;i<int(candidateSizes.size());i++) {
+		if(abs(dActuallySize-candidateSizes[i]) < 0.1){
+			return i;
+		}
+	}
+	return -1;
 }
 
 //按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的序号
