@@ -94,7 +94,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
 	vector<Action> actionSquence;
-	auto pos = sActionSquence.find('>');
+	auto pos = sActionSquence.rfind('>');
 	if(pos == string::npos) {
 		//找不到>
 		return false;
