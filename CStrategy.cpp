@@ -6,6 +6,63 @@
 
 using namespace std;
 
+static bool  parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
+	//查找最后的>
+	auto pos = sActionSquence.rfind('>');
+	if(pos != string::npos && pos != sActionSquence.size()-1) {
+		actionStr = sActionSquence.substr(pos+1,sActionSquence.size());
+		cout << "---------------\n" << actionStr << endl;
+		auto v = split(actionStr,'-');
+		for(auto it = v.begin();it != v.end();it++) {
+			auto c = (*it)[0];
+			if(c == 'X') {
+				actions.push_back(Action{check});
+			} else if(c == 'R') {
+				actions.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
+			} else if(c == 'A') {
+				actions.push_back(Action{allin});
+			} else if(c == 'O') {
+				break;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	if(pos == string::npos){
+		sPrefix = sActionSquence;
+	} else {
+		sPrefix = sActionSquence.substr(1,pos);
+	}
+
+	auto count = 0;
+
+	for(auto character:sActionSquence) {
+		if(character=='<'){
+			count++;
+		}
+	}
+
+	switch(count) {
+		case 0:
+			round = preflop;
+			break;
+		case 1:
+			round = flop;
+			break;
+		case 2:
+			round = turn;
+			break;
+		case 3:
+			round = river;
+			break;
+		default:
+			return false;
+			break;								
+	}
+	return true;
+}
+
 //从wizard读取
 bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
@@ -16,6 +73,8 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
+
+	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 
 	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 	Json::Value root;
@@ -64,224 +123,45 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 }
 
 /*
-<<<<<<< HEAD
-by xzy: 
-只可能有"O,X,R,A",其他的记录下错误日志，程序退出
+ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
+O
+R
+RR
+RRR
+RRRR
+RRRRA
+A
+RA
+RRA
+RRRA
+X
+XR
+XRR
+XRRR
+XRRRR
+XRRRRA
+XA
+XRA
+XRRA
+XRRRA
+R
 */
-vector<Action> parseActionSquence(const string& sActionSquence) {
-	vector<Action> ret; 
-	for(auto i = sActionSquence.size()-1;i >=0;i--) {
-		if(sActionSquence[i] == '>'){
-			auto v = split(sActionSquence.substr(i+1,sActionSquence.size()),'-');
-			for(auto it = v.begin();it != v.end();it++) {
-				if((*it).size() > 0) {
-					switch((*it)[0]) {
-						case 'X':
-							ret.push_back(Action{check});
-						break;
-						case 'R':{
-							Action action;
-							action.actionType = raise;
-							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
-							ret.push_back(action);
-							}
-						break;
-						case 'B':{ 
-							Action action;
-							action.actionType = bet;
-							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
-							ret.push_back(action);
-						}
-						break;						
-						case 'A':
-							ret.push_back(Action{allin});
-						break;
-						case 'F':
-							ret.push_back(Action{fold});
-						break;
-						case 'C':
-							ret.push_back(Action{call});
-						break;																		
-						case 'O':
-						ret.push_back(Action{none});
-						break;
-					}
-				} 	
-			}
-			break;
-		}
-	}
-	return ret;
-}
-
-float getBet(const string &str) {
-	auto v = split(str,' ');
-	if(v.size()==2){
-		return stringToNum<float>(v[1]);
-	} else {
-		return 0;
-	}
-}
-
-Action getActionByStr(const string &str) {
-	Action a = Action{none};
-	auto v = split(str,' ');
-	if(v.size() > 0 ) {
-		a.actionType = str2ActionType(v[0]);
-	}
-
-	if(v.size() > 1) {
-		a.fBetSize = stringToNum<float>(v[1]);
-	}
-
-	return a;
-}
-
-const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
-	cout << "getActionNode " << action.actionType << endl; 
-	if(action.actionType == none){
-		return &node;
-	} else {
-		auto members = node["childrens"].getMemberNames();
-		string maxName = "";
-		float  maxBet = 0.0f;
-		for(auto it = members.begin();it != members.end();++it){
-			switch(action.actionType) {
-				case check:
-					if(*it=="CHECK"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;
-				case fold:
-					if(*it=="FOLD"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;
-				case call:
-					if(*it=="CALL"){
-						cout << *it << endl;
- 						return &(node["childrens"][*it]);
-					}
-				break;				
-				case allin:
-				case raise:
-				case bet:
-					if((*it).find("BET") != string::npos || (*it).find("RAISE") != string::npos) {
-						auto bet = getBet(*it);
-						if(action.actionType==allin) {
-							if(bet>=maxBet){
-								maxBet=bet;
-								maxName=*it;
-							}
-						} else {
-							if(abs(action.fBetSize-bet) < 0.1){
-								cout << *it << endl;
-								return &(node["childrens"][*it]); 
-							}
-						} 
-					}
-				break;
-				default:
-				break;
-			}	
-		}
-
-		if(maxName != "") {
-			cout << maxName << endl;
-			return &(node["childrens"][maxName]); 
-		}
-	}
-
-	return nullptr;
-}
-
-void CStrategy::load(const Json::Value& node,vector<Action> &actions,int pos) {
-	//cout << "load:" << pos << "," << actions[pos].actionType << "," << actions[pos].fBetSize <<endl ;
-	if(pos == int(actions.size())) {
-		//加载strategy
-		Json::Value nodeStrategy = node["strategy"];
-		Json::Value nodeActions = nodeStrategy["actions"];
-		for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
-			std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
-			auto a = getActionByStr(nodeActions[i].asString());
-			strategyItem->m_action.actionType = a.actionType;
-			strategyItem->m_action.fBetSize = a.fBetSize;
-			auto members = nodeStrategy["strategy"].getMemberNames();
-			for(auto it = members.begin();it != members.end();++it){
-				strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
-			}
-			m_strategy.push_back(strategyItem);
-		}	
-	} else {
-		auto next = getActionNode(node,actions[pos]); 
-		if(next != nullptr) {
-			load(*next,actions,pos+1);
-		} else {
-			cout << "nullptr" << endl;
-		}
-	}
-}
-
-	/*
-	ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
-	O
-	R
-	RR
-	RRR
-	RRRR
-	RRRRA
-	A
-	RA
-	RRA
-	RRRA
-	X
-	XR
-	XRR
-	XRRR
-	XRRRR
-	XRRRRA
-	XA
-	XRA
-	XRRA
-	XRRRA
-	R
-	*/
-
 //从solver读取
-
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
-	vector<Action> actionSquence;
-	auto pos = sActionSquence.rfind('>');
-	if(pos == string::npos) {
-		//找不到>
+	vector<Action> actionSquence={};
+	string sPrefix=""; 
+	Round round;
+	string actionStr="";
+	if(!parseActionSquence(sActionSquence,sPrefix,round,actionSquence,actionStr)) {
 		return false;
-	}else if(pos == sActionSquence.size()-1) {
-		return false;
-	} else {
-		auto str = sActionSquence.substr(pos+1,sActionSquence.size());
-		cout << "---------------\n" << str << endl;
-		auto v = split(str,'-');
-		for(auto it = v.begin();it != v.end();it++) {
-			auto c = (*it)[0];
-			if(c == 'X') {
-				actionSquence.push_back(Action{check});
-			} else if(c == 'R') {
-				actionSquence.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
-			} else if(c == 'A') {
-				actionSquence.push_back(Action{allin});
-			} else if(c == 'O') {
-				break;
-			} else {
-				return false;
-			}
-		}
 	}
-
-	cout << "size," << actionSquence.size() << endl; 
+	if(actionSquence.size()==0 && (actionStr.size()==0 || actionStr[0] != 'O')) {
+		cout << actionStr << "," << actionStr[0] << endl;
+		return false;
+	}
+	cout << "size," << actionSquence.size() << "," << sPrefix  << ",round," << round <<endl; 
 	auto getBetByStr = [](const string &str)->float{ 
 		auto v = split(str,' ');
 		if(v.size()==2){
