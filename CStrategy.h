@@ -27,8 +27,8 @@ private:
 	void SpecialProcessing(); //按spcial配置处理m_strategy
 
 	
-	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack);	//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的siz
-	int MatchBetRatio(double dActuallyRatio, const std::vector<double>&candidateRatios, const double dEStatck);
+	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, const double dEStatck);	//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的siz
+	int MatchBetRatio(double dActuallyRatio, const std::vector<double>&candidateRatios, const double dEStatck); //按实际比例和有效筹码，dEStatck非零要判断是否转为allin
 };
 
 #endif

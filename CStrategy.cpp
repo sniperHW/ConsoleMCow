@@ -329,7 +329,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 					bets.push_back(getBetByStr(*it2));
 				}
 			}
-			auto i = MatchBetSize(it->fBetSize,bets,gmType,stack);
+			auto i = MatchBetSize(it->fBetSize,bets,stack.fEStack);
 			if(i>=0){
 				next = &((*node)["childrens"][names[i]]);
 				cout << names[i] << endl;
@@ -371,8 +371,8 @@ void CStrategy::SpecialProcessing()
 	
 }
 
-//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的序号
-int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack)
+//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号
+int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, const double dEStatck)
 {
 	for(auto i = 0;i<int(candidateSizes.size());i++) {
 		if(abs(dActuallySize-candidateSizes[i]) < 0.1){
@@ -382,7 +382,7 @@ int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidat
 	return -1;
 }
 
-//返回匹配的序号，dEStatck非0则需要匹配allin, allin则返回-1,
+//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin, allin则返回-1,
 int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, const double dEStatck)
 {
 	return 0;
