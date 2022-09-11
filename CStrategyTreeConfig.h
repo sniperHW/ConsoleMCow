@@ -5,6 +5,7 @@
 
 #include "json/json.h"
 #include"globledef.h"
+#include <vector>
 
 class CStrategyTreeConfig
 {
@@ -12,7 +13,8 @@ public:
 	Json::Value m_Config;
 
 	bool Init(GameType gmType);
-	Json::Value GetConfigItem(const std::string & sPreflopType);
+	Json::Value GetConfigItem(const std::string & sActionSquence);
+
 };
 
 #endif

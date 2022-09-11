@@ -18,7 +18,8 @@ typedef enum { Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50,
 typedef enum { preflop, flop, turn, river }Round;
 typedef enum { UTG = 1, HJ = 2, CO = 4, BTN = 8, SB = 16, BB = 32 }Position;
 typedef enum { OOP, IP }RelativePosition;
-typedef enum { none,call, fold, raise, allin, check, bet }ActionType;
+typedef enum { OOPA, OOPD }OOPX;
+typedef enum { none,call, fold, raise, allin, check ,bet}ActionType;
 typedef enum { h, d, c, s }Suit; //h：红桃，d：方块，c：草花，s：黑桃
 typedef enum { heroAction, flopReady, turnReady, riverReady }ActionLineMode;
 

@@ -9,13 +9,11 @@ using namespace std;
 //从wizard读取
 bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-	//sNodeName为完整名称，解析出当前round，和flop当前街名称
-	// 
+	////解析sActionSquence，得到sNodeName和Round
+	
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 
-	//flop需要匹配替换最后一个betsize,修改节点名称
-
-	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，turn用通配匹配法
+	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 
@@ -65,8 +63,11 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 	return true;
 }
 
-
-std::vector<Action> parseActionSquence(const string& sActionSquence) {
+/*
+by xzy: 
+只可能有"O,X,R,A",其他的记录下错误日志，程序退出
+*/
+vector<Action> parseActionSquence(const string& sActionSquence) {
 	vector<Action> ret; 
 	for(auto i = sActionSquence.size()-1;i >=0;i--) {
 		if(sActionSquence[i] == '>'){
@@ -84,7 +85,7 @@ std::vector<Action> parseActionSquence(const string& sActionSquence) {
 							ret.push_back(action);
 							}
 						break;
-						case 'B':{
+						case 'B':{ 
 							Action action;
 							action.actionType = bet;
 							action.fBetSize = stringToNum<float>((*it).substr(1, (*it).size()));
@@ -195,7 +196,7 @@ const Json::Value* getActionNode(const Json::Value& node,const Action &action) {
 	return nullptr;
 }
 
-void CStrategy::load(const Json::Value& node,std::vector<Action> &actions,int pos) {
+void CStrategy::load(const Json::Value& node,vector<Action> &actions,int pos) {
 	//cout << "load:" << pos << "," << actions[pos].actionType << "," << actions[pos].fBetSize <<endl ;
 	if(pos == int(actions.size())) {
 		//加载strategy
