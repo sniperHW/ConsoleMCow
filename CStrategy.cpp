@@ -3,8 +3,17 @@
 #include "util.h"
 #include <fstream>
 #include <iostream>
+#include <regex>
+#include "CStrategyNodeConfig.h"
+#include "CStrategyNodeConfigItem.h"
+#include "CStrategyTreeConfig.h"
+#include "CDataFrom.h"
+
 
 using namespace std;
+extern map<GameType, CStrategyNodeConfig> g_strategyNodeConfigs; //策略节点配置
+extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
+extern CDataFrom g_dataFrom;
 
 static bool  parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
 	//查找最后的>
@@ -83,8 +92,15 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 	auto idx = sPrefix.find('<');
 	if (idx != string::npos)
 		sPreflopName = sPrefix.substr(0, idx);
-	//oopx = g_strategyNodeConfigs[gmType].GetConfigItem(sPreflopName).m_oopx;
-	//StrategyTreeItem = g_strategyTreeConfigs[gmType].GetConfigItem(sPreflopName);
+
+	//get oopx
+	auto pStrategyNodeConfigItem = g_strategyNodeConfigs[gmType].GetItemByName(sPreflopName);
+	if (pStrategyNodeConfigItem != nullptr) {
+		oopx = pStrategyNodeConfigItem->m_oopx;
+	}
+
+	//get strategy tree config
+	Json::Value strategyTreeItem = g_strategyTreeConfigs[gmType].GetConfigItem(sPreflopName);
 
 	for (auto action : actions) {
 		nCount++;
@@ -107,22 +123,22 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 				//选择比例候选范围
 				if (nCount == 1) {	//R第一个需要判断OOPA/OOPD以决定用donk还是bet下注空间
 					if (oopx == OOPD) {
-						//取donk下注空间，测试donk下注空间用{33}
-						candidateRatios = { 33 }; //for test
+						//strategyTreeItem里取donk下注空间，测试donk下注空间用{33} 
+						candidateRatios = { 33 }; //for test///////////////////////////////////
 					}
 					else if (oopx == OOPA) {
-						//取bet下注空间，测试donk下注空间用{33,50,75,125}
-						candidateRatios = { 33,50,75,125 };  //for test
+						//strategyTreeItem里取bet下注空间，测试donk下注空间用{33,50,75,125}
+						candidateRatios = { 33,50,75,125 };  //for test///////////////////////////////////
 					}
 				}
 				else {
 					if (nCount == 2 && actions[0].actionType == check) {
-						//如果是XR，则获取bet下注空间, 测试下注空间用{33,50,75,125}
-						candidateRatios = { 33,50,75,125 };  //for test
+						//如果是XR，strategyTreeItem里取bet下注空间, 测试下注空间用{33,50,75,125}
+						candidateRatios = { 33,50,75,125 };  //for test///////////////////////////////////
 					}
 					else {
-						//获取raise下注空间, 测试下注空间用{50,100}
-						candidateRatios = { 50,100 };  //for test
+						//strategyTreeItem里取raise下注空间, 测试下注空间用{50,100}
+						candidateRatios = { 50,100 };  //for test///////////////////////////////////
 					}
 				}
 
@@ -154,29 +170,44 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 //从wizard读取
 bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-	//获取NodeName
 	Round curRound;
 	string sPrefix, actionStr, sNodeName;
 	vector<Action> actions;
-
+	string sStrategyFilePath;
+	
+	//获取NodeName
 	parseActionSquence(sActionSquence, sPrefix, curRound, actions, actionStr);
-
 	if (curRound == preflop)
 		sNodeName = sPrefix;
 	else if (curRound == flop)
 		sNodeName = getNodeName(gmType, stack, actions, sPrefix);	
-		
 	
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
+	if (curRound == flop) {
+		if (suitReplace.blIsNeeded) {
+			regex reg("<.*>");
+			string sReplace = "<" + sIsoBoard + ">";
+			sNodeName = regex_replace(sNodeName, reg, sReplace);
+		}
+	}
 
 	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
+	auto StrategyNodeConfig = g_strategyNodeConfigs[gmType];
+	auto pStrategyNodeConfigItem = StrategyNodeConfig.GetItemByName(sNodeName);
+	if (pStrategyNodeConfigItem != nullptr) {
+		if (!pStrategyNodeConfigItem->m_sReplaceNodeName.empty())
+			sNodeName = pStrategyNodeConfigItem->m_sReplaceNodeName;
+	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
+	sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType,  sNodeName, curRound);
+
+	sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
 	//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 	Json::Value root;
   	std::ifstream ifs;
-  	ifs.open("./test/2h2d2c.json");
+  	ifs.open(sStrategyFilePath);
 
   	Json::CharReaderBuilder builder;
   	//builder["collectComments"] = true;
@@ -214,35 +245,9 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 
 	//同构转换
 
-	//flop后更新sNodeName
-
 	return true;
 }
 
-/*
-ActionSquence格式：例：BTN_vsUTG_srp<KsQsTh>X-R16-A，动作范围为O(代表第一个行动),X,R,A，R后跟betsize,可能的组合如下：
-O
-R
-RR
-RRR
-RRRR
-RRRRA
-A
-RA
-RRA
-RRRA
-X
-XR
-XRR
-XRRR
-XRRRR
-XRRRRA
-XA
-XRA
-XRRA
-XRRRA
-R
-*/
 //从solver读取
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {

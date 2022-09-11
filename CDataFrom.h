@@ -9,12 +9,12 @@ class CDataFrom
 {
 public:
 
-	std::string GetWizardFilePath(GameType gmType, const std::string & sNodeName, int nStackDepth, Round round);
-	std::string GetSolverdFilePath(GameType gmType, const std::string & sNodeName, int nStackDepth, Round round);
-	std::string GetRangesFilePath(GameType gmType, const std::string & sNodeName, int nStackDepth, Round round);
+	std::string GetWizardFilePath(GameType gmType, const std::string & sNodeName, Round round);
+	std::string GetSolverdFilePath(GameType gmType, const std::string & sNodeName, Round round);
+	std::string GetRangesFilePath(GameType gmType, const std::string & sNodeName, Round round);
 
 private:
-	const GameType& m_gmType;
+	
 };
 
 #endif

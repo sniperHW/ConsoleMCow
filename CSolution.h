@@ -6,7 +6,6 @@
 #include "globledef.h"
 #include "CGame.h"
 #include "CActionLine.h"
-#include "CDataFrom.h"
 #include "json/json.h"
 #include "CStrategy.h"
 
@@ -29,7 +28,6 @@ private:
 	Json::Value m_solverResult; //当前街的solver解
 	bool m_blIsSolverPresave; //当前街是否使用预存solver解
 	CActionLine m_actionLine;
-	CDataFrom m_dataFrom;
 
 	Action CalcHeroAction(const CStrategy& strategy);
 

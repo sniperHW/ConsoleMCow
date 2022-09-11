@@ -9,6 +9,7 @@
 #include "CFlopDataFromWizardConfig.h"
 #include "CStrategy.h"
 #include <fstream>
+#include "CDataFrom.h"
 
 using namespace std;
 
@@ -19,6 +20,8 @@ map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 map<GameType, RegexTB> g_preflopRegexTBs; //preflop节点匹配表
 map<GameType, RegexTB> g_toflopRegexTBs; //toflop节点匹配表
 map<GameType, CFlopDataFromWizardConfig> g_turnDataFromWizardConfigs; //trun策略数据为wizard匹配表
+CDataFrom g_dataFrom;
+
 
 int main()
 {
