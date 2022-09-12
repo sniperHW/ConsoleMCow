@@ -24,8 +24,8 @@ private:
 	void ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace & suitReplace); //转换同构
 	void RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoardNext); //排除公牌相关的组合
 
-	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, const double dEStatck = 0);	//dEStatck只能为0，不会选择A
-	int MatchBetRatio(double dActuallyRatio, const std::vector<double>& candidateRatios, const double dEStatck = 0);
+	//int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, const double dEStatck = 0);	//dEStatck只能为0，不会选择A
+	//int MatchBetRatio(double dActuallyRatio, const std::vector<double>& candidateRatios, const double dEStatck = 0);
 
 };
 

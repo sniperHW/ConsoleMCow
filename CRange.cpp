@@ -65,14 +65,3 @@ void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoard
 {
 
 }
-
-int CRange::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, const double dEStatck)
-{
-	return 0;
-}
-
-
-int CRange::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, const double dEStatck)
-{
-	return 0;
-}
