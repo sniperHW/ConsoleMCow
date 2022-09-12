@@ -3,6 +3,10 @@
 #include "CDataFrom.h"
 using namespace std;
 extern CDataFrom g_dataFrom;
+#include <regex>
+#include "CRangeNodeConfig.h"
+#include "CRangeNodeConfigItem.h"
+#include "CStrategyTreeConfig.h"
 
 //file模式
 bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoardNext)
@@ -56,11 +60,11 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const StackBySt
 	}
 
 	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
-	auto StrategyNodeConfig = g_strategyNodeConfigs[gmType];
-	auto pStrategyNodeConfigItem = StrategyNodeConfig.GetItemByName(sNodeName);
-	if (pStrategyNodeConfigItem != nullptr) {
-		if (!pStrategyNodeConfigItem->m_sReplaceNodeName.empty())
-			sNodeName = pStrategyNodeConfigItem->m_sReplaceNodeName;
+	auto RangeNodeConfig = g_rangeNodeConfigs[gmType];
+	auto pRangeNodeConfigItem = RangeNodeConfig.GetItemByName(sNodeName);
+	if (pRangeNodeConfigItem != nullptr) {
+		if (!pRangeNodeConfigItem->m_sReplaceNodeName.empty())
+			sNodeName = pRangeNodeConfigItem->m_sReplaceNodeName;
 	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
