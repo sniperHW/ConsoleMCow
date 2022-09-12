@@ -203,6 +203,8 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 	sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType,  sNodeName, curRound);
+	if (sStrategyFilePath.size() == 0)
+		return false;
 
 	sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
