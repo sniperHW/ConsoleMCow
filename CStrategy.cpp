@@ -371,7 +371,7 @@ void CStrategy::SpecialProcessing()
 	
 }
 
-//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号
+//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号,最后一个代表allin
 int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, const double dEStatck)
 {
 	for(auto i = 0;i<int(candidateSizes.size());i++) {
