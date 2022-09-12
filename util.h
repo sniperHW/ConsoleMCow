@@ -13,14 +13,10 @@ ActionType str2ActionType(const std::string &str) {
 		return call;
 	} else if(str == "FOLD"){
 		return fold;
-	} else if(str == "RAISE"){
-		return raise;
-	} else if(str == "ALLIN"){
-		return allin;
 	} else if(str == "CHECK"){
 		return check;
 	} else if(str == "BET"){
-		return bet;
+		return raise;
 	} else {
 		return none;
 	}
