@@ -1,5 +1,6 @@
 //#include "pch.h"
 #include "CRange.h"
+#include "CStrategy.h"
 using namespace std;
 
 //file模式
@@ -20,6 +21,17 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
 	RangeData* pRangeRatio = nullptr;
+
+	//解析ActionSquence,取最后一个<>后的序列sCSquence
+	vector<Action> actionSquence={};
+	string sPrefix=""; 
+	Round round;
+	string actionStr="";
+	if(!CStrategy::parseActionSquence(sActionSquence,sPrefix,round,actionSquence,actionStr)) {
+		return false;
+	}
+
+
 	//用ComboMapping的每一个组合初始化OOPRangeRatio和IPRangeRatio，初始数值为0
 
 	//对actionSquence中每一个动作（只有X，R，C，其中X只会出现在第一个，最后一个一定是C，没有A和O）

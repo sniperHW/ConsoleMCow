@@ -30,6 +30,8 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 				actions.push_back(Action{raise,stringToNum<float>((*it).substr(1, (*it).size()))});
 			} else if(c == 'A') {
 				actions.push_back(Action{allin});
+			} else if(c == 'C') {
+				actions.push_back(Action{call});
 			} else if(c == 'O') {
 				break;
 			} else {
@@ -259,6 +261,77 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 	return true;
 }
 
+
+const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,const StackByStrategy& stack,bool last) {
+
+	auto getBetByStr = [](const string &str)->float{ 
+		auto v = split(str,' ');
+		if(v.size()==2){
+			return stringToNum<float>(v[1]);
+		} else {
+			return 0;
+		}
+    }; 
+
+	const Json::Value *next = nullptr; 
+	auto members = (*node)["childrens"].getMemberNames();
+	if(action.actionType == check) {
+		for(auto it2 = members.begin();it2 != members.end();++it2){
+			if(*it2 == "CHECK") {
+				next = &((*node)["childrens"][*it2]);
+				cout << *it2 << endl;
+				break;
+			}
+		}
+	} else if(action.actionType == call) {
+		for(auto it2 = members.begin();it2 != members.end();++it2){
+			if(*it2 == "CALL") {
+				next = &((*node)["childrens"][*it2]);
+				cout << *it2 << endl;
+				break;
+			}
+		}
+	} else if (action.actionType == allin) {
+		float  maxBet = 0.0f;
+		string maxName = "";
+		for(auto it2 = members.begin();it2 != members.end();++it2){
+			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				auto bet = getBetByStr(*it2);
+				if(bet>=maxBet){
+					maxBet=bet;
+					maxName=*it2;
+					next=&((*node)["childrens"][*it2]);
+				}
+			}				
+		}
+		if(maxName != "") {
+			cout << maxName << endl;
+		}
+	} else if (action.actionType == raise) {
+		vector<string> names;
+		vector<double>  bets;
+		for(auto it2 = members.begin();it2 != members.end();++it2){
+			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				names.push_back(*it2);
+				bets.push_back(getBetByStr(*it2));
+			}
+		}
+
+		double sstack = 0;
+		if(last) {
+			sstack = stack.fEStack;
+		}
+
+		auto i = MatchBetSize(action.fBetSize,bets,sstack);
+		if(i>=0){
+			next = &((*node)["childrens"][names[i]]);
+			cout << names[i] << endl;
+		}
+	}
+
+	return next;
+}
+
 //从solver读取
 bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
 {
@@ -275,14 +348,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		return false;
 	}
 	cout << "size," << actionSquence.size() << "," << sPrefix  << ",round," << round <<endl; 
-	auto getBetByStr = [](const string &str)->float{ 
-		auto v = split(str,' ');
-		if(v.size()==2){
-			return stringToNum<float>(v[1]);
-		} else {
-			return 0;
-		}
-    }; 
+
 
 	auto getActionByStr = [] (const string &str) -> Action {
 		Action a = Action{none};
@@ -304,7 +370,20 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//目标节点后无子节点则返回false
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
-	for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
+	int actionSquenceSize = int(actionSquence.size());  
+	for(auto i = 0; i < actionSquenceSize;i++) {
+		const Json::Value *next = geActionNode(node,actionSquence[i],stack,i==(actionSquenceSize-1));
+
+		//cout << actionSquence[i].actionType << "," << next << endl;
+
+		if(next == nullptr) {
+			return false;
+		}else {
+			node = next;
+		} 
+	}
+	
+	/*for(auto it = actionSquence.begin();it != actionSquence.end();it++) {
 		const Json::Value *next = nullptr; 
 		auto members = (*node)["childrens"].getMemberNames();
 		if(it->actionType == check) {
@@ -358,7 +437,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		}else{
 			node = next;
 		}
-	}
+	}*/
 
 	Json::Value nodeStrategy = (*node)["strategy"];
 	Json::Value nodeActions = nodeStrategy["actions"];
@@ -368,6 +447,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 		auto a = getActionByStr(nodeActions[i].asString());
+		//cout << nodeActions[i].asString() << "," << a.actionType << "," << a.fBetSize << endl;
 		strategyItem->m_action.actionType = a.actionType;
 		strategyItem->m_action.fBetSize = a.fBetSize;
 		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
