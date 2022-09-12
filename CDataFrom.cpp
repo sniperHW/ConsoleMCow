@@ -12,12 +12,12 @@ string CDataFrom::GetWizardFilePath(GameType gmType, const string& sNodeName, Ro
 	return string{};
 }
 
-string CDataFrom::GetSolverdFilePath(GameType gmType, const string& sNodeName, Round round)
+string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName, Round round)
 {
 	return string{};
 }
 
-string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName, Round round)
+string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 {
 	return string{};
 }
