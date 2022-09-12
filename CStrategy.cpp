@@ -116,7 +116,7 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 		
 				candidateRatios.clear();
 				dEstack = 0;
-				if (nCount == actions.size()) {	//R最后一个需要判断是否会转为allin，将size转为比例，MatchBetRatio中EStack非0则会判断是否转allin
+				if (nCount == int(actions.size())) {	//R最后一个需要判断是否会转为allin，将size转为比例，MatchBetRatio中EStack非0则会判断是否转allin
 					dEstack = stack.fEStack;
 				}
 
@@ -160,6 +160,8 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 					nCount > 1 ? sSquence = "-R" + to_string(candidateRatios[iMatchedIndex]) : sSquence = "R" + to_string(candidateRatios[iMatchedIndex]);
 
 			} //end of case raise
+			default:
+			break;
 		} //end of switch
 	}// end of for
 
@@ -217,12 +219,18 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
     	return false;
   	} else {
   		Json::Value solutions = root["solutions"];
+		//记录最大的bet,在最后把类型改为allin
+		std::shared_ptr<CStrategyItem> maxRaise = nullptr;
+		double maxBetSize = 0; 
 		for(auto it = solutions.begin();it != solutions.end();++it){
 			std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 			auto action = (*it)["action"];
 			strategyItem->m_action.actionType = str2ActionType(action["type"].asString());
 			strategyItem->m_action.fBetSize = stringToNum<float>(action["betsize"].asString());
 			strategyItem->m_action.fBetSizeByPot = stringToNum<float>(action["betsize_by_pot"].asString());
+			if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
+				maxRaise = strategyItem;
+			}
 			auto strategy = (*it)["strategy"];
 			for(Json::ArrayIndex i = 0;i<strategy.size();i++){
 				auto name = ComboMapping[i];
@@ -239,6 +247,9 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 				cout << name << "," << value << endl;
 			}
 			m_strategy.push_back(strategyItem);
+		}
+		if(maxRaise != nullptr) {
+			maxRaise->m_action.actionType = allin;
 		}
   	} 
 	//处理special
@@ -308,7 +319,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 			float  maxBet = 0.0f;
 			string maxName = "";
 			for(auto it2 = members.begin();it2 != members.end();++it2){
-				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				if((*it2).find("BET") != string::npos) {
 					auto bet = getBetByStr(*it2);
 					if(bet>=maxBet){
 						maxBet=bet;
@@ -324,12 +335,18 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 			vector<string> names;
 			vector<double>  bets;
 			for(auto it2 = members.begin();it2 != members.end();++it2){
-				if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				if((*it2).find("BET") != string::npos) {
 					names.push_back(*it2);
 					bets.push_back(getBetByStr(*it2));
 				}
 			}
-			auto i = MatchBetSize(it->fBetSize,bets,stack.fEStack);
+
+			double sstack = 0;
+			if(it==actionSquence.end()-1) {
+				sstack = stack.fEStack;
+			}
+
+			auto i = MatchBetSize(it->fBetSize,bets,sstack);
 			if(i>=0){
 				next = &((*node)["childrens"][names[i]]);
 				cout << names[i] << endl;
@@ -345,16 +362,25 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 
 	Json::Value nodeStrategy = (*node)["strategy"];
 	Json::Value nodeActions = nodeStrategy["actions"];
+	//记录最大的bet,在最后把类型改为allin
+	std::shared_ptr<CStrategyItem> maxRaise = nullptr;
+	double maxBetSize = 0;
 	for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 		auto a = getActionByStr(nodeActions[i].asString());
 		strategyItem->m_action.actionType = a.actionType;
 		strategyItem->m_action.fBetSize = a.fBetSize;
+		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
+			maxRaise = strategyItem;
+		}
 		auto members = nodeStrategy["strategy"].getMemberNames();
 		for(auto it = members.begin();it != members.end();++it){
 			strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
 		}
 		m_strategy.push_back(strategyItem);
+	}
+	if(maxRaise != nullptr) {
+		maxRaise->m_action.actionType = allin;
 	}
 	//同构转换
 
