@@ -34,7 +34,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		ConvertIsomorphism(IPRangeRatio, suitReplace);
 	}
 
-	//和原始范围运算（每个组合原始范围数据 *RangeRatio对应的比例, 能否一个transform函数加multiplies）
+	//和原始范围运算,更新原始范围（每个组合原始范围数据 *RangeRatio对应的比例, 能否一个transform函数加multiplies）
 
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(OOPRangeRatio, sBoardNext);
