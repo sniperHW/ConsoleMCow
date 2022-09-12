@@ -10,25 +10,23 @@
 class CRange
 {
 public:
-	RangeData m_heroRange;
-	RangeData m_rivalRange;
-	RelativePosition m_heroRelativePosition;
-
-	CRange(RelativePosition heroRelativePosition);
+	RangeData m_OOPRange;
+	RangeData m_IPRange;
 
 	bool Load(GameType gmType, const std::string & sNodeName, const CBoard & boardNext); //file模式，同时排除公牌
-	bool Load(GameType gmType, const std::string & sActionSquence, const StackByStrategy& stack, const CBoard & boardNext, bool blIsWizard); //wizard模式，同构转换，排除公牌，忽略blIsWizard
-	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const StackByStrategy& stack, const CBoard & boardNext); //solver模式，同构转换，排除公牌
+	bool Load(GameType gmType, const std::string & sActionSquence, const StackByStrategy& stack, const std::string& sBoardNext, const SuitReplace& suitReplace); //wizard模式，同构转换，排除公牌
+	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const StackByStrategy& stack, const std::string& sBoardNext, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌
 
 	std::string GetRangeStr(); //转为solver配置文件需要的格式
 	void Clear();
 
 private:
-	void ConvertIsomorphism(const SuitReplace & suitReplace); //转换同构=
-	void RemoveComboByBoard(const CBoard & pBoard); //排除公牌相关的组合
+	void ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace & suitReplace); //转换同构
+	void RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoardNext); //排除公牌相关的组合
 
-	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, GameType gmType, const StackByStrategy& stack);	//按实际下注bb数，匹配子节下注空间，用于sover解计算，参数都为实际size，返回为匹配的siz
-	int MatchBetRatio(double dActuallyRatio, const std::vector<double>& candidateRatios, GameType gmType, const StackByStrategy& stack);	//按实际下注比例，匹配子节下注空间，用于wizard解计算，需要先将size转为比例，候选在策略树设置中，返回为匹配的比例
+	int MatchBetSize(double dActuallySize, const std::vector<double>& candidateSizes, const double dEStatck = 0);	//dEStatck只能为0，不会选择A
+	int MatchBetRatio(double dActuallyRatio, const std::vector<double>& candidateRatios, const double dEStatck = 0);
+
 };
 
 #endif
