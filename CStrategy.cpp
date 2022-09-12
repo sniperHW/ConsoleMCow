@@ -15,7 +15,7 @@ extern map<GameType, CStrategyNodeConfig> g_strategyNodeConfigs; //策略节点�
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 extern CDataFrom g_dataFrom;
 
-static bool  parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
+bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
 	//查找最后的>
 	auto pos = sActionSquence.rfind('>');
 	if(pos != string::npos && pos != sActionSquence.size()-1) {
