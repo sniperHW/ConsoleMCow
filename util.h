@@ -15,7 +15,7 @@ ActionType str2ActionType(const std::string &str) {
 		return fold;
 	} else if(str == "CHECK"){
 		return check;
-	} else if(str == "BET"){
+	} else if(str == "BET" || str == "RAISE"){
 		return raise;
 	} else {
 		return none;

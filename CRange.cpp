@@ -1,5 +1,6 @@
 //#include "pch.h"
 #include "CRange.h"
+#include "CStrategy.h"
 #include "CDataFrom.h"
 using namespace std;
 extern CDataFrom g_dataFrom;
@@ -109,11 +110,74 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 	RangeData* pRangeRatio = nullptr;
 	//用ComboMapping的每一个组合初始化OOPRangeRatio和IPRangeRatio，初始数值为0
 
+
+	//解析ActionSquence,取最后一个<>后的序列sCSquence
+	vector<Action> actionSquence={};
+	string sPrefix=""; 
+	Round round;
+	string actionStr="";
+	if(!CStrategy::parseActionSquence(sActionSquence,sPrefix,round,actionSquence,actionStr)) {
+		return false;
+	}
+	if(actionSquence.size()==0) {
+		return false;
+	}
+
 	//对actionSquence中每一个动作（只有X，R，C，其中X只会出现在第一个，最后一个一定是C或X，没有A和O）
 		//确定是操作OOP还是IP（奇数是OOP，偶数是IP，赋值pRangeRatio）
 		//当前节点（第一个为root）下选择对应的动作，和策略中方法一样，但R不需要匹配A
 		//对策略数据中每个组合，用选定动作对应的比例去改写pRangeRatio中对应的数据（如果是第一次行动则填写1*比例，非第一次行动则填写*pRangeRatio[组合] * 比例，区分第一次目的是让不存在的组合保持0）
 		//不是最后一个动作则按之前匹配的动作选择子节点，为当前节点
+
+	const Json::Value *node = &root;
+	for(auto i = 0;i<int(actionSquence.size());i++){
+		if(i%2==0) {
+			pRangeRatio = &OOPRangeRatio;
+		} else {
+			pRangeRatio = &IPRangeRatio;		
+		}
+
+		auto a = actionSquence[i];
+
+		const Json::Value &nodeStrategy = (*node)["strategy"];
+		const Json::Value &nodeActions = nodeStrategy["actions"];
+		Json::ArrayIndex j = 0;
+		for(;j<nodeActions.size();j++){
+			auto aa = CStrategy::getActionByStr(nodeActions[j].asString());
+			if(aa.actionType == a.actionType) {
+				break;
+			}
+		}
+		if(j==nodeActions.size()) {
+			return false;
+		}
+
+		auto members = nodeStrategy["strategy"].getMemberNames();
+		for(auto it = members.begin();it != members.end();++it){
+			auto name = *it;
+			auto value = nodeStrategy["strategy"][name][j].asFloat();
+
+			auto mapIt = pRangeRatio->find(name);
+			if(mapIt == pRangeRatio->end()) {
+				//第一次1*value
+				(*pRangeRatio)[name] = value;
+			} else {
+				mapIt->second *= value;
+			}
+		}
+
+		double sstack = 0;
+		if(i==int(actionSquence.size()-1)) {
+			sstack = stack.fEStack;
+		}
+
+		//根据动作选择下一节点
+		node = CStrategy::geActionNode(node,a,sstack);
+		if(node==nullptr){
+			return false;
+		}
+	}
+
 
 	//同构转换
 	if (suitReplace.blIsNeeded) {
