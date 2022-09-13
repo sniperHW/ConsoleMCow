@@ -24,8 +24,8 @@ public:
 	static int MatchBetRatio(double dActuallyRatio, const std::vector<double>&candidateRatios, const double dEStatck); //按实际比例和有效筹码，dEStatck非零要判断是否转为allin,返回-1代表allin
 	static std::string getNodeName(const GameType gmType, const StackByStrategy& stack, const std::vector<Action>& actions, const std::string& sPrefix);
 	static bool parseActionSquence(const std::string& sActionSquence, std::string& sPrefix, Round &round,std::vector<Action>& actions,std::string &actionStr);
-	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,const StackByStrategy& stack,bool last);
-
+	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,double stack);//const StackByStrategy& stack,bool last);
+	static Action getActionByStr(const std::string &str); 
 
 private:
 	
