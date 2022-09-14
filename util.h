@@ -8,7 +8,7 @@
 #include <sstream>
 #include "globledef.h"
 
-ActionType str2ActionType(const std::string &str) {
+inline ActionType str2ActionType(const std::string &str) {
 	if(str == "CALL"){
 		return call;
 	} else if(str == "FOLD"){
@@ -32,7 +32,7 @@ Type stringToNum(const std::string& str)
 }
 
 
-std::vector<std::string> split(const std::string& s, char seperator)
+inline std::vector<std::string> split(const std::string& s, char seperator)
 {
    std::vector<std::string> output;
 
@@ -50,6 +50,16 @@ std::vector<std::string> split(const std::string& s, char seperator)
     output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
 
     return output;
+}
+
+
+inline float getBetByStr(const std::string &str){ 
+	auto v = split(str,' ');
+	if(v.size()==2){
+		return stringToNum<float>(v[1]);
+	} else {
+		return 0;
+	}
 }
 
 
