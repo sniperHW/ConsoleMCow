@@ -2,6 +2,7 @@
 #include "CRange.h"
 #include "CStrategy.h"
 #include "CDataFrom.h"
+#include "util.h"
 using namespace std;
 extern CDataFrom g_dataFrom;
 
@@ -134,20 +135,56 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		}
 
 		auto a = actionSquence[i];
+		auto getActionIdx = [] (const Json::Value *node,const Action& action) -> int {
+				int index = -1;
 
-		const Json::Value &nodeStrategy = (*node)["strategy"];
-		const Json::Value &nodeActions = nodeStrategy["actions"];
-		Json::ArrayIndex j = 0;
-		for(;j<nodeActions.size();j++){
-			auto aa = CStrategy::getActionByStr(nodeActions[j].asString());
-			if(aa.actionType == a.actionType) {
-				break;
-			}
-		}
-		if(j==nodeActions.size()) {
+				auto members = (*node)["actions"].getMemberNames();
+				if(action.actionType == check) {
+					for(int i = 0;i<int(members.size());i++){
+						if(members[i] == "CHECK") {
+							index = i;
+							break;
+						}	
+					}
+				} else if(action.actionType == call) {
+					for(int i = 0;i<int(members.size());i++){
+						if(members[i] == "CALL") {
+							index = i;
+							break;
+						}	
+					}
+				} else if (action.actionType == raise) {
+					vector<string> names;
+					vector<double>  bets;
+					for(auto it2 = members.begin();it2 != members.end();++it2){
+						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+							names.push_back(*it2);
+							bets.push_back(getBetByStr(*it2));
+						}
+					}
+
+					auto j = CStrategy::MatchBetSize(action.fBetSize,bets,0);
+					if(j>=0){
+						for(int i = 0;i<int(members.size());i++){
+							if(names[j]==members[i]){
+								index=i;
+								break;
+							}
+						}
+					}
+				}
+
+				return index;
+			};			
+		
+
+		int j = getActionIdx(node,a);
+
+		if(j < 0) {
 			return false;
 		}
 
+		const Json::Value &nodeStrategy = (*node)["strategy"];
 		auto members = nodeStrategy["strategy"].getMemberNames();
 		for(auto it = members.begin();it != members.end();++it){
 			auto name = *it;
@@ -162,13 +199,8 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 			}
 		}
 
-		double sstack = 0;
-		if(i==int(actionSquence.size()-1)) {
-			sstack = stack.fEStack;
-		}
-
 		//根据动作选择下一节点
-		node = CStrategy::geActionNode(node,a,sstack);
+		node = CStrategy::geActionNode(node,a,0);
 		if(node==nullptr){
 			return false;
 		}

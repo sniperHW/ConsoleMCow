@@ -265,22 +265,13 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 
 
 const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,double stack){//const StackByStrategy& stack,bool last) {
-
-	auto getBetByStr = [](const string &str)->float{ 
-		auto v = split(str,' ');
-		if(v.size()==2){
-			return stringToNum<float>(v[1]);
-		} else {
-			return 0;
-		}
-    }; 
-
 	const Json::Value *next = nullptr; 
-	auto members = (*node)["childrens"].getMemberNames();
+	const Json::Value &nodeChildren = (*node)["childrens"];
+	auto members = nodeChildren.getMemberNames();
 	if(action.actionType == check) {
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if(*it2 == "CHECK") {
-				next = &((*node)["childrens"][*it2]);
+				next = &(nodeChildren[*it2]);
 				cout << *it2 << endl;
 				break;
 			}
@@ -288,7 +279,7 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 	} else if(action.actionType == call) {
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if(*it2 == "CALL") {
-				next = &((*node)["childrens"][*it2]);
+				next = &(nodeChildren[*it2]);
 				cout << *it2 << endl;
 				break;
 			}
@@ -302,7 +293,7 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 				if(bet>=maxBet){
 					maxBet=bet;
 					maxName=*it2;
-					next=&((*node)["childrens"][*it2]);
+					next=&(nodeChildren[*it2]);
 				}
 			}				
 		}
@@ -321,7 +312,7 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 
 		auto i = MatchBetSize(action.fBetSize,bets,stack);
 		if(i>=0){
-			next = &((*node)["childrens"][names[i]]);
+			next = &(nodeChildren[names[i]]);
 			cout << names[i] << endl;
 		}
 	}
