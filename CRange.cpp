@@ -69,23 +69,28 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const StackBySt
 	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
+
 	sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType, sNodeName, curRound);
 	if(sStrategyFilePath.size() == 0)
 		return false;
 	*/
 
-	//解析range(注释）
+	//取C或X对应策略，和最后行动者的位置(注释)
 	//clear(); //先清空原始range（不需要按原始range来计算）
-	//solution下找出action.code = "X"或"C"(忽略大小写)的[n]，rangeRatio = solution.[n].strategy；sLastPlayerPosition = solution.[n].action.position
+	//solution下找出action.code = "X"或"C"的[n]，rangeRatio = solution.[n].strategy；sLastPlayerPosition = solution.[n].action.position
+	// 
+	//加载原始范围(注释)
 	//如果player_info[0].player.relative_postflop_position == "OOP"
 		//m_OOPRange = player_info[0].player.range ；m_IPRange = player_info[1].player.range
 	 //else m_OOPRange = player_info[1].player.range; m_IPRange = player_info[0].player.range
 
-	//对最后行动的玩家范围结合C或X的策略进行运算(注释）
+	//找出sLastPlayerPosition对应的相对位置，确定需要范围运算的是OOP还是IP(注释)
+	//string sRelativePos;
 	//如果player_info[0].player.position == sLastPlayerPosition
-		//如果 player_info[0].player.relative_postflop_position == "OOP" 则 pRangeRatio = &m_OOPRange else pRangeRatio = &m_IPRange
-	//else
-		//如果 player_info[1].player.relative_postflop_position == "OOP" 则 pRangeRatio = &m_OOPRange else pRangeRatio = &m_IPRange
+		//sRelativePos = player_info[0].player.relative_postflop_position
+	//else 
+		//sRelativePos = player_info[1].player.relative_postflop_position
+	// sRelativePos == "OOP" ? pRangeRatio = &m_OOPRange : pRangeRatio = &m_IPRange;
 
 	//rangeRatio和pRangeRatio指向的范围运算，更新范围
 
@@ -108,7 +113,6 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
 	RangeData* pRangeRatio = nullptr;
-	//用ComboMapping的每一个组合初始化OOPRangeRatio和IPRangeRatio，初始数值为0
 
 
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
