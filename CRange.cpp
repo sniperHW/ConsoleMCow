@@ -4,7 +4,6 @@
 #include "CDataFrom.h"
 #include "util.h"
 using namespace std;
-extern CDataFrom g_dataFrom;
 #include <regex>
 #include "CRangeNodeConfig.h"
 #include "CRangeNodeConfigItem.h"
@@ -14,7 +13,7 @@ extern CDataFrom g_dataFrom;
 bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoardNext)
 {
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	string sPath = g_dataFrom.GetRangesFilePath(gmType, sNodeName);
+	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeName);
 	if (sPath.size() == 0)
 		return false;
 
