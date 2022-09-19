@@ -89,10 +89,10 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	return true;
 }
 
+
 //wizard模式(未测试)
 bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-/*
 	Round curRound;
 	string sPrefix, actionStr, sNodeName;
 	vector<Action> actions;
@@ -112,7 +112,7 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 	if (curRound == preflop)
 		sNodeName = sPrefix;
 	else if (curRound == flop)
-		sNodeName = CStrategy::getNodeName(gmType, stack, actions, sPrefix);
+		sNodeName = CStrategy::getNodeName(gmType, stacks, actions, sPrefix);
 
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (curRound == flop) {
@@ -132,7 +132,7 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	//g_dataFrom未定义
+
 	/*
 	sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType, sNodeName, curRound);
 	if(sStrategyFilePath.size() == 0){
