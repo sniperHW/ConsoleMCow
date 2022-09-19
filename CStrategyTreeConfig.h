@@ -9,11 +9,12 @@
 
 class CStrategyTreeConfig
 {
-public:
+private:
 	Json::Value m_Config;
 
+public:
 	bool Init(GameType gmType);
-	Json::Value GetConfigItem(const std::string & sActionSquence);
+	Json::Value GetConfigItem(const std::string & sAbbrName);
 
 };
 

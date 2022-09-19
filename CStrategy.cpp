@@ -73,16 +73,15 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	return true;
 }
 
-//生成wizard用的NodeName （未测试）
-string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stack, const vector<Action>& actions, const string& sPrefix)
+//生成wizard用的NodeName
+string CStrategy::getNodeName(const GameType gmType, const Stacks& stacks, const vector<Action>& actions, const string& sPrefix)
 {
 	string sSquence, sPreflopName;
 	OOPX oopx = OOPA;
 	Json::Value StrategyTreeItem;
 	int nCount = 0;	//当前处理的actions的序号，1开始
 	double dActuallyRatio = 0;	//实际下注比例
-	double dHeroStackSum, dRivalStackSum = 0;	//hero和对手总筹码投入
-	double dEstack = 0;	//有效筹码，为实际有效筹码，非策略对应筹码
+//	double dHeroStackSum, dRivalStackSum = 0;	//hero和对手总筹码投入
 	vector<double> candidateRatios;	//比例候选集合，对应策略数设置
 
 	if (actions.empty()) {	//无代表本街hero第一个行动
@@ -114,12 +113,7 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 				nCount > 1 ? sSquence += "-A" : sSquence += "A";
 				break;
 			case raise:{
-		
 				candidateRatios.clear();
-				dEstack = 0;
-				if (nCount == int(actions.size())) {	//R最后一个需要判断是否会转为allin，将size转为比例，MatchBetRatio中EStack非0则会判断是否转allin
-					dEstack = stack.fEStack;
-				}
 
 				//选择比例候选范围
 				if (nCount == 1) {	//R第一个需要判断OOPA/OOPD以决定用donk还是bet下注空间
@@ -143,22 +137,23 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 					}
 				}
 
-				//计算dActuallyRatio
-				dHeroStackSum = 0; dRivalStackSum = 0; //计算双方下注总额，用于计算比例
-				for (int i = nCount - 1; i >= 0; i -= 2 ) {
-					if (actions[i].actionType == raise) { dRivalStackSum += actions[i].fBetSize; }
+				//候选范围加入allin的比例（相当与最后一个元素替换为allin来计算）,并确保allin为最大比例
+				if (nCount == actions.size()) {
+					double dAllinRatio = CalcBetRatio(stacks.dPot, actions, nCount - 1, stacks.dEStack);
+					while (candidateRatios.back() > dAllinRatio)
+						candidateRatios.pop_back();
+					candidateRatios.push_back(int(dAllinRatio));
 				}
-				for (int i = nCount - 2; i >= 0; i -= 2) {
-					if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
-				}
-				dActuallyRatio = (dRivalStackSum - dHeroStackSum) / (stack.fPot + 2 * dHeroStackSum) * 100;
 
-				int iMatchedIndex = MatchBetRatio(dActuallyRatio, candidateRatios, dEstack);
+				//计算dActuallyRatio,当前正则计算的actions的元素的比例
+				dActuallyRatio = CalcBetRatio(stacks.dPot, actions, nCount - 1);
 
-				if(iMatchedIndex == -1)	//转为allin
-					nCount > 1 ? sSquence = "-A" : sSquence = "A";
+				int iMatchedIndex = MatchBetRatio(dActuallyRatio, candidateRatios);
+
+				if(nCount == actions.size() && iMatchedIndex == candidateRatios.size()-1)	//最后动作并且匹配allin则转为allin
+					nCount > 1 ? sSquence += "-A" : sSquence += "A";
 				else
-					nCount > 1 ? sSquence = "-R" + to_string(candidateRatios[iMatchedIndex]) : sSquence = "R" + to_string(candidateRatios[iMatchedIndex]);
+					nCount > 1 ? sSquence += "-R" + to_string(candidateRatios[iMatchedIndex]) : sSquence += "R" + to_string(candidateRatios[iMatchedIndex]);
 
 			} //end of case raise
 			default:
@@ -171,7 +166,7 @@ string CStrategy::getNodeName(const GameType gmType, const StackByStrategy& stac
 }
 
 //从wizard读取
-bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace, const string& sIsoBoard)
+bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 	Round curRound;
 	string sPrefix, actionStr, sNodeName;
@@ -196,7 +191,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const StackB
 	if (curRound == preflop)
 		sNodeName = sPrefix;
 	else if (curRound == flop)
-		sNodeName = getNodeName(gmType, stack, actions, sPrefix);	
+		sNodeName = getNodeName(gmType, stacks, actions, sPrefix);	
 	
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (curRound == flop) {
@@ -360,7 +355,7 @@ Action CStrategy::getActionByStr(const string &str) {
 } 
 
 //从solver读取
-bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const SuitReplace& suitReplace)
+bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace)
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
 	vector<Action> actionSquence={};
@@ -386,7 +381,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	for(auto i = 0; i < actionSquenceSize;i++) {
 		double sstack = 0;
 		if(i==actionSquenceSize-1) {
-			sstack = stack.fEStack;
+			sstack = stacks.dEStack;
 		}
 
 		const Json::Value *next = geActionNode(node,actionSquence[i],sstack);
@@ -439,6 +434,7 @@ void CStrategy::SpecialProcessing()
 }
 
 //返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号,最后一个代表allin
+/*
 int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, const double dEStatck)
 {
 	for(auto i = 0;i<int(candidateSizes.size());i++) {
@@ -448,12 +444,66 @@ int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidat
 	}
 	return -1;
 }
+*/
 
-//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin, allin则返回-1,
-int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios, const double dEStatck)
+//返回匹配的序号
+int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios)
 {
-	return 0;
+	double dLowbound = 0.33; //匹配小的允许超出1/3
+	double dHibound = 3;	//差值超过3倍时，允许小的翻倍
+
+	if (candidateRatios.size() == 0)
+		return 0;
+	if (candidateRatios.size() == 1)
+		return 0;
+	if (dActuallyRatio <= candidateRatios[0])
+		return 0;
+	if (dActuallyRatio >= candidateRatios[candidateRatios.size() - 1])
+		return candidateRatios.size() - 1;
+
+	int nCount = 0;
+	for (auto pos = candidateRatios.cbegin(); pos + 1 != candidateRatios.cend(); ++pos) {
+		auto posNext = pos + 1;
+		if (dActuallyRatio >= *pos && dActuallyRatio < *posNext) {
+			double dDvalue = *posNext - *pos;
+			double dAllowExceed = 0;
+			if (*posNext > dHibound * (*pos))
+				dAllowExceed = *pos;
+			else
+				dAllowExceed = dLowbound * dDvalue;
+
+			if (dActuallyRatio < *pos + dAllowExceed)
+				return nCount;
+			else
+				return nCount + 1;
+		}
+		nCount++;
+	}
 }
+
+//计算下注比例，actions为完整序列（或到参与计算的最后一个），iLastIdx为当前需要计算的序号（0开始），dEstack只有wizard模式计算最后一个为allin的比例时才用
+double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions, int iLastIdx, const double dEstack)
+{
+	double dHeroStackSum = 0; double dRivalStackSum = 0;  //计算双方下注总额，用于计算比例
+	double dRatio = 0;
+
+	if (dEstack == 0) {
+		for (int i = iLastIdx; i >= 0; i -= 2) {
+			if (actions[i].actionType == raise) { dRivalStackSum += actions[i].fBetSize; }
+		}
+	}
+	else
+		dRivalStackSum = dEstack;
+
+	for (int i = iLastIdx - 1; i >= 0; i -= 2)
+		if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
+
+	cout << dRivalStackSum << "\t" << dHeroStackSum << endl;
+	dRatio = (dRivalStackSum - dHeroStackSum) / (dPot + 2 * dHeroStackSum) * 100;
+
+	return dRatio;
+}
+
 
 void CStrategy::AlignmentByBetsize(float fBase, float fActually)
 {

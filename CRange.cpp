@@ -26,8 +26,8 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	return true;
 }
 
-//wizard模式
-bool CRange::Load(GameType gmType, const string& sActionSquence, const StackByStrategy& stack, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
+//wizard模式(未测试)
+bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 /*
 	Round curRound;
@@ -108,7 +108,7 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const StackBySt
 }
 
 //solver模式
-bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const StackByStrategy& stack, const string& sBoardNext, const SuitReplace& suitReplace)
+bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const string& sBoardNext, const SuitReplace& suitReplace)
 {
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家

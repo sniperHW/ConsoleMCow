@@ -8,7 +8,7 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	return true;
 }
 
-Json::Value CStrategyTreeConfig::GetConfigItem(const string& sActionSquence)
+Json::Value CStrategyTreeConfig::GetConfigItem(const string& sAbbrName)
 {
 	Json::Value v;
 	return v;

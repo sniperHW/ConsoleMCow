@@ -10,9 +10,10 @@
 
 class CRangeNodeConfig
 {
-public:
+private:
 	std::map<std::string, std::shared_ptr<CRangeNodeConfigItem>> m_configItems;
 
+public:
 	bool Init(GameType gmType); //从配置文件中加载
 	const std::shared_ptr<CRangeNodeConfigItem> GetItemByName(const std::string& sNodeName) const;
 };

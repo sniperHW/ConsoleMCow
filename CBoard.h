@@ -9,9 +9,7 @@
 class CBoard
 {
 public:
-	std::array<CCard, 3>m_flopCards;
-	CCard m_turnCard;
-	CCard m_riverCard;
+	std::vector<CCard>m_flopCards;
 
 	std::string m_sFlop;
 	std::string m_sTurn;

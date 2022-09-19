@@ -10,6 +10,7 @@
 #include "CStrategy.h"
 #include <fstream>
 #include "CActionMatchConfig.h"
+#include "CStackByStrategyConfig.h"
 
 using namespace std;
 
@@ -19,6 +20,8 @@ map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;	//范围节点配置
 map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 map<GameType, CActionMatchConfig> g_actionMatchConfigs; //preflop节点匹配表
 map<GameType, CFlopDataFromWizardConfig> g_turnDataFromWizardConfigs; //trun策略数据为wizard匹配表
+map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig; //预存solver策略对应的筹码
+
 
 
 int main()
@@ -44,8 +47,8 @@ int main()
 			  			
 			{
 				CStrategy strategy;
-				StackByStrategy stackTest;
-				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O",stackTest, SuitReplace{});
+				Stacks stackTest,stackByStrategy;
+				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>O",stackTest, stackByStrategy, SuitReplace{});
 				for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
 					cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
 				}
@@ -53,8 +56,8 @@ int main()
 
 			{
 				CStrategy strategy;
-				StackByStrategy stackTest;
-				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>X-R15",stackTest, SuitReplace{});
+				Stacks stackTest, stackByStrategy;
+				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>X-R15",stackTest, stackByStrategy, SuitReplace{});
 				for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
 					cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
 				}
@@ -63,8 +66,8 @@ int main()
 
 			{
 				CStrategy strategy;
-				StackByStrategy stackTest;
-				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>X-R15-A",stackTest, SuitReplace{});
+				Stacks stackTest, stackByStrategy;
+				strategy.Load(Max6_NL50_SD150,root,"BTN_vsUTG_srp<KsQsTh>X-R15-A",stackTest, stackByStrategy,  SuitReplace{});
 				for(auto it = strategy.m_strategy.begin();it != strategy.m_strategy.end();it++){
 					cout << (*it)->m_action.actionType << "," << (*it)->m_action.fBetSize << endl;
 				}
