@@ -10,6 +10,7 @@
 #include "CStrategy.h"
 #include <fstream>
 #include "CActionMatchConfig.h"
+#include "util.h"
 #include "CStackByStrategyConfig.h"
 
 using namespace std;
