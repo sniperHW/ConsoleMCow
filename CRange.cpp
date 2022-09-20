@@ -282,7 +282,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		//当前节点（第一个为root）下选择对应的动作，和策略中方法一样，但R不需要匹配A
 		//对策略数据中每个组合，用选定动作对应的比例去改写pRangeRatio中对应的数据（如果是第一次行动则填写1*比例，非第一次行动则填写*pRangeRatio[组合] * 比例，区分第一次目的是让不存在的组合保持0）
 		//不是最后一个动作则按之前匹配的动作选择子节点，为当前节点
-
+	vector<Action> actions={};
 	const Json::Value *node = &root;
 	for(auto i = 0;i<int(actionSquence.size());i++){
 		if(i%2==0) {
@@ -292,7 +292,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		}
 
 		auto a = actionSquence[i];
-		auto getActionIdx = [] (const Json::Value *node,const Action& action) -> int {
+		auto getActionIdx = [actions] (const Json::Value *node,const Action& action) -> int {
 				int index = -1;
 
 				auto members = (*node)["actions"].getMemberNames();
@@ -316,11 +316,30 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 					for(auto it2 = members.begin();it2 != members.end();++it2){
 						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 							names.push_back(*it2);
-							bets.push_back(getBetByStr(*it2));
+							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),0);	
+							bets.push_back(v);
 						}
 					}
 
-					auto j = CStrategy::MatchBetSize(action.fBetSize,bets,0);
+					if(bets.size()>1){
+						//找到最大值
+						double max = 0;
+						double maxIdx = -1;
+						for(int i = 0;i < int(bets.size());i++){
+							if(bets[i]>max){
+								maxIdx = i;
+							}
+						}
+						//跟最后一个元素交换位置
+						swap(bets[maxIdx],bets[bets.size()-1]);
+						swap(names[maxIdx],names[names.size()-1]);
+						//将最大值丢弃
+						bets.pop_back();
+						names.pop_back();	
+					}
+
+
+					auto j = CStrategy::MatchBetRatio(action.fBetSize,bets);
 					if(j>=0){
 						for(int i = 0;i<int(members.size());i++){
 							if(names[j]==members[i]){
@@ -357,9 +376,11 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		}
 
 		//根据动作选择下一节点
-		node = CStrategy::geActionNode(node,a,0);
+		node = CStrategy::geActionNode(node,a,actions,0);
 		if(node==nullptr){
 			return false;
+		}else {
+			actions.push_back(a);
 		}
 	}
 
