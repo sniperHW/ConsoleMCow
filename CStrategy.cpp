@@ -504,7 +504,6 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 	for (int i = iLastIdx - 1; i >= 0; i -= 2)
 		if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
 
-	cout << dRivalStackSum << "\t" << dHeroStackSum << endl;
 	dRatio = (dRivalStackSum - dHeroStackSum) / (dPot + 2 * dHeroStackSum) * 100;
 
 	return dRatio;
