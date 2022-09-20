@@ -203,6 +203,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	}
 
 	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
+//先要转为NodeNameWithoutBoard
 	auto StrategyNodeConfig = g_strategyNodeConfigs[gmType];
 	auto pStrategyNodeConfigItem = StrategyNodeConfig.GetItemByName(sNodeName);
 	if (pStrategyNodeConfigItem != nullptr) {
@@ -428,7 +429,7 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 
 }
 
-void CStrategy::SpecialProcessing()
+void CStrategy::SpecialProcessing(const std::string& sCommand)
 {
 	
 }
