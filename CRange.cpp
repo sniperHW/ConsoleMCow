@@ -46,8 +46,8 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	vector<string> lines;
 	loadFileAsLine("./test/LP_#_vs_4cold3bet4bet.txt",lines);
 
-	string *oopStr;
-	string *ipStr;
+	string *oopStr = nullptr;
+	string *ipStr = nullptr;
 
 	for(auto i = 0;i < int(lines.size());i++) {
 		if(lines[i].find("OOP") != string::npos){
@@ -164,7 +164,7 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 	Clear(); //先清空原始range（不需要按原始range来计算）
 	//solution下找出action.code = "X"或"C"的[n]，rangeRatio = solution.[n].strategy；sLastPlayerPosition = solution.[n].action.position
 	auto solutions = root["solutions"];
-	const Json::Value *nodeStrategy;
+	const Json::Value *nodeStrategy = nullptr;
 	for(auto it = solutions.begin();it != solutions.end();it++){
 		if(lastAction.actionType == call && (*it)["action"]["code"] == "C") {
 			sLastPlayerPosition = (*it)["action"]["position"].asString();

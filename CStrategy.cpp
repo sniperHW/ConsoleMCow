@@ -8,6 +8,7 @@
 #include "CStrategyNodeConfigItem.h"
 #include "CStrategyTreeConfig.h"
 #include "CDataFrom.h"
+#include "CCombo.h"
 
 
 using namespace std;
@@ -510,6 +511,93 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 	return dRatio;
 }
 
+//将special文本命令格式化
+//for test :string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
+vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands)
+{
+	vector<CCommForSpecialProcessing> commands;
+	vector<string> rowCommands;
+	regex SepCommands(R"(\s?;\s?)");
+
+	sregex_token_iterator p1(sCommands.cbegin(), sCommands.cend(), SepCommands, -1);
+	sregex_token_iterator e;
+	for (; p1 != e; ++p1)
+		rowCommands.push_back(p1->str());
+
+	regex reg;
+	smatch m;
+
+	for (auto s : rowCommands) {
+		CCommForSpecialProcessing commObj;
+
+		//匹配命令
+		reg = R"(^[^[<(]*)";
+		regex_search(s, m, reg);
+		commObj.m_sCommand = m[0];
+
+		//匹配动作
+		reg = R"(\[([^[<(]*)\])";
+		if (regex_search(s, m, reg)) {
+			string sAction1, sAction2;
+			//填写action1
+			sAction1 = m[1];
+
+			regex sep(R"(\s?,\s?)");
+			sregex_token_iterator p2(sAction1.cbegin(), sAction1.cend(), sep, -1);
+			sregex_token_iterator e2;
+			for (; p2 != e; ++p2)
+				commObj.m_sActions1.push_back(p2->str());
+
+
+			//填写Action2
+			auto pos = m.suffix().first;
+			if (regex_search(m.suffix().first, s.cend(), m, reg)) {
+				sAction2 = m[1];
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sAction2.cbegin(), sAction2.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2)
+					commObj.m_sActions2.push_back(p2->str());
+			}
+
+			//匹配range
+			reg = R"(\(([^[<(]*)\))";
+			string sAbbrCombos;
+			if (regex_search(s, m, reg)) {
+
+				sAbbrCombos = m[1];
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sAbbrCombos.cbegin(), sAbbrCombos.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2) {
+					vector<string> v = CCombo::GetCombosByAbbr(p2->str());
+					for (auto s : v)
+						commObj.m_range.push_back(s);
+				}
+			}
+
+			//匹配conditions
+			reg = R"(\<([^[<(]*)\>)";
+			string sConditions;
+			if (regex_search(s, m, reg)) {
+
+				sConditions = m[1];
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sConditions.cbegin(), sConditions.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2)
+					commObj.m_conditions.push_back(p2->str());
+			}
+		}
+		commands.push_back(commObj);
+
+	} //end of for
+
+	return commands;
+}
 
 void CStrategy::AlignmentByBetsize(float fBase, float fActually)
 {

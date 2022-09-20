@@ -7,6 +7,17 @@
 #include "CStrategyItem.h"
 #include "json/json.h"
 
+class CCommForSpecialProcessing
+{
+public:
+	std::string m_sCommand;
+	std::vector<std::string> m_sActions1;
+	std::vector<std::string> m_sActions2;
+	std::vector<std::string> m_range;
+	bool m_blRangeExclude;
+	std::vector<std::string> m_conditions;
+};
+
 class CStrategy
 {
 public:
@@ -32,6 +43,8 @@ private:
 	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
+
+	std::vector<CCommForSpecialProcessing> GetCommands(const std::string& sCommands);
 
 	
 
