@@ -283,7 +283,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 }
 
 
-const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,double stack){//const StackByStrategy& stack,bool last) {
+const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,const vector<Action>& actions,double stack){//const StackByStrategy& stack,bool last) {
 	const Json::Value *next = nullptr; 
 	const Json::Value &nodeChildren = (*node)["childrens"];
 	auto members = nodeChildren.getMemberNames();
@@ -325,11 +325,13 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 				names.push_back(*it2);
-				bets.push_back(getBetByStr(*it2));
+				/////////CalcBetRatio
+				auto v = CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),stack);	
+				bets.push_back(v);
 			}
 		}
 
-		auto i = MatchBetSize(action.fBetSize,bets,stack);
+		auto i = MatchBetRatio(action.fBetSize,bets);
 		if(i>=0){
 			next = &(nodeChildren[names[i]]);
 			cout << names[i] << endl;
@@ -377,20 +379,19 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//目标节点后无子节点则返回false
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
+	vector<Action> actions={};
 	int actionSquenceSize = int(actionSquence.size());  
 	for(auto i = 0; i < actionSquenceSize;i++) {
 		double sstack = 0;
 		if(i==actionSquenceSize-1) {
 			sstack = stacks.dEStack;
 		}
-
-		const Json::Value *next = geActionNode(node,actionSquence[i],sstack);
-
+		const Json::Value *next = geActionNode(node,actionSquence[i],actions,sstack);
 		//cout << actionSquence[i].actionType << "," << next << endl;
-
 		if(next == nullptr) {
 			return false;
 		}else {
+			actions.push_back(actionSquence[i]);
 			node = next;
 		} 
 	}
@@ -404,8 +405,13 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 		auto a = getActionByStr(nodeActions[i].asString());
 		//cout << nodeActions[i].asString() << "," << a.actionType << "," << a.fBetSize << endl;
+		/////////CalcBetRatio
+		auto iLastIdx = int(actions.size());
+		actions.push_back(a);
+		auto v = CalcBetRatio(a.fBetSize,actions,iLastIdx,0);
+		actions.pop_back();
 		strategyItem->m_action.actionType = a.actionType;
-		strategyItem->m_action.fBetSize = a.fBetSize;
+		strategyItem->m_action.fBetSize = v;
 		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
 			maxRaise = strategyItem;
 		}
