@@ -568,6 +568,13 @@ vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands
 
 				sAbbrCombos = m[1];
 
+				if (sAbbrCombos.find('-') != string::npos) {
+					sAbbrCombos = sAbbrCombos.substr(1, sAbbrCombos.size());
+					commObj.m_blRangeExclude = true;
+				}
+				else
+					commObj.m_blRangeExclude = false;
+
 				regex sep(R"(\s?,\s?)");
 				sregex_token_iterator p2(sAbbrCombos.cbegin(), sAbbrCombos.cend(), sep, -1);
 				sregex_token_iterator e2;
