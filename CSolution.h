@@ -8,6 +8,8 @@
 #include "CActionLine.h"
 #include "json/json.h"
 #include "CStrategy.h"
+#include <typeinfo>
+#include "CPlayer.h"
 
 class CSolution
 {
@@ -17,6 +19,8 @@ public:
 	void TurnReady(const std::string & sActionLine);
 	void RiverReady(const std::string & sActionLine);
 
+	void InitGame(const std::string & sInitGame);
+	void HeroHands(const std::string & sHands); //某些平台初始不能看到hero的手牌，需要单独接口
 
 private:
 	CGame m_game;

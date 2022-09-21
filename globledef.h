@@ -8,6 +8,7 @@
 #include <vector>
 #include <unordered_set>
 #include <set>
+#include <map>
 
 const int COMBO_COUNT = 1326;
 const int ISOFLOP_COUNT = 1755;
@@ -18,7 +19,7 @@ const std::array<std::string, 6> PositionSymble{"UTG","HJ","CO","BTN","SB","BB"}
 
 typedef enum { Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD30}GameType; //SD为筹码深度，每个筹码深度相关配置和数据都独立
 typedef enum { preflop, flop, turn, river }Round;
-typedef enum { UTG = 1, HJ = 2, CO = 4, BTN = 8, SB = 16, BB = 32 }Position;
+typedef enum { UTG, HJ, CO, BTN, SB, BB }Position;
 typedef enum { OOP, IP }RelativePosition;
 typedef enum { OOPA, OOPD }OOPX;
 typedef enum { none,call, fold, raise, allin, check}ActionType;

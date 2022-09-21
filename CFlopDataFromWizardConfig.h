@@ -10,10 +10,10 @@ class CFlopDataFromWizardConfig
 {
 public:
 	bool Init(GameType gmType);
-	bool IsFrWizard(const std::string sPreflopType);
+	bool IsFrWizard(const std::string sAbbrName);
 
 private:
-	std::set<std::string> m_preflopTypes;
+	std::set<std::string> m_sAbbrNames;
 };
 
 #endif

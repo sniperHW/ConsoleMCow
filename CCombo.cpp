@@ -3,15 +3,6 @@
 
 using namespace std;
 
-CCombo::CCombo()
-{
-
-}
-
-CCombo::CCombo(const string& sSymbol)
-{
-
-}
 
 vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 {
@@ -22,4 +13,9 @@ string CCombo::GetAbbrSymble(const string sCombo)
 {
 
 	return string{};
+}
+
+void CCombo::SetHands(const string sCombo)
+{
+
 }

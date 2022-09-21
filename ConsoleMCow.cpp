@@ -12,6 +12,7 @@
 #include "CActionMatchConfig.h"
 #include "util.h"
 #include "CStackByStrategyConfig.h"
+#include "CTurnPresaveSolverConfig.h"
 
 using namespace std;
 
@@ -20,13 +21,13 @@ map<GameType, CStrategyNodeConfig> g_strategyNodeConfigs; //策略节点配置
 map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;	//范围节点配置
 map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 map<GameType, CActionMatchConfig> g_actionMatchConfigs; //preflop节点匹配表
-map<GameType, CFlopDataFromWizardConfig> g_turnDataFromWizardConfigs; //trun策略数据为wizard匹配表
+map<GameType, CFlopDataFromWizardConfig> g_flopDataFromWizardConfigs; //flop策略数据为wizard匹配表
+map<GameType, CTurnPresaveSolverConfig> g_turnPresaveSolverConfigs; //flop策略数据为wizard匹配表
 map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig; //预存solver策略对应的筹码
-
-
 
 int main()
 {
+
 
 	/*{
 		CStrategy strategy;

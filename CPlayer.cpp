@@ -3,7 +3,14 @@
 
 using namespace std;
 
-CPlayer::CPlayer(string sPlayName, Position position, float fInitStack):m_sPlayName(sPlayName), m_position(position), m_fInitStack(fInitStack)
+CPlayer::CPlayer(Position position, const double dEStack) : m_position(position), m_dEStack(dEStack)
 {
+	m_blIsHero = false;
+	m_positionByPresent = m_position;
+	m_positionRelative = OOP;
+}
 
+CPlayer::CPlayer()
+{
+	m_blIsHero = false;
 }
