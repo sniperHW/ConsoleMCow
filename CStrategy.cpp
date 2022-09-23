@@ -466,11 +466,14 @@ void CStrategy::Assign(const string &action,vector<string> &ranges) {
 			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++) {
 				auto it2 = rangeMap.find(it->first);	
 				if(it2 != rangeMap.end()) {
-					if(it->second > 0){
-						//原来非0设为1
-						it->second = 1;
-					}else {
-						//否则忽略
+					//allin不需要判断
+					if(actionType != allin) {
+						if(it->second > 0){
+							//原来非0设为1
+							it->second = 1;
+						}else {
+							//否则忽略
+						}
 					}
 				} else if(itemFold != nullptr){
 					//其余添加到fold底下,并从当前策略下删除
