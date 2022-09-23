@@ -436,9 +436,30 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 
 }
 
-void CStrategy::Assign(const string &action,const unordered_map<string, bool> &rangeMap){//};//vector<string> &ranges) {
-	auto actionType = str2ActionType(action);
+static unordered_map<ActionType,string> getCommandActions(const string &actionStr) {
+	unordered_map<ActionType,string> actions;
+	if(actionStr == "call") {
+		actions[call] = actionStr; 
+	}else if(actionStr == "fold"){
+		actions[fold] = actionStr; 
+	} else if(actionStr == "check"){
+		actions[check] = actionStr; 
+	} else if(actionStr.find("raise") != string::npos){
+		actions[raise] = actionStr; 
+	} else if (actionStr == "allin") {
+		actions[allin] = actionStr; 
+	} else if (actionStr == "whole") {
+		actions[call]  = "call"; 
+		actions[check] = "check"; 
+		actions[raise] = "raise"; 
+		actions[allin] = "allin"; 
+	}
 
+	return actions;
+} 
+
+
+void CStrategy::Assign(const string &action,const unordered_map<string, bool> &rangeMap){
 	std::shared_ptr<CStrategyItem> itemFold;
 	//找到itemFold
 	for(auto s : m_strategy) {
@@ -447,18 +468,18 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 		}
 	}
 
-	bool foundAction = false;
 	//Action下仅且只有range指定的组合，而且这些组合100%分配给该动作（在该action中设为1，其他action下设为0，该action下其他组合转为fold，数值加到fold对应的组合下
 	//当action下已经存在数据，则需要判断range指定的组合原数据是否为0，非0则设为1，0则忽略不处理。两种情况不需要判断，一是action是allin，二是action不存在数据。
+	auto actions = getCommandActions(action);
 	for(auto s : m_strategy) {
-		if(s->m_action.actionType == actionType) {
-			//找到对应的action
-			foundAction = true;
+		auto aIt = actions.find(s->m_action.actionType);
+		if(aIt != actions.end()){
+			actions.erase(aIt);
 			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++) {
 				auto it2 = rangeMap.find(it->first);	
 				if(it2 != rangeMap.end()) {
 					//allin不需要判断
-					if(actionType != allin) {
+					if(s->m_action.actionType != allin) {
 						if(it->second > 0){
 							//原来非0设为1
 							it->second = 1;
@@ -488,14 +509,15 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 	}
 	
 	//如果策略中没有该action，则添加该action对应的数据集
-	if(!foundAction) {
+	for(auto it = actions.begin();it != actions.end();it++){
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
-		strategyItem->m_action.actionType = actionType;
-		for(auto it = rangeMap.begin();it != rangeMap.end();it++) {
-			strategyItem->m_strategyData[it->first] = 1;
+		strategyItem->m_action.actionType = it->first;
+		for(auto it2 = rangeMap.begin();it2 != rangeMap.end();it2++) {
+			strategyItem->m_strategyData[it2->first] = 1;
 		}
 		m_strategy.push_back(strategyItem);
 	}
+	
 }
 
 void CStrategy::SpecialProcessing(const std::string& sCommand)
