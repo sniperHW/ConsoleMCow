@@ -436,16 +436,7 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 
 }
 
-void CStrategy::Assign(const string &action,vector<string> &ranges) {
-	unordered_map<string, bool> rangeMap;
-
-	//将ranges中所有的combo添加到_ranges中
-	for(auto r : ranges) {
-		auto range = CCombo::GetCombosByAbbr(r);
-		for(auto v : range) {
-			rangeMap[v] = true;
-		}
-	}
+void CStrategy::Assign(const string &action,const unordered_map<string, bool> &rangeMap){//};//vector<string> &ranges) {
 	auto actionType = str2ActionType(action);
 
 	std::shared_ptr<CStrategyItem> itemFold;
@@ -511,9 +502,35 @@ void CStrategy::SpecialProcessing(const std::string& sCommand)
 {
 	auto commands = GetCommands(sCommand);
 	for(auto c : commands) {
+		unordered_map<string, bool> rangeMap;
+		if (!c.m_blRangeExclude) {
+			//将ranges中所有的combo添加到_ranges中
+			for(auto r : c.m_range) {
+				auto range = CCombo::GetCombosByAbbr(r);
+				for(auto v : range) {
+					rangeMap[v] = true;
+				}
+			}
+		} else {
+			unordered_map<string, bool> RangeExcludeMap;
+			for(auto r : c.m_range) {
+				auto range = CCombo::GetCombosByAbbr(r);
+				for(auto v : range) {
+					RangeExcludeMap[v] = true;
+				}
+			}
+
+			//遍历所有范围，只有不在RangeExcludeMap中的才添加进rangeMap
+			for(auto v : ComboMapping) {
+				if(RangeExcludeMap.find(v) == RangeExcludeMap.end()) {
+					rangeMap[v] = true;
+				}
+			}
+		}
+
 		if(c.m_sCommand == "Assign") {
 			for(auto a : c.m_sActions1) {
-				Assign(a,c.m_range);
+				Assign(a,rangeMap);
 			}
 		} else if (c.m_sCommand == "Replace") {
 
