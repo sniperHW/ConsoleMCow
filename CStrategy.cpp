@@ -436,9 +436,88 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 
 }
 
+void CStrategy::Assign(const string &action,vector<string> &ranges) {
+	unordered_map<string, bool> rangeMap;
+
+	//将ranges中所有的combo添加到_ranges中
+	for(auto r : ranges) {
+		auto range = CCombo::GetCombosByAbbr(r);
+		for(auto v : range) {
+			rangeMap[v] = true;
+		}
+	}
+	auto actionType = str2ActionType(action);
+
+	std::shared_ptr<CStrategyItem> itemFold;
+	//找到itemFold
+	for(auto s : m_strategy) {
+		if(s->m_action.actionType == fold) {
+			itemFold = s;
+		}
+	}
+
+	bool foundAction = false;
+	//Action下仅且只有range指定的组合，而且这些组合100%分配给该动作（在该action中设为1，其他action下设为0，该action下其他组合转为fold，数值加到fold对应的组合下
+	//当action下已经存在数据，则需要判断range指定的组合原数据是否为0，非0则设为1，0则忽略不处理。两种情况不需要判断，一是action是allin，二是action不存在数据。
+	for(auto s : m_strategy) {
+		if(s->m_action.actionType == actionType) {
+			//找到对应的action
+			foundAction = true;
+			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++) {
+				auto it2 = rangeMap.find(it->first);	
+				if(it2 != rangeMap.end()) {
+					if(it->second > 0){
+						//原来非0设为1
+						it->second = 1;
+					}else {
+						//否则忽略
+					}
+				} else if(itemFold != nullptr){
+					//其余添加到fold底下,并从当前策略下删除
+					auto it3 = itemFold->m_strategyData.find(it->first);
+					if(it3 != itemFold->m_strategyData.end()){
+						//找到组合把数值加进去
+						it3->second += it->second;
+					}
+					s->m_strategyData.erase(it->first);
+				}
+			}
+		} else {
+			//其它action下设为0
+			for(auto it = rangeMap.begin();it != rangeMap.end();it++) {
+				auto it2 = s->m_strategyData.find(it->first);
+				if(it2 != s->m_strategyData.end()) {
+					it2->second = 0;
+				}
+			}			
+		}
+	}
+	
+	//如果策略中没有该action，则添加该action对应的数据集
+	if(!foundAction) {
+		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+		strategyItem->m_action.actionType = actionType;
+		for(auto it = rangeMap.begin();it != rangeMap.end();it++) {
+			strategyItem->m_strategyData[it->first] = 1;
+		}
+		m_strategy.push_back(strategyItem);
+	}
+}
+
 void CStrategy::SpecialProcessing(const std::string& sCommand)
 {
-	
+	auto commands = GetCommands(sCommand);
+	for(auto c : commands) {
+		if(c.m_sCommand == "Assign") {
+			for(auto a : c.m_sActions1) {
+				Assign(a,c.m_range);
+			}
+		} else if (c.m_sCommand == "Replace") {
+
+		} else if (c.m_sCommand == "Discard"){
+
+		}
+	}
 }
 
 //返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号,最后一个代表allin

@@ -42,7 +42,12 @@ public:
 private:
 	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
+	
+	
+	void Assign(const std::string &actions,std::vector<std::string> &range);
 	void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
+
+
 
 	std::vector<CCommForSpecialProcessing> GetCommands(const std::string& sCommands);
 

@@ -9,15 +9,17 @@
 #include "globledef.h"
 
 inline ActionType str2ActionType(const std::string &str) {
-	if(str == "CALL"){
+	if(str == "CALL" || str == "call") {
 		return call;
-	} else if(str == "FOLD"){
+	} else if(str == "FOLD" || str == "fold"){
 		return fold;
-	} else if(str == "CHECK"){
+	} else if(str == "CHECK" ||str == "check"){
 		return check;
-	} else if(str == "BET" || str == "RAISE"){
+	} else if(str == "BET" || str == "RAISE" || str == "bet" || str == "raise"){
 		return raise;
-	} else {
+	} else if (str == "ALLIN" || str == "allin") {
+		return allin;
+	}	else {
 		return none;
 	}
 }
