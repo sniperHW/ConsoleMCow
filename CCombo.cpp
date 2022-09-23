@@ -17,30 +17,38 @@ vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 {
 	vector<string> combos;
 	
-	if(sAbbr == "AA"){
-		for(auto it = ComboMapping.begin();it != ComboMapping.end();it++) {
-			if((*it)[0] == (*it)[1]) {
-				combos.push_back(*it);
+	auto card1 = sAbbr[0];
+	auto card2 = sAbbr[1];
+
+	//对子
+	if(card1==card2) {
+		for(auto c : ComboMapping) {
+			if(c[0] == c[2]) {
+				combos.push_back(c);
 			}			
 		}
-	}
-
-
-
-	if(sAbbr == "AKo" || sAbbr == "AK") {
-		for(auto it = ComboMapping.begin();it != ComboMapping.end();it++) {
-			if(getColor((*it)[1]) != getColor((*it)[3])){
-				combos.push_back(*it);
+	} else {
+		//AKo,AK
+		
+		if(sAbbr.size() == 2 || sAbbr[2] == 'o' ) {
+			for(auto c : ComboMapping) {
+				if(getColor(c[1]) != getColor(c[3])){
+					if(c[0] == card1 && c[2] == card2) {
+						combos.push_back(c);
+					}
+				}
 			}
 		}
-	}
 
-
-	if(sAbbr == "AKs" || sAbbr == "AK") {
-		for(auto it = ComboMapping.begin();it != ComboMapping.end();it++) {
-			if(getColor((*it)[1]) == getColor((*it)[3])){
-				combos.push_back(*it);
-			}
+		//AKs,AK
+		if(sAbbr.size() == 2 || sAbbr[2] == 'o' ) {
+			for(auto c : ComboMapping) {
+				if(getColor(c[1]) == getColor(c[3])){
+					if(c[0] == card1 && c[2] == card2) {
+						combos.push_back(c);
+					}
+				}
+			}				
 		}
 	}
 
@@ -50,15 +58,18 @@ vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 
 string CCombo::GetAbbrSymble(const string sCombo)
 {
-	if(sCombo[0] == sCombo[2]) {
-		return "AA";
-	}
+	string ret;
+	ret.push_back(sCombo[0]);
+	ret.push_back(sCombo[2]); 
 
-	if(getColor(sCombo[1]) == getColor(sCombo[3])) {
-		return "AKs";
-	}else{
-		return "AKo";
-	}	
+	if(sCombo[0] != sCombo[2]) {
+		if(getColor(sCombo[1]) == getColor(sCombo[3])) {
+			ret.push_back('s');
+		}else{
+			ret.push_back('o');
+		}	
+	}
+	return ret;
 }
 
 void CCombo::SetHands(const string sCombo)
