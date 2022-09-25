@@ -457,6 +457,109 @@ static unordered_map<ActionType,string> getCommandActions(const string &actionSt
 	return actions;
 } 
 
+static void fetchRaiseParam(const string &actionStr,double &num,bool &isRatio) {
+	if(actionStr=="raise") {
+		return;
+	} else if(actionStr[actionStr.size()-1] == '%') {
+		isRatio=true;
+		num = stringToNum<double>(actionStr.substr(5,actionStr.size()-5-1));
+	} else {
+		num = stringToNum<double>(actionStr.substr(5,actionStr.size()-5));
+	}
+}
+
+static bool matchRaise(const Action& action,const string &actionStr) {
+	double num = 0;
+	bool   isRatio = false;
+	fetchRaiseParam(actionStr,num,isRatio);
+	if(num == 0) {
+		return true;
+	}else if(action.fBetSize == num){
+		return true;
+	} else {
+		return false;
+	}	
+}
+
+void CStrategy::Discard(const string &action,const unordered_map<std::string, bool> &rangeMap,condition *cond) {
+	std::shared_ptr<CStrategyItem> itemFold;
+	//找到itemFold
+	for(auto s : m_strategy) {
+		if(s->m_action.actionType == fold) {
+			itemFold = s;
+		}
+	}
+
+	if(itemFold == nullptr) {
+		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+	    strategyItem->m_action.actionType = fold;
+		m_strategy.push_back(strategyItem);
+		itemFold = strategyItem;
+	}
+
+
+	auto actions = getCommandActions(action);
+	for(auto s : m_strategy) {
+		auto aIt = actions.find(s->m_action.actionType);
+		bool match = true;
+		if(aIt != actions.end()) {
+			match = false;
+		} else {
+			if(s->m_action.actionType == raise){
+				match = matchRaise(s->m_action,aIt->second); 	
+			}
+		}
+	
+		if(match){
+			actions.erase(aIt);
+			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();) {
+				auto it2 = rangeMap.find(it->first);	
+				if(it2 != rangeMap.end()) {
+					bool bFold = false;
+					//判断ev
+					auto itEv = s->m_evData.find(it->first);
+					if(itEv != s->m_evData.end()) {
+						if(nullptr == cond) {
+							bFold = true;
+						}else{
+							if(cond->m_less && itEv->second < cond->m_ev) {
+								bFold = true;
+							}else if(!cond->m_less && itEv->second > cond->m_ev) {
+								bFold = true;
+							}
+						
+						}
+					}
+
+					if(bFold) {
+						//加到fold下
+						auto it3 = itemFold->m_strategyData.find(it->first);
+						if(it3 != itemFold->m_strategyData.end()){
+							//找到组合把数值加进去
+							it3->second += it->second;
+						} else {
+							itemFold->m_strategyData[it->first] = it->second;
+						}
+						it = s->m_strategyData.erase(it);
+
+
+						auto itEv2 = itemFold->m_evData.find(it->first);
+						if(itEv2 != itemFold->m_evData.end()){
+							itEv2->second += itEv->second;
+						} else {
+							itemFold->m_evData[it->first] = itEv->second;
+						}
+						s->m_evData.erase(itEv);
+					} else {
+						it++;
+					}
+				}
+			}
+		}
+	}
+
+
+}
 
 void CStrategy::Assign(const string &action,const unordered_map<string, bool> &rangeMap){
 	std::shared_ptr<CStrategyItem> itemFold;
@@ -466,30 +569,14 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 			itemFold = s;
 		}
 	}
-	
-	auto fetchRaiseParam = [](const string &actionStr,double &num,bool &isRatio) {
-		if(actionStr=="raise") {
-			return;
-		} else if(actionStr[actionStr.size()-1] == '%') {
-			isRatio=true;
-			num = stringToNum<double>(actionStr.substr(5,actionStr.size()-5-1));
-		} else {
-			num = stringToNum<double>(actionStr.substr(5,actionStr.size()-5));
-		}
-	};
 
-	auto matchRaise = [fetchRaiseParam](const Action& action,const string &actionStr) -> bool {
-		double num = 0;
-		bool   isRatio = false;
-		fetchRaiseParam(actionStr,num,isRatio);
-		if(num == 0) {
-			return true;
-		}else if(action.fBetSize == num){
-			return true;
-		} else {
-			return false;
-		}
-	};
+	/*
+	if(itemFold == nullptr) {
+		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
+	    strategyItem->m_action.actionType = fold;
+		m_strategy.push_back(strategyItem);
+		itemFold = strategyItem;
+	}*/
 
 	//Action下仅且只有range指定的组合，而且这些组合100%分配给该动作（在该action中设为1，其他action下设为0，该action下其他组合转为fold，数值加到fold对应的组合下
 	//当action下已经存在数据，则需要判断range指定的组合原数据是否为0，非0则设为1，0则忽略不处理。两种情况不需要判断，一是action是allin，二是action不存在数据。
@@ -507,7 +594,7 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 	
 		if(match){
 			actions.erase(aIt);
-			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++) {
+			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();) {
 				auto it2 = rangeMap.find(it->first);	
 				if(it2 != rangeMap.end()) {
 					//allin不需要判断
@@ -519,6 +606,7 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 							//否则忽略
 						}
 					}
+					it++;
 				} else if(itemFold != nullptr){
 					//其余添加到fold底下,并从当前策略下删除
 					auto it3 = itemFold->m_strategyData.find(it->first);
@@ -526,7 +614,16 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 						//找到组合把数值加进去
 						it3->second += it->second;
 					}
-					s->m_strategyData.erase(it->first);
+					it = s->m_strategyData.erase(it);
+
+					auto itEv1 = s->m_evData.find(it->first);
+					if(itEv1 != s->m_evData.end()) {
+						auto itEv2 = itemFold->m_evData.find(it->first);
+						if(itEv2 != itemFold->m_evData.end()){
+							itEv2->second += itEv1->second;
+						}
+						s->m_evData.erase(itEv1);
+					} 
 				}
 			}
 		} else {
@@ -550,10 +647,19 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 		strategyItem->m_action.fBetSize = num;
 		for(auto it2 = rangeMap.begin();it2 != rangeMap.end();it2++) {
 			strategyItem->m_strategyData[it2->first] = 1;
+			//ev怎么办?????
 		}
 		m_strategy.push_back(strategyItem);
 	}
-	
+}
+
+static void parseCondition(const string &condStr,condition &cond) {
+	if(condStr[2] == '-') {
+		cond.m_less = true;
+	}
+	if(condStr.size() > 4 && condStr[3] == '=') {
+		cond.m_ev = stringToNum<double>(condStr.substr(4, condStr.size()));
+	}
 }
 
 void CStrategy::SpecialProcessing(const std::string& sCommand)
@@ -593,7 +699,19 @@ void CStrategy::SpecialProcessing(const std::string& sCommand)
 		} else if (c.m_sCommand == "Replace") {
 
 		} else if (c.m_sCommand == "Discard"){
-
+			if(c.m_sCommand.size() == 0) {
+				//无条件
+				for(auto a : c.m_sActions1) {
+					Discard(a,rangeMap,nullptr);
+				}
+			} else if(c.m_sActions1.size() == c.m_conditions.size()) {
+				//每个action有对应的条件
+				for(auto i=0;i<int(c.m_sActions1.size());i++) {
+					condition cond;
+					parseCondition(c.m_conditions[i],cond);
+					Discard(c.m_sActions1[i],rangeMap,&cond);
+				}
+			}
 		}
 	}
 }

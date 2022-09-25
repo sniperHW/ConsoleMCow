@@ -18,6 +18,11 @@ public:
 	std::vector<std::string> m_conditions;
 };
 
+struct condition {
+	double     m_ev;
+	bool       m_less;//if true <,else >	
+};
+
 class CStrategy
 {
 public:
@@ -44,7 +49,8 @@ private:
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	
 	
-	void Assign(const std::string &actions,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
+	void Assign(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
+	void Discard(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap,condition *cond);
 	void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
 
 
