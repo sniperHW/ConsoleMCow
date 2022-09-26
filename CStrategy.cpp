@@ -570,13 +570,13 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 		}
 	}
 
-	/*
+	
 	if(itemFold == nullptr) {
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 	    strategyItem->m_action.actionType = fold;
 		m_strategy.push_back(strategyItem);
 		itemFold = strategyItem;
-	}*/
+	}
 
 	//Action下仅且只有range指定的组合，而且这些组合100%分配给该动作（在该action中设为1，其他action下设为0，该action下其他组合转为fold，数值加到fold对应的组合下
 	//当action下已经存在数据，则需要判断range指定的组合原数据是否为0，非0则设为1，0则忽略不处理。两种情况不需要判断，一是action是allin，二是action不存在数据。
