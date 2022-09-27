@@ -502,7 +502,7 @@ void CStrategy::Discard(const string &action,const unordered_map<std::string, bo
 	for(auto s : m_strategy) {
 		auto aIt = actions.find(s->m_action.actionType);
 		bool match = true;
-		if(aIt != actions.end()) {
+		if(aIt == actions.end()) {
 			match = false;
 		} else {
 			if(s->m_action.actionType == raise){
@@ -584,7 +584,7 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 	for(auto s : m_strategy) {
 		auto aIt = actions.find(s->m_action.actionType);
 		bool match = true;
-		if(aIt != actions.end()) {
+		if(aIt == actions.end()) {
 			match = false;
 		} else {
 			if(s->m_action.actionType == raise){
@@ -659,6 +659,82 @@ static void parseCondition(const string &condStr,condition &cond) {
 	}
 	if(condStr.size() > 4 && condStr[3] == '=') {
 		cond.m_ev = stringToNum<double>(condStr.substr(4, condStr.size()));
+	}
+}
+
+void CStrategy::Replace(const string &action1,const string &action2,const unordered_map<string, bool> &rangeMap,condition *cond)
+{
+	auto actions1 = getCommandActions(action1);
+	auto actions2 = getCommandActions(action2);
+	shared_ptr<CStrategyItem> itemAction2 = nullptr;
+	for(auto s : m_strategy) {
+		if(s->m_action.actionType == actions2.begin()->first) {
+			if(s->m_action.actionType == raise){
+				if(matchRaise(s->m_action,actions2.begin()->second)){
+					itemAction2 = s;
+				} 	
+			} else {
+				itemAction2 = s;
+			}
+		}
+	}
+	if(itemAction2 == nullptr) {
+		//找不到跟action2对应的
+		return;
+	}
+
+	for(auto it = actions1.begin();it != actions1.end();it++) {
+		shared_ptr<CStrategyItem> itemAction1 = m_strategy[it->first];
+		if(itemAction1==nullptr) {
+			continue;
+		}
+
+		if(itemAction1->m_action.actionType== raise) {
+			//匹配raise值
+			if(!matchRaise(itemAction1->m_action,it->second)){
+				continue;
+			}
+		}
+
+		for(auto it2 = rangeMap.begin();it2 != rangeMap.end();it2++) {
+			auto combo1It = itemAction1->m_strategyData.find(it2->first);
+			auto combo2It = itemAction2->m_strategyData.find(it2->first);
+			//combo在两个组合中都有
+			if(combo1It==itemAction1->m_strategyData.end() || combo2It == itemAction2->m_strategyData.end()) {
+				continue;
+			}
+
+			if(itemAction2->m_action.actionType != allin && combo2It->second == 0) {
+				shared_ptr<CStrategyItem> itemAllin = m_strategy[allin];
+				if(itemAllin != nullptr) {
+					auto comboAllinIt = itemAllin->m_strategyData.find(it2->first);
+					if(comboAllinIt != itemAllin->m_strategyData.end()) {
+						if(comboAllinIt->second > 100) {//allin的值大于预设值
+							comboAllinIt->second += combo1It->second; //action1的值加到allin上
+							combo1It->second = 0;                     //action1值清0
+						}
+					}
+				}
+			} else {
+				//判断condition,符合条件则转换
+				auto replace = false;
+				if(cond == nullptr) {
+					replace = true;
+				} else {
+					auto ev =  itemAction2->m_evData[it2->first];
+					if(cond->m_less && ev < cond->m_ev) {
+						replace = true;
+					}else if(!cond->m_less && ev > cond->m_ev) {
+						replace = true;
+					}
+				}
+
+				if(replace) {
+					combo2It->second += combo1It->second;
+					combo1It->second = 0; 
+				}
+			}
+		}
 	}
 }
 

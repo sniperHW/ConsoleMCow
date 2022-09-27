@@ -51,6 +51,7 @@ private:
 	
 	void Assign(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
 	void Discard(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap,condition *cond);
+	void Replace(const std::string &action1,const std::string &action2,const std::unordered_map<std::string, bool> &rangeMap,condition *cond);
 	void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
 
 
