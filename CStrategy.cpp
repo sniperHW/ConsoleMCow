@@ -43,7 +43,7 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	if(pos == string::npos){
 		sPrefix = sActionSquence;
 	} else {
-		sPrefix = sActionSquence.substr(1,pos);
+		sPrefix = sActionSquence.substr(0,pos+1);
 	}
 
 	auto count = 0;
@@ -512,9 +512,8 @@ void CStrategy::Discard(const string &action,const unordered_map<std::string, bo
 	
 		if(match){
 			actions.erase(aIt);
-			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();) {
-				auto it2 = rangeMap.find(it->first);	
-				if(it2 != rangeMap.end()) {
+			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();) {	
+				if(rangeMap.find(it->first) != rangeMap.end()) {
 					bool bFold = false;
 					//判断ev
 					auto itEv = s->m_evData.find(it->first);
