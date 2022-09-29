@@ -31,6 +31,7 @@ void loadFileAsLine(const string& path,vector<string> &lines) {
 		}
 	}
 	delete [] buffer;
+	ifs.close();
 }
 
 

@@ -956,6 +956,27 @@ vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands
 	return commands;
 }
 
+extern void loadFileAsLine(const string& path,vector<string> &lines);
+
+void CStrategy::LoadMacro(std::string path) 
+{
+	vector<string> lines;
+	loadFileAsLine(path,lines);
+	for(auto l:lines) {
+		auto v = split(l,'\t');	
+		if(v.size() == 2) {
+			m_macro[v[0]] = v[1];
+		}
+	}
+}
+
+void CStrategy::DoMacro(std::string macro) {
+	auto it = m_macro.find(macro);
+	if(it != m_macro.end()) {
+		SpecialProcessing(it->second);
+	}
+}
+
 void CStrategy::AlignmentByBetsize(float fBase, float fActually)
 {
 

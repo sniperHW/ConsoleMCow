@@ -27,6 +27,7 @@ class CStrategy
 {
 public:
 	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
+	std::unordered_map<std::string,std::string> m_macro;
 
 	bool Load(GameType gmType, const std::string & sActionSquence, const Stacks& stacks, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取
 	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace & suitReplace); //从solver读取
@@ -43,6 +44,9 @@ public:
 	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,const std::vector<Action>& actions,double stack);//const StackByStrategy& stack,bool last);
 	static Action getActionByStr(const std::string &str); 
 	static double CalcBetRatio(const double dPot, const std::vector<Action>& actions, int iLastIdx, const double dEstack = 0);
+
+	void LoadMacro(std::string path);
+	void DoMacro(std::string macro);
 
 private:
 	
