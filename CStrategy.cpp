@@ -937,7 +937,7 @@ void CStrategy::DoMacro(std::string macro) {
 	}
 }
 
-void CStrategy::AlignmentByBetsize(float fBase, float fActually)
+void CStrategy::AlignmentByBetsize()
 {
 
 }

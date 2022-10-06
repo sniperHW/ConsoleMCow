@@ -33,7 +33,6 @@ struct condition {
 class CStrategy
 {
 public:
-	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 	std::unordered_map<std::string,std::string> m_macro;
 
 
