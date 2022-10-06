@@ -2,6 +2,7 @@
 #include "CBoard.h"
 #include "CCard.h"
 #include <string>
+#include <cstring>
 
 using namespace std;
 

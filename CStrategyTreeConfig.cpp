@@ -1,7 +1,7 @@
 //#include "pch.h"
 #include "CStrategyTreeConfig.h"
 #include <regex>
-#include <direct.h>
+#include "util.h"
 #include <fstream>
 #include "CActionLine.h"
 
@@ -25,7 +25,7 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	vector<string> vTmp;
 	smatch m;
 
-	//¼ÓÔØflop configÅäÖÃ
+	//ï¿½ï¿½ï¿½ï¿½flop configï¿½ï¿½ï¿½ï¿½
 	sFilePath = sConfigFolder + GameTypeName[gmType] + "_FlopTreeConfig.txt";
 	fin.open(sFilePath, ios_base::in);
 	if (!fin.is_open())
@@ -49,7 +49,7 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	}
 	fin.close();
 
-	//¼ÓÔØÊµÊ±ÔËËãÅäÖÃ
+	//ï¿½ï¿½ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	sFilePath = sConfigFolder + GameTypeName[gmType] + "_RTTreeConfig.txt";
 	fin.open(sFilePath, ios_base::in);
 	if (!fin.is_open())
@@ -136,7 +136,7 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	return true;
 }
 
-//sPreflopNameÐèÒª°´ÕýÔòÆ¥Åä
+//sPreflopNameï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½
 void CStrategyTreeConfig::GetFlopCandidateRatios(const string& sPreflopName, vector<double>& candidateRatios, const SpaceMode mode)
 {
 	candidateRatios.clear();

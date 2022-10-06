@@ -1,7 +1,7 @@
 
 #include "CActionMatchConfig.h"
 #include <regex>
-#include <direct.h>
+#include "util.h"
 #include <fstream>
 #include "CActionLine.h"
 

@@ -341,6 +341,236 @@ string  CStrategy::ConvertOneHandcard(std::string& sCard, const SuitReplace& sui
 {
 	string strConveted(sCard);
 
+	for (int i = 1; i <= 3; i += 2)
+	{
+		switch (sCard[i])
+		{
+		case 'h':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.h2);
+			break;
+		}
+		case 'd':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.d2);
+			break;
+		}
+		case 'c':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.c2);
+			break;
+
+		}
+		case 's':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.s2);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
+	}
+	return strConveted;
+}
+void CStrategy::ConvertIsomorphismOneMap(std::unordered_map<std::string, double>* pMap, const SuitReplace& suitReplace)
+{
+	std::unordered_map<std::string, double>::iterator  it_map;
+	std::unordered_map<std::string, double> mapTemp;
+
+	for (it_map = pMap->begin(); it_map != pMap->end(); it_map++)
+	{
+		string key = it_map->first;
+		string strKeyIsomor = ConvertOneHandcard(key, suitReplace);
+		mapTemp.insert({ strKeyIsomor, it_map->second });
+	}
+	pMap->clear();
+	pMap->insert(mapTemp.begin(), mapTemp.end());
+}
+
+void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
+{
+	std::shared_ptr<CStrategyItem> pItem = NULL;
+	if (false == suitReplace.blIsNeeded)
+	{
+		return;
+	}
+	for (int i = 0; i < m_strategy.size(); i++)
+	{
+		pItem = m_strategy[i];
+		ConvertIsomorphismOneMap(&pItem->m_strategyData, suitReplace);
+		ConvertIsomorphismOneMap(&pItem->m_evData, suitReplace);
+	}
+}
+
+//返回匹配的序号
+int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios)
+{
+	double dLowbound = 0.33; //匹配小的允许超出1/3
+	double dHibound = 3;	//差值超过3倍时，允许小的翻倍
+
+	if (candidateRatios.size() == 0)
+		return 0;
+	if (candidateRatios.size() == 1)
+		return 0;
+	if (dActuallyRatio <= candidateRatios[0])
+		return 0;
+	if (dActuallyRatio >= candidateRatios[candidateRatios.size() - 1])
+		return (int)candidateRatios.size() - 1;
+
+	int nCount = 0;
+	for (auto pos = candidateRatios.cbegin(); pos + 1 != candidateRatios.cend(); ++pos) {
+		auto posNext = pos + 1;
+		if (dActuallyRatio >= *pos && dActuallyRatio < *posNext) {
+			double dDvalue = *posNext - *pos;
+			double dAllowExceed = 0;
+			if (*posNext > dHibound * (*pos))
+				dAllowExceed = *pos;
+			else
+				dAllowExceed = dLowbound * dDvalue;
+
+			if (dActuallyRatio < *pos + dAllowExceed)
+				return nCount;
+			else
+				return nCount + 1;
+		}
+		nCount++;
+	}
+
+	return 0;
+}
+
+//计算下注比例，actions为完整序列（或到参与计算的最后一个），iLastIdx为当前需要计算的序号（0开始），dEstack只有wizard模式计算最后一个为allin的比例时才用
+double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions, int iLastIdx, const double dEstack)
+{
+	double dHeroStackSum = 0; double dRivalStackSum = 0;  //计算双方下注总额，用于计算比例
+	double dRatio = 0;
+
+	if (dEstack == 0) {
+		for (int i = iLastIdx; i >= 0; i -= 2) {
+			if (actions[i].actionType == raise) { dRivalStackSum += actions[i].fBetSize; }
+		}
+	}
+	else
+		dRivalStackSum = dEstack;
+
+	for (int i = iLastIdx - 1; i >= 0; i -= 2)
+		if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
+
+	dRatio = (dRivalStackSum - dHeroStackSum) / (dPot + 2 * dHeroStackSum) * 100;
+
+	return dRatio;
+}
+
+//将special文本命令格式化
+//for test :string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
+vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands)
+{
+	vector<CCommForSpecialProcessing> commands;
+	vector<string> rowCommands;
+	regex SepCommands(R"(\s?;\s?)");
+
+	sregex_token_iterator p1(sCommands.cbegin(), sCommands.cend(), SepCommands, -1);
+	sregex_token_iterator e;
+	for (; p1 != e; ++p1)
+		rowCommands.push_back(p1->str());
+
+	regex reg;
+	smatch m;
+
+	for (auto s : rowCommands) {
+		CCommForSpecialProcessing commObj;
+
+		//匹配命令
+		reg = R"(^[^[<(]*)";
+		regex_search(s, m, reg);
+		commObj.m_sCommand = m[0];
+
+		//匹配动作
+		reg = R"(\[([^[<(]*)\])";
+		if (regex_search(s, m, reg)) {
+			string sAction1, sAction2;
+			//填写action1
+			sAction1 = m[1];
+
+			regex sep(R"(\s?,\s?)");
+			sregex_token_iterator p2(sAction1.cbegin(), sAction1.cend(), sep, -1);
+			sregex_token_iterator e2;
+			for (; p2 != e; ++p2)
+				commObj.m_sActions1.push_back(p2->str());
+
+
+			//填写Action2
+			auto pos = m.suffix().first;
+			if (regex_search(m.suffix().first, s.cend(), m, reg)) {
+				sAction2 = m[1];
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sAction2.cbegin(), sAction2.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2)
+					commObj.m_sActions2.push_back(p2->str());
+			}
+
+			//匹配range
+			reg = R"(\(([^[<(]*)\))";
+			string sAbbrCombos;
+			if (regex_search(s, m, reg)) {
+
+				sAbbrCombos = m[1];
+
+				if (sAbbrCombos.find('-') != string::npos) {
+					sAbbrCombos = sAbbrCombos.substr(1, sAbbrCombos.size());
+					commObj.m_blRangeExclude = true;
+				}
+				else
+					commObj.m_blRangeExclude = false;
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sAbbrCombos.cbegin(), sAbbrCombos.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2) {
+					vector<string> v = CCombo::GetCombosByAbbr(p2->str());
+					for (auto s : v)
+						commObj.m_range.push_back(s);
+				}
+			}
+
+			//匹配conditions
+			reg = R"(\<([^[<(]*)\>)";
+			string sConditions;
+			if (regex_search(s, m, reg)) {
+
+				sConditions = m[1];
+
+				regex sep(R"(\s?,\s?)");
+				sregex_token_iterator p2(sConditions.cbegin(), sConditions.cend(), sep, -1);
+				sregex_token_iterator e2;
+				for (; p2 != e; ++p2)
+					commObj.m_conditions.push_back(p2->str());
+			}
+		}
+		commands.push_back(commObj);
+
+	} //end of for
+
+	return commands;
+}
+
+void CStrategy::AlignmentByBetsize()
+{
+
+}
+
+void CStrategy::AlignmentByStackDepth()
+{
+
+}
+
+void CStrategy::AlignmentByexploit()
+{
+
 }
 
 static unordered_map<ActionType,string> getCommandActions(const string &actionStr) {
@@ -403,24 +633,6 @@ void CStrategy::Discard(const string &action,const unordered_map<std::string, bo
 		m_strategy.push_back(strategyItem);
 		itemFold = strategyItem;
 	}
-	for (int i = 1; i <= 3; i += 2)
-	{
-		switch (sCard[i])
-		{
-		case 'h':
-		{
-			strConveted[i] = CCard::CharacterFromsuit(suitReplace.h2);
-			break;
-		}
-		case 'd':
-		{
-			strConveted[i] = CCard::CharacterFromsuit(suitReplace.d2);
-			break;
-		}
-		case 'c':
-		{
-			strConveted[i] = CCard::CharacterFromsuit(suitReplace.c2);
-			break;
 
 
 	auto actions = getCommandActions(action);
@@ -663,21 +875,6 @@ void CStrategy::Replace(const string &action1,const string &action2,const unorde
 }
 
 void CStrategy::SpecialProcessing(const std::string& sCommand)
-		}
-		case 's':
-		{
-			strConveted[i] = CCard::CharacterFromsuit(suitReplace.s2);
-			break;
-		}
-		default:
-		{
-			break;
-		}
-		}
-	}
-	return strConveted;
-}
-void CStrategy::ConvertIsomorphismOneMap(std::unordered_map<std::string, double>* pMap, const SuitReplace& suitReplace)
 {
 	auto commands = GetCommands(sCommand);
 	for(auto c : commands) {
@@ -729,191 +926,6 @@ void CStrategy::ConvertIsomorphismOneMap(std::unordered_map<std::string, double>
 			}
 		}
 	}
-	std::unordered_map<std::string, double>::iterator  it_map;
-	std::unordered_map<std::string, double> mapTemp;
-
-	for (it_map = pMap->begin(); it_map != pMap->end(); it_map++)
-	{
-		string key = it_map->first;
-		string strKeyIsomor = ConvertOneHandcard(key, suitReplace);
-		mapTemp.insert({ strKeyIsomor, it_map->second });
-	}
-	pMap->clear();
-	pMap->insert(mapTemp.begin(), mapTemp.end());
-}
-
-void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
-{
-	std::shared_ptr<CStrategyItem> pItem = NULL;
-	if (false == suitReplace.blIsNeeded)
-	{
-		return;
-	}
-	for (int i = 0; i < m_strategy.size(); i++)
-	{
-		pItem = m_strategy[i];
-		ConvertIsomorphismOneMap(&pItem->m_strategyData, suitReplace);
-		ConvertIsomorphismOneMap(&pItem->m_evData, suitReplace);
-	}
-}
-
-void CStrategy::SpecialProcessing(const std::string& sCommand)
-{
-	
-}
-
-//返回匹配的序号
-int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios)
-{
-	double dLowbound = 0.33; //匹配小的允许超出1/3
-	double dHibound = 3;	//差值超过3倍时，允许小的翻倍
-
-	if (candidateRatios.size() == 0)
-		return 0;
-	if (candidateRatios.size() == 1)
-		return 0;
-	if (dActuallyRatio <= candidateRatios[0])
-		return 0;
-	if (dActuallyRatio >= candidateRatios[candidateRatios.size() - 1])
-		return (int)candidateRatios.size() - 1;
-
-	int nCount = 0;
-	for (auto pos = candidateRatios.cbegin(); pos + 1 != candidateRatios.cend(); ++pos) {
-		auto posNext = pos + 1;
-		if (dActuallyRatio >= *pos && dActuallyRatio < *posNext) {
-			double dDvalue = *posNext - *pos;
-			double dAllowExceed = 0;
-			if (*posNext > dHibound * (*pos))
-				dAllowExceed = *pos;
-			else
-				dAllowExceed = dLowbound * dDvalue;
-
-			if (dActuallyRatio < *pos + dAllowExceed)
-				return nCount;
-			else
-				return nCount + 1;
-		}
-		nCount++;
-	}
-
-	return 0;
-}
-
-//计算下注比例，actions为完整序列（或到参与计算的最后一个），iLastIdx为当前需要计算的序号（0开始），dEstack只有wizard模式计算最后一个为allin的比例时才用
-double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions, int iLastIdx, const double dEstack)
-{
-	double dHeroStackSum = 0; double dRivalStackSum = 0;  //计算双方下注总额，用于计算比例
-	double dRatio = 0;
-
-	if (dEstack == 0) {
-		for (int i = iLastIdx; i >= 0; i -= 2) {
-			if (actions[i].actionType == raise) { dRivalStackSum += actions[i].fBetSize; }
-		}
-	}
-	else
-		dRivalStackSum = dEstack;
-
-	for (int i = iLastIdx - 1; i >= 0; i -= 2)
-		if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }
-
-	dRatio = (dRivalStackSum - dHeroStackSum) / (dPot + 2 * dHeroStackSum) * 100;
-
-	return dRatio;
-}
-
-//将special文本命令格式化
-//for test :string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
-vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands)
-{
-	vector<CCommForSpecialProcessing> commands;
-	vector<string> rowCommands;
-	regex SepCommands(R"(\s?;\s?)");
-
-	sregex_token_iterator p1(sCommands.cbegin(), sCommands.cend(), SepCommands, -1);
-	sregex_token_iterator e;
-	for (; p1 != e; ++p1)
-		rowCommands.push_back(p1->str());
-
-	regex reg;
-	smatch m;
-
-	for (auto s : rowCommands) {
-		CCommForSpecialProcessing commObj;
-
-		//匹配命令
-		reg = R"(^[^[<(]*)";
-		regex_search(s, m, reg);
-		commObj.m_sCommand = m[0];
-
-		//匹配动作
-		reg = R"(\[([^[<(]*)\])";
-		if (regex_search(s, m, reg)) {
-			string sAction1, sAction2;
-			//填写action1
-			sAction1 = m[1];
-
-			regex sep(R"(\s?,\s?)");
-			sregex_token_iterator p2(sAction1.cbegin(), sAction1.cend(), sep, -1);
-			sregex_token_iterator e2;
-			for (; p2 != e; ++p2)
-				commObj.m_sActions1.push_back(p2->str());
-
-
-			//填写Action2
-			auto pos = m.suffix().first;
-			if (regex_search(m.suffix().first, s.cend(), m, reg)) {
-				sAction2 = m[1];
-
-				regex sep(R"(\s?,\s?)");
-				sregex_token_iterator p2(sAction2.cbegin(), sAction2.cend(), sep, -1);
-				sregex_token_iterator e2;
-				for (; p2 != e; ++p2)
-					commObj.m_sActions2.push_back(p2->str());
-			}
-
-			//匹配range
-			reg = R"(\(([^[<(]*)\))";
-			string sAbbrCombos;
-			if (regex_search(s, m, reg)) {
-
-				sAbbrCombos = m[1];
-
-				if (sAbbrCombos.find('-') != string::npos) {
-					sAbbrCombos = sAbbrCombos.substr(1, sAbbrCombos.size());
-					commObj.m_blRangeExclude = true;
-				}
-				else
-					commObj.m_blRangeExclude = false;
-
-				regex sep(R"(\s?,\s?)");
-				sregex_token_iterator p2(sAbbrCombos.cbegin(), sAbbrCombos.cend(), sep, -1);
-				sregex_token_iterator e2;
-				for (; p2 != e; ++p2) {
-					vector<string> v = CCombo::GetCombosByAbbr(p2->str());
-					for (auto s : v)
-						commObj.m_range.push_back(s);
-				}
-			}
-
-			//匹配conditions
-			reg = R"(\<([^[<(]*)\>)";
-			string sConditions;
-			if (regex_search(s, m, reg)) {
-
-				sConditions = m[1];
-
-				regex sep(R"(\s?,\s?)");
-				sregex_token_iterator p2(sConditions.cbegin(), sConditions.cend(), sep, -1);
-				sregex_token_iterator e2;
-				for (; p2 != e; ++p2)
-					commObj.m_conditions.push_back(p2->str());
-			}
-		}
-		commands.push_back(commObj);
-
-	} //end of for
-
-	return commands;
 }
 
 extern void loadFileAsLine(const string& path,vector<string> &lines);
@@ -935,19 +947,4 @@ void CStrategy::DoMacro(std::string macro) {
 	if(it != m_macro.end()) {
 		SpecialProcessing(it->second);
 	}
-}
-
-void CStrategy::AlignmentByBetsize(float fBase, float fActually)
-{
-
-}
-
-void CStrategy::AlignmentByStackDepth()
-{
-
-}
-
-void CStrategy::AlignmentByexploit()
-{
-
 }

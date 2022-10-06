@@ -2,7 +2,7 @@
 #include "CStrategyNodeConfig.h"
 #include "CActionLine.h"
 #include <regex>
-#include <direct.h>
+#include "util.h"
 #include <fstream>
 
 //for test
@@ -25,7 +25,7 @@ bool CStrategyNodeConfig::Init(GameType gmType)
 	vector<string> vTmp;
 	smatch m;
 
-	//¼ÓÔØpreflopÅäÖÃ
+	//ï¿½ï¿½ï¿½ï¿½preflopï¿½ï¿½ï¿½ï¿½
 	sFilePath = sConfigFolder + GameTypeName[gmType] + "_StrategyNodeConfig.txt";
 	fin.open(sFilePath, ios_base::in);
 	if (!fin.is_open())
@@ -52,9 +52,9 @@ bool CStrategyNodeConfig::Init(GameType gmType)
 		if(vTmp.back() == "replace")
 			item.blReplace = true;
 
-		if (vTmp.back() == "regex" || vTmp.back() == "replace") //ÕýÔòÆ¥Åä
+		if (vTmp.back() == "regex" || vTmp.back() == "replace") //ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½
 			m_regexConfigItems.push_back(make_pair(vTmp[0], make_shared<CStrategyNodeConfigItem>(item)));
-		else //ÆÕÍ¨Æ¥Åä
+		else //ï¿½ï¿½Í¨Æ¥ï¿½ï¿½
 			m_configItems[vTmp[0]] = make_shared<CStrategyNodeConfigItem>(item);
 	}
 	fin.close();
@@ -64,12 +64,12 @@ bool CStrategyNodeConfig::Init(GameType gmType)
 
 string CStrategyNodeConfig::GetReplace(const string& sNodeName)
 {
-	//²éÕÒmap
+	//ï¿½ï¿½ï¿½ï¿½map
 	auto result = m_configItems.find(sNodeName);
 	if (result != m_configItems.end()) 
 		return result->second->m_sReplaceNodeName;
 
-	//°´ÕýÔòÆ¥Åä
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½
 	regex reg;
 	for (auto it : m_regexConfigItems) {
 		reg = it.first;
@@ -87,12 +87,12 @@ string CStrategyNodeConfig::GetReplace(const string& sNodeName)
 
 string CStrategyNodeConfig::GetSpecial(const string& sNodeName)
 {
-	//²éÕÒmap
+	//ï¿½ï¿½ï¿½ï¿½map
 	auto result = m_configItems.find(sNodeName);
 	if (result != m_configItems.end())
 		return result->second->m_sSpecialProcessing;
 
-	//°´ÕýÔòÆ¥Åä
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½
 	regex reg;
 	for (auto it : m_regexConfigItems) {
 		reg = it.first;

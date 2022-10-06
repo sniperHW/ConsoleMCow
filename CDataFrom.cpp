@@ -2,11 +2,12 @@
 #include "CDataFrom.h"
 #include <regex>
 #include <sstream>
-#include <direct.h>
+#include "util.h"
 #include "CActionLine.h"
 
 using namespace std;
 
+#define _MAX_PATH 1024
 
 string CDataFrom::GetWizardFilePath(GameType gmType, const string& sNodeName)
 {
@@ -63,7 +64,7 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 {
 	//\Data\RangesFile\Max6_NL50_SD100\3BET_#_vs_4callcold3bet4bet_EPfold.txt
 	char buffer[_MAX_PATH];
-	_getcwd(buffer, _MAX_PATH);
+	//_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	stringstream ss;
 
