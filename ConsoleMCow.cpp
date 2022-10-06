@@ -210,6 +210,16 @@ int main()
 	//b.SetFlop("KsQs7d");
 	//cout << b.GetBoardSymbol();
 
+	{
+		CStrategy strategy;
+		strategy.LoadMacro("./test/macro.txt");
+		for(auto it = strategy.m_macro.begin();it != strategy.m_macro.end();it++){
+			cout << it->first << "," << it->second << endl;
+		}		
+	}
+
+	cout << "hello";
+	cout << "by xu" << endl;
 
 }
 

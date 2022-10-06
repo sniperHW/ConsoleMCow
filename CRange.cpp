@@ -31,6 +31,7 @@ void loadFileAsLine(const string& path,vector<string> &lines) {
 		}
 	}
 	delete [] buffer;
+	ifs.close();
 }
 
 
@@ -259,9 +260,13 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		} else {
 			pRangeRatio = &IPRangeRatio;		
 		}
+		double sstack = 0;
+		if(i==actionSquence.size()-1) {
+			sstack = stacks.dEStack;
+		}
 
 		auto a = actionSquence[i];
-		auto getActionIdx = [actions] (const Json::Value *node,const Action& action) -> int {
+		auto getActionIdx = [actions] (const Json::Value *node,const Action& action,double sstack) -> int {
 				int index = -1;
 
 				auto members = (*node)["actions"].getMemberNames();
@@ -285,7 +290,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 					for(auto it2 = members.begin();it2 != members.end();++it2){
 						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 							names.push_back(*it2);
-							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),0);	
+							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),sstack);	
 							bets.push_back(v);
 						}
 					}
@@ -323,7 +328,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 			};			
 		
 
-		int j = getActionIdx(node,a);
+		int j = getActionIdx(node,a,sstack);
 
 		if(j < 0) {
 			return false;
