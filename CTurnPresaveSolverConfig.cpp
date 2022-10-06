@@ -1,5 +1,5 @@
 #include "CTurnPresaveSolverConfig.h"
-#include <direct.h>
+#include "util.h"
 #include <fstream>
 #include <regex>
 using namespace std;
@@ -19,7 +19,7 @@ bool CTurnPresaveSolverConfig::Init(GameType gmType)
 
 	string sLine, sFilePath;
 
-	//¼ÓÔØpreflopÅäÖÃ
+	//ï¿½ï¿½ï¿½ï¿½preflopï¿½ï¿½ï¿½ï¿½
 	sFilePath = sConfigFolder + GameTypeName[gmType] + "_TurnPresaveSolverConfig.txt";
 	fin.open(sFilePath, ios_base::in);
 	if (!fin.is_open())

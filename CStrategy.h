@@ -33,7 +33,8 @@ struct condition {
 class CStrategy
 {
 public:
-	std::unordered_map<std::string,std::string> m_macro;
+	//std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
+	//std::unordered_map<std::string,std::string> m_macro;
 
 
 	bool Load(GameType gmType, const std::string & sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取
@@ -55,6 +56,8 @@ public:
 	static std::string ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace);
 private:
 	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
+	std::unordered_map<std::string,std::string> m_macro;
+	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	
 	

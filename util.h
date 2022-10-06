@@ -65,4 +65,22 @@ inline float getBetByStr(const std::string &str){
 }
 
 
+#ifdef MAC 
+#include <unistd.h>
+#include <stdio.h>
+#include <limits.h>
+
+#ifndef _MAX_PATH
+#define _MAX_PATH PATH_MAX
+#endif
+
+#ifndef _getcwd
+#define _getcwd getcwd
+#endif
+
+#else
+#include <direct.h>
+#endif
+
+
 #endif // !UTIL_H_

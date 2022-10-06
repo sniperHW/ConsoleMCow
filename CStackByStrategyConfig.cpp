@@ -2,7 +2,7 @@
 #include "CActionLine.h"
 
 #include <regex>
-#include <direct.h>
+#include "util.h"
 #include <fstream>
 
 //for test
