@@ -3,6 +3,7 @@
 #include <regex>
 #include <direct.h>
 #include <fstream>
+#include "CActionLine.h"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ bool CActionMatchConfig::Init(GameType gmType)
 	string sLine, sFilePath;
 	regex sep(R"(\s+)");
 	regex not_ation("[^-CRXFC]");
+	regex reg_blank(R"(^\s*$)");
 	vector<string> vTmp;
 	string sTmp;
 	smatch m;
@@ -29,14 +31,18 @@ bool CActionMatchConfig::Init(GameType gmType)
 		return false;
 
 	while (getline(fin, sLine)) {
-		if (sLine.size() == 0)
+		if (regex_match(sLine, reg_blank))
 			continue;
 
 		sregex_token_iterator p(sLine.cbegin(), sLine.cend(), sep, -1);
 		sregex_token_iterator e;
 		vTmp.clear();
-		for (; p != e; ++p)
-			vTmp.push_back(p->str());
+
+		for (; p != e; ++p) {
+			string s = p->str();
+			CActionLine::EraseBlank(s);
+			vTmp.push_back(s);
+		}
 
 		if (!regex_search(vTmp[0], m, not_ation))	//非正则，为完整匹配
 			m_preflopFullNameTB[vTmp[0]] = vTmp[1];
@@ -58,8 +64,11 @@ bool CActionMatchConfig::Init(GameType gmType)
 		sregex_token_iterator p(sLine.cbegin(), sLine.cend(), sep, -1);
 		sregex_token_iterator e;
 		vTmp.clear();
-		for (; p != e; ++p)
-			vTmp.push_back(p->str());
+		for (; p != e; ++p) {
+			string s = p->str();
+			CActionLine::EraseBlank(s);
+			vTmp.push_back(s);
+		}
 
 		if (!regex_search(vTmp[0], m, not_ation))	//非正则，为完整匹配
 			m_toflopFullNameTB[vTmp[0]] = vTmp[1];

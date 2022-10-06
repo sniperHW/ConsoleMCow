@@ -1,0 +1,15 @@
+.*_vs.*_srp;	bet:33 50 75 125;	raise:50 100;	donk:33
+.*_vs.*_3bet;	bet:33 67 130;	raise:33 55 100;	donk:33
+EP_.*_vs_2sqz3bet\(.*\);	bet:33 67 130;	raise:33 55 100;	donk:33
+LP_.*_vs_2sqz3bet_EPfold\(.*\);	bet:33 67 100;	raise:33 55 100;	donk:33
+.*_vs_cold3bet\(.*\);	bet:33 67 130;	raise:33 55 100;	donk:33
+
+
+
+
+
+
+
+
+
+

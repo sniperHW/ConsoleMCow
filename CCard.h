@@ -15,6 +15,13 @@ public:
 
 	CCard();
 	CCard(const std::string& sSymbol);	//构造函数
+	void setCard(const std::string& sSymbol);
+	static void GetCardDetail(int& nCardPoint, Suit& cardSuit, const std::string& sSymbol);
+
+	static Suit  SuitFromChar(char cCardSuit);
+	static  char PointFromChar(char cCard);
+	static  char CharFromPoint(int iCard);
+	static char CharacterFromsuit(Suit cCardSuit);
 };
 
 #endif // !CCCARD_H_

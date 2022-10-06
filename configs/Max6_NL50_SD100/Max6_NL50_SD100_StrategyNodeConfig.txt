@@ -1,0 +1,331 @@
+BB_open//	//Replace[call][raise]<EV+0.1>;Discard[call];Discard[raise]<EV-=0>
+CO_vsUTG_srp//	//Replace[call][raise]<EV+>;Discard[call]
+CO_vsHJ_srp//	//Replace[call][raise]<EV+>;Discard[call]
+HJ_vsSB_5bet//	HJ_vsSB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+HJ_vsBB_5bet//	HJ_vsBB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+CO_vsBTN_5bet//	CO_vsBTN_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+CO_vsSB_5bet//	CO_vsSB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+CO_vsBB_5bet//	CO_vsBB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+BTN_vsSB_5bet//	BTN_vsSB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+BTN_vsBB_5bet//	BTN_vsBB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+SB_vsBB_5bet//	SB_vsBB_5betallin//	Replace[call][allin]<EV+>;Discard[call]
+#_vs#_srpallin//	special//	default(5betallinL)
+BB_vsSB_limp//	//Replace[raise5][raise3]
+SB_vsBB_limpbet//	special//	default(3bet)
+SB_vsBB_limp4bet//	special//	default(3bet)
+BB_vsSB_limp5bet//	BB_vsSB_limp5betallin//	Replace[call][allin]<EV+>;Discard[call]
+#_vs_nlimp2raise//	special//	default(5betallinL)
+
+.*_vs_2srp\(.*\)	//	//Replace[call][raise]<EV+0.4>;Discard[call]	//regex
+EP_UTG_vs_2sqz3bet(HJ,CO)//	//Discard[call]<EV-0>
+EP_UTG_vs_2sqz3bet(HJ,BTN)//	//Discard[call]<EV-0>
+EP_UTG_vs_2sqz3bet(HJ,SB)//	//Discard[call]<EV-0>
+EP_UTG_vs_2sqz3bet(HJ,BB)//	//Discard[call]<EV-0>
+LP_HJ_vs_2sqz3bet_EPfold\(.*\)//special	//default(4bet)	//regex
+LP_(CO|BTN|SB)_vs_2sqz3bet_EPfold\(.*\)//	//Replace[raise][call]<EV+>;Discard[raise];Discard[call]<EV-0>	//regex
+LP_HJ_vs_2sqz3bet_EPcall\(.*\)//special	//default(4bet)	//regex
+LP_(CO|BTN|SB)_vs_2sqz3bet_EPcall\(.*\)//	//Replace[raise][call]<EV+>;Discard[raise];Discard[call]<EV-0>	//regex
+.*_vs_2sqz4bet\(.*\)//	//Replace[raise][allin]<EV+>;Discard[raise]	//regex
+#_vs_2sqzLPraise//special	//default(3bet)
+LP_#_vs_2sqz3bet_EPraise\(.*\)//special	//Discard[whole]	//regex
+#_vs_2sqzLP5bet//special	//default(5betallinS)
+
+.*_vs_cold3bet\(.*\)//	//Replace[call][raise]<EV+>;Discard[call]	//regex
+EP_.*_vs_cold4bet\(.*\)//		//Replace[call][allin]<EV+>;Discard[call];Replace[raise][allin]<EV+>;Discard[raise]	//regex
+3BET_.*_vs_cold4bet_EPraise\(.*\)//special	//default(5betallinS)	//regex
+3BET_.*_vs_cold4bet_EPallin\(.*\)//special	//default(5betallinS)	//regex
+3BET_.*_vs_cold4bet_EPcall\(.*\)//	//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]	//regex
+BB_vs_cold4bet_EPraise(HJ,SB)//	//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_EPraise(CO,BTN)//	//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_EPraise(CO,SB)//	//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_EPraise(BTN,SB)//	//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_3BETraise(HJ,SB)//		//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_3BETraise(CO,BTN)//		//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_3BETraise(CO,SB)//		//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+BB_vs_cold4bet_3BETraise(BTN,SB)//		//Replace[whole][allin](AA,KK,QQ)<EV+>;Discard[call,raise]
+#_vs_1r1ccold4bet	//	special	//default(5betallinS)
+EP_UTG_vs_callcold3bet(HJ,CO)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(HJ,BTN)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(CO,BTN)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(HJ,SB)	//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(CO,SB)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(BTN,SB)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(HJ,BB)	//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(CO,BB)//	special//	Discard[call]<EV-0>
+EP_UTG_vs_callcold3bet(BTN,BB)//	special//	Discard[call]<EV-0>
+EP_HJ_vs_callcold3bet(CO,SB)//	special//	Discard[call]<EV-0>
+EP_HJ_vs_callcold3bet(BTN,SB)//	special//	Discard[call]<EV-0>
+EP_HJ_vs_callcold3bet(CO,BB)//	special//	Discard[call]<EV-0>
+EP_HJ_vs_callcold3bet(BTN,BB)	//	special//	Discard[call]<EV-0>
+3BET_#_vs_callcold3bet_EPaise\(.*\)//	special//	default(5bet)	//regex
+#_vs_callcold3bet_EPraise\(.*\)//	special//	default(5bet)	//regex
+#_vs_callcold3bet_2raise//	special//	default(5bet)
+EP_#_vs_callcold3bet5betallin//	special//	default(5bet)
+
+BTN_vs_3srp(UTG,HJ,CO)//	//Discard[raise]<EV->
+SB_vs_3srp(UTG,HJ,CO)//	//Discard[raise]<EV->
+SB_vs_3srp(UTG,HJ,BTN)//	SB_vs_3srp(UTG,CO,BTN)//Discard[raise]<EV->
+BB_vs_3srp(UTG,HJ,CO)//	//Discard[raise]<EV->
+BB_vs_3srp(UTG,HJ,BTN)//	//Discard[raise]<EV->
+BB_vs_3srp(UTG,HJ,SB)//		//Discard[raise]<EV->
+EP_UTG_vs_3sqz3bet(HJ,CO,BTN)//	//Discard[call]<EV->
+EP_UTG_vs_3sqz3bet(HJ,CO,SB)//	//Discard[call]<EV->
+EP_UTG_vs_3sqz3bet(HJ,BTN,SB)//	//Discard[call]<EV->
+EP_UTG_vs_3sqz3bet(HJ,CO,BB)//	//Discard[call]<EV->
+EP_UTG_vs_3sqz3bet(HJ,SB,BB)//	//Discard[call]<EV->
+EP_UTG_vs_3sqz3bet(HJ,BTN,BB)//	//Discard[call]<EV->
+LP_#_vs_3sqz3bet_EPfold(OOPA)//	special	//Assign[allin](AA,KK);Assign[call](AK,AQs,QQ,JJ,TT)
+LP_#_vs_3sqz3bet_EPfold(OOPD)//	special	//Assign[allin](AA,KK);Assign[call](AK,AQs,QQ,JJ,TT)
+LP_#_vs_3sqz3bet_EPcall	//	special	//Assign[allin](AA,KK);Assign[call](AK,AQs,QQ,JJ,TT)
+LP_#_vs_3sqz3bet_EPraise(OOPA)//	special	//default(5betallinL)
+LP_#_vs_3sqz3bet_EPraise(OOPD)//	special	//default(5betallinL)
+LP_#_vs_3sqz3betallin//		special	//default(5betallinL)
+#_vs_3sqz3betLPraise//		special	//default(4betL)
+#_vs_3sqz3bet2raise//		special	//default(5betallinL)
+BTN_vs_3sqz4bet(UTG,HJ,CO)//	//Discard[call]<EV->
+SB_vs_3sqz4bet(UTG,HJ,CO)//		//Discard[call]<EV->
+SB_vs_3sqz4bet(UTG,HJ,BTN)//		//Discard[call]<EV->
+BB_vs_3sqz4bet(UTG,HJ,CO)//		//Discard[call]<EV->
+BB_vs_3sqz4bet(UTG,HJ,BTN)//		//Discard[call]<EV->
+BB_vs_3sqz4bet(UTG,HJ,SB)//		//Discard[call]<EV->
+
+BTN_vs_3cold3bet(UTG,HJ,CO)//	//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+SB_vs_3cold3bet(UTG,HJ,CO)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+SB_vs_3cold3bet(UTG,HJ,BTN)//	//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+SB_vs_3cold3bet(UTG,CO,BTN)//	//Replace[call][raise]<EV+>;Discard[call] 
+SB_vs_3cold3bet(UTG,CO,BTN)//	//Replace[call][raise]<EV+>;Discard[call] 
+BB_vs_3cold3bet(UTG,HJ,CO)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+BB_vs_3cold3bet(UTG,HJ,BTN)//	//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+BB_vs_3cold3bet(UTG,HJ,SB)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+BB_vs_3cold3bet(UTG,CO,BTN)//	//Replace[call][raise]<EV+>;Discard[call] 
+BB_vs_3cold3bet(UTG,CO,SB)//		//Replace[call][raise]<EV+>;Discard[call] 
+BB_vs_3cold3bet(HJ,CO,BTN)//		//Replace[call][raise]<EV+>;Discard[call] 
+BB_vs_3cold3bet(HJ,CO,SB)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+BB_vs_3cold3bet(HJ,BTN,SB)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+BB_vs_3cold3bet(CO,BTN,SB)//		//Replace[call][raise]<EV+>;Discard[call];Discard[raise]<EV->
+EP_UTG_vs_3cold4bet(HJ,CO,BTN)//	//Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(HJ,CO,SB)//	EP_UTG_vs_3cold4bet(CO,BTN,SB)//	Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(HJ,BTN,SB)//	EP_UTG_vs_3cold4bet(CO,BTN,SB)//	Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(CO,BTN,SB)//	//Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(HJ,CO,BB)//	EP_UTG_vs_3cold4bet(CO,BTN,BB)//	Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(HJ,BTN,BB)//	EP_UTG_vs_3cold4bet(CO,BTN,BB)//	Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(HJ,SB,BB)//	EP_UTG_vs_3cold4bet(CO,BTN,BB)//	Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(CO,BTN,BB)//	//Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4bet(CO,SB,BB)//	//Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_HJ_vs_3cold4bet\(.*\)//	//Replace[whole][allin]<EV+>;Discard[call,raise]	//regex
+EP_CO_vs_3cold4bet(BTN,SB,BB)//	//Replace[whole][allin]<EV+>;Discard[call,raise]
+EP_UTG_vs_3cold4betallin(HJ,CO,BTN)//	special	//default(5betallinL)
+EP_UTG_vs_3cold4betallin(HJ,CO,SB)//	EP_UTG_vs_3cold4betallin(CO,BTN,SB)//
+EP_UTG_vs_3cold4betallin(HJ,BTN,SB)//	EP_UTG_vs_3cold4betallin(CO,BTN,SB)//
+EP_UTG_vs_3cold4betallin(HJ,CO,BB)//	EP_UTG_vs_3cold4betallin(CO,BTN,BB)//
+EP_UTG_vs_3cold4betallin(HJ,BTN,BB)//	EP_UTG_vs_3cold4betallin(CO,BTN,BB)//
+EP_UTG_vs_3cold4betallin(HJ,SB,BB)//	EP_UTG_vs_3cold4betallin(CO,SB,BB)//
+3BET_CO_vs_3cold4bet_EPfold(UTG,HJ,BTN)//	special//	default(4betL)
+3BET_CO_vs_3cold4bet_EPfold(UTG,HJ,SB)//	special//	default(4betL)
+3BET_CO_vs_3cold4bet_EPfold(UTG,HJ,BB)//	special//	default(4betL)
+3BET_BTN_vs_3cold4bet_EPfold(UTG,HJ,SB)//	3BET_BTN_vs_3cold4bet_EPfold(HJ,CO,SB)//
+3BET_BTN_vs_3cold4bet_EPfold(UTG,HJ,BB)//	3BET_BTN_vs_3cold4bet_EPfold(HJ,CO,SB)//
+3BET_SB_vs_3cold4bet_EPfold(UTG,HJ,BB)//	3BET_BTN_vs_3cold4bet_EPfold(UTG,CO,BB)//
+3BET_CO_vs_3cold4betallin_EPfold\(.*\)//	special	//default(4betS)	//regex
+3BET_BTN_vs_3cold4betallin_EPfold(UTG,HJ,SB)//		3BET_BTN_vs_3cold4betallin_EPfold(UTG,CO,SB)//
+3BET_BTN_vs_3cold4betallin_EPfold(UTG,HJ,BB)//		3BET_BTN_vs_3cold4betallin_EPfold(UTG,CO,BB)//
+3BET_SB_vs_3cold4betallin_EPfold(UTG,HJ,BB)//		3BET_SB_vs_3cold4betallin_EPfold(UTG,CO,BB)//
+3BET_CO_vs_3cold4bet_EPallin\(.*\)//	special	//default(5betallinL)	//regex
+3BET_BTN_vs_3cold4bet_EPallin(UTG,HJ,SB)//	3BET_BTN_vs_3cold4bet_EPallin(UTG,CO,SB)//
+3BET_BTN_vs_3cold4bet_EPallin(UTG,HJ,BB)//	3BET_BTN_vs_3cold4bet_EPallin(UTG,CO,BB)//
+3BET_SB_vs_3cold4bet_EPallin(UTG,HJ,BB)//	3BET_SB_vs_3cold4bet_EPallin(UTG,CO,BB)//
+3BET_CO_vs_3cold4bet_EPcall\(.*\)//	special	//default(5betallinS)	//regex
+3BET_BTN_vs_3cold4bet_EPcall(UTG,HJ,SB)//	3BET_BTN_vs_3cold4bet_EPcall(UTG,CO,SB)//
+3BET_BTN_vs_3cold4bet_EPcall(UTG,HJ,BB)//	3BET_BTN_vs_3cold4bet_EPcall(UTG,CO,BB)//
+3BET_SB_vs_3cold4bet_EPcall(UTG,HJ,BB)//		3BET_SB_vs_3cold4bet_EPcall(UTG,CO,BB)//
+3BET_CO_vs_3cold4bet_EPcall\(.*\)//	special	//default(5betallinS)	//regex
+3BET_BTN_vs_3cold4bet_EPcall	(UTG,HJ,SB)//	3BET_BTN_vs_3cold4bet_EPcall(UTG,CO,SB)//
+3BET_BTN_vs_3cold4bet_EPcall	(UTG,HJ,BB)//	3BET_BTN_vs_3cold4bet_EPcall(UTG,CO,BB)//
+3BET_SB_vs_3cold4bet_EPcall(UTG,HJ,BB)//		3BET_SB_vs_3cold4bet_EPcall(UTG,CO,BB)//
+#_vs_1rallin3cold3bet//	special		//default(5bet)
+#_vs_2rallin3cold3bet//	special		//default(5betallinS)
+LP_#_vs_3cold4bet//	special	//Discard[whole]
+EP_#_vs_call3cold3bet//		special	//default(4betL)
+3BET_#_vs_call3cold3bet_EPraise//		special	//default(5betallinL)
+#_vs_1rcall3cold3bet//	special	//default(5betallinL)
+#_vs_2rcall3cold3bet//	special	//default(5betallinS)
+
+#_vs_callcold3bet//	special	//default(4betL)
+EP_#_vs_callcold3bet4bet//	special	//default(4betS)
+EP_#_vs_callcold3bet4betallin	//	special	//default(5betallinL)
+3BET_#_vs_callcold3bet4bet_EPfold//	special	//default(4betS)
+3BET_#_vs_callcold3bet4bet_EPcall//		special	//default(4betS)
+3BET_#_vs_callcold3bet4bet_EPraise//	special	//default(5betallinS)
+3BET_#_vs_callcold3bet4betallin_EPfold//		special	//default(4betS)
+3BET_#_vs_callcold3bet4betallin_EPcall//		special	//default(5betallinS)
+LP_#_vs_callcold3bet4bet_EPfold//		special	//default(4betL)
+LP_#_vs_callcold3bet4betallin_EPfold	//	special	//default(5betallinL)
+LP_#_vs_callcold3bet4betallin_EPcall//		special	//default(5betallinS)
+LP_#_vs_callcold3bet4bet_1raise//		special	//default(5betallinS)
+#_vs_callcold3bet5bet//		special	//default(5bet)
+EP_#_vs_2callcold3bet4bet//		special	//default(4betL)
+3BET_#_vs_2callcold3bet4bet_EPraise//		special	//default(5betallinL)
+LP_#_vs_2callcold3bet4bet_EPraise//		special	//default(5betallinL)
+.*_vs_cold4bet\(.*\)//	//Replace[call][allin]<EV+>;Discard[call];Discard[allin]<EV->	//regex
+EP_#_vs_cold5bet//		special	//default(5betallinL)
+3BET_#_vs_cold5bet_EPfold//		special	//default(5betallinL)
+4BET_#_vs_cold5bet_EPfold//		special	//default(5bet)
+4BET_#_vs_cold5betallin_EPfold//		special	//default(5betallinL)
+3BET_#_vs_cold5bet_EPraise//		special	//default(5betallinS)
+4BET_#_vs_cold5bet_1allin//		special	//default(5betallinS)
+#_vs_1rallincold5bet//		special	//default(5bet)
+#_vs_2rallincold5bet//		special	//default(5betallinS)
+EP_#_vs_callcold4bet//		special	//default(4betS)
+3BET_#_vs_callcold4bet_EPfold	//	special	//default(4betS)
+3BET_#_vs_callcold4bet_EPraise//		special	//default(5betallinS)
+3BET_#_vs_callcold4bet_EPcall//		special	//default(5betallinL)
+4BET_#_vs_callcold4bet_1allin//		special	//default(5betallinS)
+
+#_vs_4cold3bet(OOPA)//	//Replace[call][raise]<EV+>;Discard[call]
+#_vs_4cold3bet(OOPD)//	special	//default(4betS)
+EP_#_vs_call4cold3bet//		special	//default(4betS) 
+LP_#_vs_call4cold3bet//		special	//Discard[whole]
+3BET_#_vs_call4cold3bet _EPraise//		special	//default(5betallinL) 
+EP_#_vs_4cold3bet4bet//		special	//Assign[allin](AA,KK,Aks,QQ)
+EP_#_vs_4cold3bet4betallin//		special	//default(5betallinL)
+LP_#_vs_4cold3bet4bet//		special	//Discard[whole]
+3BET_#_vs_4cold3bet4bet_EPcall//		special	//default(4betL)
+3BET_#_vs_4cold3bet4bet_EPraise//		special	//default(5betallinS)
+3BET_#_vs_4cold3bet4bet_EPfold//		special	//default(4betL)
+3BET_#_vs_4cold3bet4bet_LPcall//		special	//Assign[allin](AA,KK,Aks,QQ)
+3BET_#_vs_4cold3bet4betallin_EPcall//	special	//default(5betallinL)
+3BET_#_vs_4cold3bet4betallin_EPfold//		special	//default(4betL)
+3BET_#_vs_4cold3bet4betallin_LPcall//		special	//Assign[allin](AA,KK,QQ)
+#_vs_1r4cold3bet4bet//		special//	//default(5betL)
+#_vs_2r4cold3bet4bet//		special//	//default(5betallinS)
+SB_vs_4srp(UTG,HJ,CO,BTN)//	SB_vs_cold3bet(UTG,BTN)//
+BB_vs_4srp(UTG,HJ,CO,BTN)//	BB_vs_4srp(UTG,CO,BTN,SB)//
+BB_vs_4srp(UTG,HJ,CO,SB)//	BB_vs_4srp(UTG,CO,BTN,SB)//
+BB_vs_5srp(UTG,HJ,CO,BTN,SB)//	BB_vs_4srp(UTG,CO,BTN,SB)//
+EP_UTG_vs_4sqz3bet(HJ,CO,BTN,SB)//	EP_UTG_vs_4sqz3bet(CO,BTN,SB,BB)//
+EP_UTG_vs_4sqz3bet(HJ,CO,BTN,BB)//	EP_UTG_vs_4sqz3bet(CO,BTN,SB,BB)//
+EP_UTG_vs_4sqz3bet(HJ,CO,SB,BB)//	EP_UTG_vs_4sqz3bet(CO,BTN,SB,BB)//
+EP_UTG_vs_4sqz3betallin(HJ,CO,BTN,SB)//	UTG_vs_cold4betallin(BTN,SB)//
+EP_UTG_vs_4sqz3betallin(HJ,CO,BTN,BB)//	EP_UTG_vs_4sqz3betallin(CO,BTN,SB,BB)//
+EP_UTG_vs_4sqz3betallin(HJ,CO,SB,BB)//	EP_UTG_vs_4sqz3betallin(CO,BTN,SB,BB)//
+EP_UTG_vs_5sqz3betallin(HJ,CO,BTN,SB,BB)//	EP_UTG_vs_4sqz3betallin(CO,BTN,SB,BB)//
+LP_#_vs_4sqz3bet_EPfold//		special	//Assign[allin](AA,KK);Assign[call](AK,AQs,QQ,JJ,TT)
+LP_#_vs_4sqz3bet_EPcall	//	special	//Assign[allin](AA,KK);Assign[call](AK,AQs,QQ,JJ,TT)
+LP_#_vs_1r4sqz3bet//		special	//Discard[whole]
+#_vs_4sqz3betLPraise//		special	//default(4betL)
+SB_vs_4sqz4bet(UTG,HJ,CO,BTN)//	special	//default(4betS)
+BB_vs_4sqz4bet(UTG,HJ,CO,BTN)//	BB_vs_4sqz4bet(UTG,CO,BTN,SB)//
+BB_vs_4sqz4bet(UTG,HJ,CO,SB)//	BB_vs_4sqz4bet(UTG,CO,BTN,SB)//
+BB_vs_5sqz4bet(UTG,HJ,CO,BTN,SB)//	BB_vs_4sqz4bet(UTG,CO,BTN,SB)//
+SB_vs_4sqz4betallin(UTG,HJ,CO,BTN)//	special	//default(5bet)
+BB_vs_4sqz4betallin(UTG,HJ,CO,BTN)//	BB_vs_4sqz4betallin(UTG,CO,BTN,SB)//
+BB_vs_4sqz4betallin(UTG,HJ,CO,SB)//		BB_vs_4sqz4betallin(UTG,CO,BTN,SB)//
+BB_vs_5sqz4betallin(UTG,HJ,CO,BTN,SB)//	BB_vs_4sqz4betallin(UTG,CO,BTN,SB)//
+EP_UTG_vs_4sqz5betallin(HJ,CO,BTN,SB)//	special	//default(5betallinL)
+EP_UTG_vs_4sqz5betallin(HJ,CO,BTN,BB)//		EP_UTG_vs_4sqz5betallin(CO,BTN,SB,BB)//
+EP_UTG_vs_4sqz5betallin(HJ,CO,SB,BB)//		EP_UTG_vs_4sqz5betallin(CO,BTN,SB,BB)//
+EP_UTG_vs_5sqz5betallin(HJ,CO,BTN,SB,BB)//	EP_UTG_vs_4sqz5betallin(CO,BTN,SB,BB)//
+#_vs_4callcold3bet//		special	//Assign[allin](AA,KK,Aks,QQ)
+EP_#_vs_4callcold3bet4bet//		special	//default(5betallinL)
+LP_#_vs_4callcold3bet4bet_EPfold//		special	//default(5betallinL)
+3BET_#_vs_4callcold3bet4bet_EPfold//	special	//default(5betallinL)
+LP_#_vs_4callcold3bet4bet_EPcall//		special	//default(5betallinL)
+3BET_#_vs_4callcold3bet4bet_EPcall//		special	//Assign[allin](AA,KK,QQ)
+EP_#_vs_call4callcold3bet//		special	//Assign[allin](AA,AKs);Assign[call](KK,QQ)
+LP_#_vs_call4callcold3bet_EPfold//		special	//Assign[allin](AA,KK);Assign[call](QQ)
+LP_#_vs_call4callcold3bet_EPcall//		special	//Assign[allin](AA,KK);Assign[call](QQ)
+LP_#_vs_call4callcold3bet_EPraise//		special	//Discard[whole]
+3BET_#_vs_call4callcold3bet_EPraise//		special	//default(5bet)
+LPcall3BET_#_vs_call4callcold3bet_EPraise//		special	//default(5betallinL)
+#_vs_4cold4bet//		special	//default(4betS)
+EP_#_vs_4cold4bet5bet//		special	//default(5betallinS)
+LP_#_vs_4cold4bet5bet//		special	//default(5betallinL)
+3BET_#_vs_4cold4bet5bet_EPfold//		special	//default(5betallinL)
+4BET_#_vs_4cold4bet5bet_EPfold//		special	//default(5bet)
+BET_#_vs_4cold4bet5bet_1allin//		special	//default(5betallinS)
+EP_#_vs_call4cold4bet//		special	//default(5betallinS)
+LP_#_vs_call4cold4bet//		special	//Discard[whole]
+3BET_#_vs_call4cold4bet_EPfold//		special	//Assign[allin](AA);Assign[call](KK)
+3BET_#_vs_call4cold4bet_EPcall//		special	//default(5bet)
+3BET_#_vs_call4cold4bet_EPraise//		special	//default(5betallinS)
+4BET_#_vs_1rcall4cold4bet//		special	//default(5betallinS)
+#_vs_4cold4bet//		special	//default(5betallinS)
+#_vs_cold6bet//		special	//default(6bet)
+BB_vs_5srp//		BB_vs_4srp(UTG,CO,BTN,SB)	//Replace[call][raise](AA,KK,AKs,AKo,QQ,JJ)
+EP_#_vs_5szq3bet//		special	//default(4betL)
+LP_#_vs_5szq3bet_EPfold//		special	//Assign[call](AK,AQs,QQ,JJ)
+LP_#_vs_5szq3betallin_EPfold//		special	//Assign[call](AK,QQ)
+LP_#_vs_5szq3bet_EPcall	//	special	//Assign[call](AK,QQ)
+LP_#_vs_5szq3betallin_EPcall//		special	//Discard[whole]
+LP_#_vs_5szq3bet_EPraise//		special	//Discard[whole]
+#_vs_1r5szq3bet//		special	//default(4betL)
+BB_vs_53bet	//	special	//default(4betL)
+EP_UTG_vs_53bet4bet//		special	//Assign[allin](AA,KK,Aks,QQ)
+EP_UTG_vs_53bet4betallin//		special	//default(5betallinL)
+LP_#_vs_53bet4bet//		special	//default(5betallinL)
+3BET_#_vs_53bet4bet_EPfold//		special	//default(4betL)
+3BET_#_vs_53bet4bet_EPraise//		special	//default(5betallinL)
+3BET_#_vs_53bet4betallin_EPfold//		special	//default(5betallinL)
+3BET_#_vs_53bet4betallin_EPcall//		special	//default(5betallinS)
+EP_UTG_vs_call53bet//		special	//Assign[allin](AA,AKs);Assign[call](KK,QQ)
+LP_#_vs_call53bet_EPcall	//	special	//Assign[call](AK,QQ)
+LP_#_vs_call53bet_EPraise//		special	//default(5betallinL)
+3BET_#_vs_call53bet_EPraise//		special	//default(4betL)
+BB_vs_54bet	//	special	//default(4betS)
+X_#_vs_54bet5bet//		special	//default(5betallinL)
+BB_vs_55bet	//	special	//default(5betallinS)
+X_#_vs_55betX//		special	//default(5betallinS)
+BB_vs_6bet//		special	//default(5betallinS)
+X_#_vs_6betX//		special	//default(5betallinS)
+
+((SB|BB)(?!_vsSB)_vs.*_srp<.*>R33)-R[\d]*-R[\d]*//	$1-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+((SB|BB)(?!_vsSB)_vs.*_srp<.*>R33)-R[\d]*-A//	$1-R50-A	//Discard[call]<EV->	//replace
+((SB|BB)(?!_vsSB)_vs.*_srp<.*>R33)-R[\d]*-R[\d]*-R[\d]*//	$1-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+((SB|BB)(?!_vsSB)_vs.*_srp<.*>R33)-R[\d]*-R[\d]*-A//	$1-R50-R50-A	//Discard[call]<EV->	//replace
+((SB|BB)(?!_vsSB)_vs.*_srp<.*>R33)-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-A//	$1R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-R[\d]*-R[\d]*//	$1R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-R[\d]*-A//	$1R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1R50-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-R[\d]*-R[\d]*-A//	$1R50-R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1R50-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-A//	$1X-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-R[\d]*-R[\d]*//	$1X-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-R[\d]*-A//	$1X-R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1X-R50-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-R[\d]*-R[\d]*-A//	$1X-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(.*_vs.*_srp<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1X-R50-R50-R50-R50-A	//Discard[call]<EV->	//replace
+
+(BB_vsSB_limp<.*>)X-R[\d]*-A//	$1X-R75-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)X-R[\d]*-R[\d]*-R[\d]*//	$1X-R75-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(BB_vsSB_limp<.*>)X-R[\d]*-R[\d]*-A//	$1X-R75-R50-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1X-R75-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(BB_vsSB_limp<.*>)X-R[\d]*-R[\d]*-R[\d]*-A//	$1X-R75-R50-R50-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1X-R75-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-A//	$1R75-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-R[\d]*-R[\d]*//	$1R75-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-R[\d]*-A//	$1R75-R50-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1R75-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-R[\d]*-R[\d]*-A//	$1R75-R50-R50-A	//Discard[call]<EV->	//replace
+(BB_vsSB_limp<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1R75-R50-R50-R50-A	//Discard[call]<EV->	//replace
+
+(SB_vsBB_limpbet<.*>)R[\d]*-A//	$1R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)R[\d]*-R[\d]*-R[\d]*//	$1R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(SB_vsBB_limpbet<.*>)R[\d]*-R[\d]*-A//	$1R50-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1R50-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(SB_vsBB_limpbet<.*>)R[\d]*-R[\d]*-R[\d]*-A//	$1R50-R50-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1R50-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-A//	$1X-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-R[\d]*-R[\d]*//	$1X-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-R[\d]*-A//	$1X-R50-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*//	$1X-R50-R50-R50-R50	//Discard[call,raise,allin]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-R[\d]*-R[\d]*-A//	$1X-R50-R50-R50-A	//Discard[call]<EV->	//replace
+(SB_vsBB_limpbet<.*>)X-R[\d]*-R[\d]*-R[\d]*-R[\d]*-[RA]//	$1X-R50-R50-R50-R50-A	//Discard[call]<EV->	//replace
+
+
+
+
+
+
+
+

@@ -1,0 +1,7 @@
+(14 96)spr=6.85	//	turn=bet:33 67 130; raise:50 100; donk:33			//	river=bet:33 67 130; raise:50; donk:50
+(20 90)spr=4.5	//	turn=bet:33 50 75 125; raise:50 100; donk:33		//	river=bet:33 67 130; raise:50; donk:50
+(24 88)spr=3.67	//	turn=bet:33 50 75 125 200; raise:50 100; donk:33		//	river=bet:33 67 130; raise:50; donk:50
+(36 82)spr=2.28	//	turn=bet:25 50 75 100; raise:33 55; donk:33		//	river=bet:33 66 100; raise:33 50; donk:20 50
+(40 80)spr=2	//	turn=bet:10 25 50 75 100; raise:33 55; donk:25 50	//	river=bet:25 50 75 100; raise:33 50; donk:20 50
+
+

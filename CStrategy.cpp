@@ -5,10 +5,10 @@
 #include <iostream>
 #include <regex>
 #include "CStrategyNodeConfig.h"
-#include "CStrategyNodeConfigItem.h"
 #include "CStrategyTreeConfig.h"
 #include "CDataFrom.h"
 #include "CCombo.h"
+#include "CActionLine.h"
 
 
 using namespace std;
@@ -43,7 +43,7 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	if(pos == string::npos){
 		sPrefix = sActionSquence;
 	} else {
-		sPrefix = sActionSquence.substr(1,pos);
+		sPrefix = sActionSquence.substr(0,pos+1);
 	}
 
 	auto count = 0;
@@ -74,100 +74,8 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	return true;
 }
 
-//生成wizard用的NodeName
-string CStrategy::getNodeName(const GameType gmType, const Stacks& stacks, const vector<Action>& actions, const string& sPrefix)
-{
-	string sSquence, sPreflopName;
-	OOPX oopx = OOPA;
-	Json::Value StrategyTreeItem;
-	int nCount = 0;	//当前处理的actions的序号，1开始
-	double dActuallyRatio = 0;	//实际下注比例
-//	double dHeroStackSum, dRivalStackSum = 0;	//hero和对手总筹码投入
-	vector<double> candidateRatios;	//比例候选集合，对应策略数设置
-
-	if (actions.empty()) {	//无代表本街hero第一个行动
-		sSquence = sPrefix + "O";
-		return sSquence;
-	}
-
-	auto idx = sPrefix.find('<');
-	if (idx != string::npos)
-		sPreflopName = sPrefix.substr(0, idx);
-
-	//get oopx
-	auto pStrategyNodeConfigItem = g_strategyNodeConfigs[gmType].GetItemByName(sPreflopName);
-	if (pStrategyNodeConfigItem != nullptr) {
-		oopx = pStrategyNodeConfigItem->m_oopx;
-	}
-
-	//get strategy tree config
-	Json::Value strategyTreeItem = g_strategyTreeConfigs[gmType].GetConfigItem(sPreflopName);
-
-	for (auto action : actions) {
-		nCount++;
-
-		switch (action.actionType) {	//（只有X,R,A），X对应check, A对应allin
-			case check:
-				nCount > 1 ? sSquence += "-X" : sSquence += "X";
-				break;
-			case allin:
-				nCount > 1 ? sSquence += "-A" : sSquence += "A";
-				break;
-			case raise:{
-				candidateRatios.clear();
-
-				//选择比例候选范围
-				if (nCount == 1) {	//R第一个需要判断OOPA/OOPD以决定用donk还是bet下注空间
-					if (oopx == OOPD) {
-						//strategyTreeItem里取donk下注空间，测试donk下注空间用{33} 
-						candidateRatios = { 33 }; //for test///////////////////////////////////
-					}
-					else if (oopx == OOPA) {
-						//strategyTreeItem里取bet下注空间，测试donk下注空间用{33,50,75,125}
-						candidateRatios = { 33,50,75,125 };  //for test///////////////////////////////////
-					}
-				}
-				else {
-					if (nCount == 2 && actions[0].actionType == check) {
-						//如果是XR，strategyTreeItem里取bet下注空间, 测试下注空间用{33,50,75,125}
-						candidateRatios = { 33,50,75,125 };  //for test///////////////////////////////////
-					}
-					else {
-						//strategyTreeItem里取raise下注空间, 测试下注空间用{50,100}
-						candidateRatios = { 50,100 };  //for test///////////////////////////////////
-					}
-				}
-
-				//候选范围加入allin的比例（相当与最后一个元素替换为allin来计算）,并确保allin为最大比例
-				if (nCount == actions.size()) {
-					double dAllinRatio = CalcBetRatio(stacks.dPot, actions, nCount - 1, stacks.dEStack);
-					while (candidateRatios.back() > dAllinRatio)
-						candidateRatios.pop_back();
-					candidateRatios.push_back(int(dAllinRatio));
-				}
-
-				//计算dActuallyRatio,当前正则计算的actions的元素的比例
-				dActuallyRatio = CalcBetRatio(stacks.dPot, actions, nCount - 1);
-
-				int iMatchedIndex = MatchBetRatio(dActuallyRatio, candidateRatios);
-
-				if(nCount == actions.size() && iMatchedIndex == candidateRatios.size()-1)	//最后动作并且匹配allin则转为allin
-					nCount > 1 ? sSquence += "-A" : sSquence += "A";
-				else
-					nCount > 1 ? sSquence += "-R" + to_string(candidateRatios[iMatchedIndex]) : sSquence += "R" + to_string(candidateRatios[iMatchedIndex]);
-
-			} //end of case raise
-			default:
-			break;
-		} //end of switch
-	}// end of for
-
-	sSquence = sPrefix + sSquence;
-	return sSquence;
-}
-
 //从wizard读取
-bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const SuitReplace& suitReplace, const string& sIsoBoard)
+bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 	Round curRound;
 	string sPrefix, actionStr, sNodeName;
@@ -178,11 +86,11 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	bool blCreateStrategy = false;
 
 	//解析需要allin和call转换的标准
-	if (sActionSquenceTmp.find('$')) {
+	if (sActionSquenceTmp.find('$')!=string::npos) {
 		bl2Allin = true;
 		sActionSquenceTmp.pop_back();
 	}
-	if (sActionSquenceTmp.find('@')) {
+	if (sActionSquenceTmp.find('@') != string::npos) {
 		blAllin2Call = true;
 		sActionSquenceTmp.pop_back();
 	}
@@ -192,7 +100,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	if (curRound == preflop)
 		sNodeName = sPrefix;
 	else if (curRound == flop)
-		sNodeName = getNodeName(gmType, stacks, actions, sPrefix);	
+		sNodeName = CActionLine::GetNodeName(gmType, stacks, oopx,actions, sPrefix);
 	
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (curRound == flop) {
@@ -203,24 +111,18 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		}
 	}
 
-	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
-//先要转为NodeNameWithoutBoard
-	auto StrategyNodeConfig = g_strategyNodeConfigs[gmType];
-	auto pStrategyNodeConfigItem = StrategyNodeConfig.GetItemByName(sNodeName);
-	if (pStrategyNodeConfigItem != nullptr) {
-		if (!pStrategyNodeConfigItem->m_sReplaceNodeName.empty()) {
-			if (pStrategyNodeConfigItem->m_sReplaceNodeName != "special")
-				sNodeName = pStrategyNodeConfigItem->m_sReplaceNodeName;
-			else
-				blCreateStrategy = true; //没有预存策略文件，按special构建
-		}
-	}
+	//从策略配置中获取替换和special设置，存在替换则启用替换的名称
+	string sReplace = g_strategyNodeConfigs[gmType].GetReplace(sNodeName);
+	if (sReplace == "special")
+		blCreateStrategy = true;
+	else if (!sReplace.empty())
+		sNodeName = sReplace;
 
 	//如果策略不是由special指定，则从策略文件中加载
 	if (!blCreateStrategy)
 	{
 		//获取节点名称对应的文件路径，未找到则返回false,代表offline
-		sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeName, curRound);
+		sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeName);
 		if (sStrategyFilePath.size() == 0)
 			return false;
 
@@ -275,7 +177,11 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		}
 	}
 
-	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+	string sSpecial = g_strategyNodeConfigs[gmType].GetSpecial(sNodeName);
+	if (!sSpecial.empty()) {
+		//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+
+	}
 
 	//处理allin和call的转换
 
@@ -413,7 +319,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		auto v = CalcBetRatio(a.fBetSize,actions,iLastIdx,0);
 		actions.pop_back();
 		strategyItem->m_action.actionType = a.actionType;
-		strategyItem->m_action.fBetSize = v;
+		strategyItem->m_action.fBetSize = (float)v;
 		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
 			maxRaise = strategyItem;
 		}
@@ -431,28 +337,77 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	return true;
 }
 
+string  CStrategy::ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace)
+{
+	string strConveted(sCard);
+
+	for (int i = 1; i <= 3; i += 2)
+	{
+		switch (sCard[i])
+		{
+		case 'h':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.h2);
+			break;
+		}
+		case 'd':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.d2);
+			break;
+		}
+		case 'c':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.c2);
+			break;
+
+		}
+		case 's':
+		{
+			strConveted[i] = CCard::CharacterFromsuit(suitReplace.s2);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
+	}
+	return strConveted;
+}
+void CStrategy::ConvertIsomorphismOneMap(std::unordered_map<std::string, double>* pMap, const SuitReplace& suitReplace)
+{
+	std::unordered_map<std::string, double>::iterator  it_map;
+	std::unordered_map<std::string, double> mapTemp;
+
+	for (it_map = pMap->begin(); it_map != pMap->end(); it_map++)
+	{
+		string key = it_map->first;
+		string strKeyIsomor = ConvertOneHandcard(key, suitReplace);
+		mapTemp.insert({ strKeyIsomor, it_map->second });
+	}
+	pMap->clear();
+	pMap->insert(mapTemp.begin(), mapTemp.end());
+}
+
 void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 {
-
+	std::shared_ptr<CStrategyItem> pItem = NULL;
+	if (false == suitReplace.blIsNeeded)
+	{
+		return;
+	}
+	for (int i = 0; i < m_strategy.size(); i++)
+	{
+		pItem = m_strategy[i];
+		ConvertIsomorphismOneMap(&pItem->m_strategyData, suitReplace);
+		ConvertIsomorphismOneMap(&pItem->m_evData, suitReplace);
+	}
 }
 
 void CStrategy::SpecialProcessing(const std::string& sCommand)
 {
 	
 }
-
-//返回匹配的序号，当R为最后一个动作时，dEStatck非0则需要匹配allin，返回正常序号,最后一个代表allin
-/*
-int CStrategy::MatchBetSize(double dActuallySize, const vector<double>& candidateSizes, const double dEStatck)
-{
-	for(auto i = 0;i<int(candidateSizes.size());i++) {
-		if(abs(dActuallySize-candidateSizes[i]) < 0.1){
-			return i;
-		}
-	}
-	return -1;
-}
-*/
 
 //返回匹配的序号
 int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios)
@@ -467,7 +422,7 @@ int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candid
 	if (dActuallyRatio <= candidateRatios[0])
 		return 0;
 	if (dActuallyRatio >= candidateRatios[candidateRatios.size() - 1])
-		return candidateRatios.size() - 1;
+		return (int)candidateRatios.size() - 1;
 
 	int nCount = 0;
 	for (auto pos = candidateRatios.cbegin(); pos + 1 != candidateRatios.cend(); ++pos) {
@@ -487,6 +442,8 @@ int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candid
 		}
 		nCount++;
 	}
+
+	return 0;
 }
 
 //计算下注比例，actions为完整序列（或到参与计算的最后一个），iLastIdx为当前需要计算的序号（0开始），dEstack只有wizard模式计算最后一个为allin的比例时才用
@@ -606,12 +563,12 @@ vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands
 	return commands;
 }
 
-void CStrategy::AlignmentByBetsize(float fBase, float fActually)
+void CStrategy::AlignmentByBetsize()
 {
 
 }
 
-void CStrategy::AlignmentByStackDepth(float fBase, float fActually)
+void CStrategy::AlignmentByStackDepth()
 {
 
 }

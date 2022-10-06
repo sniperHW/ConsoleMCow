@@ -10,8 +10,7 @@
 class CSolverConfig
 {
 public:
-	float m_fPot;
-	float m_fEffectivestack;
+	Stacks m_stacks;
 	std::string m_sBoard;
 	CRange* m_pRange;
 	Json::Value m_strategyTree;

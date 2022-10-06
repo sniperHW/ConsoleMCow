@@ -1,10 +1,11 @@
 //#include "pch.h"
 #include "CSolver.h"
 
+using namespace std;
 
-int CSolver::ToSolve(int nGameID, const CSolverConfig& config, Json::Value& result)
+bool CSolver::ToSolve(const string& sGameID, const CSolverConfig& config, Json::Value& result, const SolverCalcMode calcMode)
 {
-	return 0;
+	return true;
 }
 
 void CSolver::ToStop(int nGameID)

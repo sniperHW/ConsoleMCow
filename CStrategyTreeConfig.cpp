@@ -1,16 +1,188 @@
 //#include "pch.h"
 #include "CStrategyTreeConfig.h"
+#include <regex>
+#include <direct.h>
+#include <fstream>
+#include "CActionLine.h"
+
+//for test
+#include <iostream>
 
 using namespace std;
 
 bool CStrategyTreeConfig::Init(GameType gmType)
 {
+	ifstream fin;
+
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\configs\\" + GameTypeName[gmType] + "\\";
+
+	string sLine, sFilePath;
+	regex sep(R"(\s*;\s*)");
+	regex reg_blank(R"(^\s*$)");
+	vector<string> vTmp;
+	smatch m;
+
+	//加载flop config配置
+	sFilePath = sConfigFolder + GameTypeName[gmType] + "_FlopTreeConfig.txt";
+	fin.open(sFilePath, ios_base::in);
+	if (!fin.is_open())
+		return false;
+
+	while (getline(fin, sLine)) {
+		if (regex_match(sLine, reg_blank))
+			continue;
+		sregex_token_iterator p(sLine.cbegin(), sLine.cend(), sep, -1);
+		sregex_token_iterator e;
+		vTmp.clear();
+		for (; p != e; ++p) {
+			vTmp.push_back(p->str());
+		}
+		
+		CFlopTreeConfigItem item;
+		ParseDigitals(vTmp[1], item.m_flopBet);
+		ParseDigitals(vTmp[2], item.m_flopRaise);
+		ParseDigitals(vTmp[3], item.m_flopDonk);
+		m_FlopTreeConfigItems.push_back(make_pair(vTmp[0], item));
+	}
+	fin.close();
+
+	//加载实时运算配置
+	sFilePath = sConfigFolder + GameTypeName[gmType] + "_RTTreeConfig.txt";
+	fin.open(sFilePath, ios_base::in);
+	if (!fin.is_open())
+		return false;
+
+	sep = R"(\s*//\s*)";
+	while (getline(fin, sLine)) {
+		if (regex_match(sLine, reg_blank))
+			continue;
+		sregex_token_iterator p(sLine.cbegin(), sLine.cend(), sep, -1);
+		sregex_token_iterator e;
+		vTmp.clear();
+		for (; p != e; ++p) {
+			vTmp.push_back(p->str());
+		}
+
+		//(14 96)spr = 6.85	//	turn=bet:33 67 130; raise:50,100; donk:33		//	river=bet: bet:33 67 130; raise:50; donk:50
+		double dlSpr;
+		regex regSpr(".*spr=(.*)");
+		if (regex_search(vTmp[0], m, regSpr))
+			dlSpr = stod(m[1]);
+
+		vector<string> vTmp2;
+		regex sep1(R"(\s*;\s*)");
+		CRTTreeConfigItem item;
+
+		sregex_token_iterator p1(vTmp[1].cbegin(), vTmp[1].cend(), sep1, -1);
+		sregex_token_iterator e1;
+		vTmp2.clear();
+		for (; p1 != e1; ++p1) {
+			vTmp2.push_back(p1->str());
+		}
+		ParseDigitals(vTmp2[0], item.m_turnBet);
+		ParseDigitals(vTmp2[1], item.m_turnRaise);
+		ParseDigitals(vTmp2[2], item.m_turnDonk);
+
+		sregex_token_iterator p2(vTmp[2].cbegin(), vTmp[2].cend(), sep1, -1);
+		sregex_token_iterator e2;
+		vTmp2.clear();
+		for (; p2 != e2; ++p2) {
+			vTmp2.push_back(p2->str());
+		}
+		ParseDigitals(vTmp2[0], item.m_riverBet);
+		ParseDigitals(vTmp2[1], item.m_riverRaise);
+		ParseDigitals(vTmp2[2], item.m_riverDonk);
+
+		m_RTTreeConfigItems.push_back(make_pair(dlSpr, make_shared<CRTTreeConfigItem>(item)));
+	}
+	fin.close();
+	sort(m_RTTreeConfigItems.begin(), m_RTTreeConfigItems.end(), [](const pair<double, shared_ptr<CRTTreeConfigItem>>& elem1, const pair<double, shared_ptr<CRTTreeConfigItem>>& elem2) {return elem1.first < elem2.first; });
+
+//for test
+/*
+	for (auto it : m_RTTreeConfigItems) {
+		cout << it.first << "\t" ;
+		for (auto a : it.second->m_turnBet)
+			cout << a << ",";
+		cout << "\t";
+
+		for (auto a : it.second->m_turnRaise)
+			cout << a << ",";
+		cout << "\t";
+
+		for (auto a : it.second->m_turnDonk)
+			cout << a << ",";
+		cout << "\t";
+
+		for (auto a : it.second->m_riverBet)
+			cout << a << ",";
+		cout << "\t";
+
+		for (auto a : it.second->m_riverRaise)
+			cout << a << ",";
+		cout << "\t";
+
+		for (auto a : it.second->m_riverDonk)
+			cout << a << ",";
+		cout << "\t";
+
+		cout << endl;
+	}
+*/
+
 	return true;
 }
 
-Json::Value CStrategyTreeConfig::GetConfigItem(const string& sAbbrName)
+//sPreflopName需要按正则匹配
+void CStrategyTreeConfig::GetFlopCandidateRatios(const string& sPreflopName, vector<double>& candidateRatios, const SpaceMode mode)
 {
-	Json::Value v;
-	return v;
+	candidateRatios.clear();
+	smatch m;
+	for (auto it : m_FlopTreeConfigItems) {
+		regex reg(it.first);
+		if (regex_search(sPreflopName, m, reg)) {
+			switch (mode) {
+			case space_bet:
+				copy(it.second.m_flopBet.cbegin(), it.second.m_flopBet.cend(), back_inserter(candidateRatios));
+				break;
+			case space_raise:
+				copy(it.second.m_flopRaise.cbegin(), it.second.m_flopRaise.cend(), back_inserter(candidateRatios));
+				break;
+			case space_donk:
+				copy(it.second.m_flopDonk.cbegin(), it.second.m_flopDonk.cend(), back_inserter(candidateRatios));
+				break;
+			}
+		}
+	}
 }
 
+shared_ptr<CRTTreeConfigItem> CStrategyTreeConfig::GetRTTreeConfig(const Stacks& stack)
+{
+	double dlSrp = stack.dEStack / stack.dPot;
+	pair<double, std::shared_ptr<CRTTreeConfigItem>> value = make_pair(dlSrp,nullptr);
+	auto pos = lower_bound(m_RTTreeConfigItems.begin(), m_RTTreeConfigItems.end(), value, [](auto& e1, auto& e2) {return e1.first < e2.first; });
+	if (pos != m_RTTreeConfigItems.end()) {
+		return pos->second;
+	}
+	else
+		return m_RTTreeConfigItems.back().second;
+}
+
+void CStrategyTreeConfig::ParseDigitals(const string& sDigitals, vector<double>& v)
+{
+	regex sepBlank(R"(\s+)");
+	string s = sDigitals;
+
+	auto idx = sDigitals.find(':');
+	if (idx != string::npos)
+		s = sDigitals.substr(idx + 1, sDigitals.size());
+
+	sregex_token_iterator p(s.cbegin(), s.cend(), sepBlank, -1);
+	sregex_token_iterator e;
+	for (; p != e; ++p) 
+		v.push_back(stod(p->str()));
+
+}

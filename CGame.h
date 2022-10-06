@@ -17,6 +17,7 @@ public:
 	double m_dPot; //按多少个大盲计
 	Round m_round;
 	CBoard m_board;
+	OOPX m_oopx;
 
 	std::map<Position, CPlayer> m_players;
 
@@ -25,6 +26,8 @@ public:
 
 	static GameType GetGameTypeBySymbol(const std::string& sSymbol);
 	static Position GetPositionBySymbol(const std::string& sSymbol);
+
+	CGame();
 };
 
 #endif 

@@ -5,10 +5,10 @@
 #include "util.h"
 #include <regex>
 #include "CRangeNodeConfig.h"
-#include "CRangeNodeConfigItem.h"
 #include "CStrategyTreeConfig.h"
 #include "globledef.h"
 #include <fstream>
+#include "CActionLine.h"
 
 using namespace std;
 
@@ -89,56 +89,34 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	return true;
 }
 
-
 //wizard模式(未测试)
-bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
+bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
-	Round curRound;
-	string sPrefix, actionStr, sNodeName;
-	vector<Action> actions;
+	string sNodeNameTmp = sNodeName;
 	string sStrategyFilePath;
 	string sActionSquenceTmp;
 	RangeData rangeRatio;
 	string sLastPlayerPosition;
 	RangeData* pRangeRatio = nullptr;
 
-	//获取NodeName(注释）
-	//去掉sActionSquence中最后一个动作(C或X)
-	auto idx = sActionSquence.find_last_of('-');
-	if (idx != string::npos)
-		sActionSquenceTmp = sActionSquence.substr(0, idx);
-
-	CStrategy::parseActionSquence(sActionSquenceTmp, sPrefix, curRound, actions, actionStr);
-	if (curRound == preflop)
-		sNodeName = sPrefix;
-	else if (curRound == flop)
-		sNodeName = CStrategy::getNodeName(gmType, stacks, actions, sPrefix);
-
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
-	if (curRound == flop) {
-		if (suitReplace.blIsNeeded) {
-			regex reg("<.*>");
-			string sReplace = "<" + sIsoBoard + ">";
-			sNodeName = regex_replace(sNodeName, reg, sReplace);
-		}
+	if (suitReplace.blIsNeeded) {
+		regex reg("<.*>");
+		string sReplace = "<" + sIsoBoard + ">";
+		sNodeNameTmp = regex_replace(sNodeName, reg, sReplace);
 	}
 
-	//从策略配置中获取替换和special设置，存在替换则启用替换的名称，(flop用通配匹配法配置)
-	auto RangeNodeConfig = g_rangeNodeConfigs[gmType];
-	auto pRangeNodeConfigItem = RangeNodeConfig.GetItemByName(sNodeName);
-	if (pRangeNodeConfigItem != nullptr) {
-		if (!pRangeNodeConfigItem->m_sReplaceNodeName.empty())
-			sNodeName = pRangeNodeConfigItem->m_sReplaceNodeName;
-	}
+	//从策略配置中获取替换和replace设置，存在替换则启用替换的名称
+	string sReplace = g_rangeNodeConfigs[gmType].GetReplace(sNodeNameTmp);
+	if (!sReplace.empty())
+		sNodeNameTmp = sReplace;
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
+	//sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType, sNodeNameTmp, curRound);
+	//if(sStrategyFilePath.size() == 0){
+	//	return false;
+	//}
 
-	/*
-	sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType, sNodeName, curRound);
-	if(sStrategyFilePath.size() == 0){
-		return false;
-	}*/
-	
 	sStrategyFilePath = "./test/wizard_smple.json"; //for test/////////////////////////////////////////////////
 
 	Json::Value root;
@@ -151,40 +129,27 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 		return false;
 	}
 
-	if(actions.empty()) {
-		return false;
-	}
-
-	auto lastAction = actions[actions.size()-1];
-	if(!(lastAction.actionType == call || lastAction.actionType == check)){
-		return false;
-	}	
-
 	//取C或X对应策略，和最后行动者的位置(注释)
 	Clear(); //先清空原始range（不需要按原始range来计算）
 	//solution下找出action.code = "X"或"C"的[n]，rangeRatio = solution.[n].strategy；sLastPlayerPosition = solution.[n].action.position
 	auto solutions = root["solutions"];
-	const Json::Value *nodeStrategy = nullptr;
-	for(auto it = solutions.begin();it != solutions.end();it++){
-		if(lastAction.actionType == call && (*it)["action"]["code"] == "C") {
-			sLastPlayerPosition = (*it)["action"]["position"].asString();
-			nodeStrategy = &(*it)["strategy"];
-			break;
-		} else if(lastAction.actionType == check && (*it)["action"]["code"] == "X") {
+	const Json::Value* nodeStrategy = nullptr;
+	for (auto it = solutions.begin(); it != solutions.end(); it++) {
+		if ((*it)["action"]["code"] == "C" || (*it)["action"]["code"] == "X") {
 			sLastPlayerPosition = (*it)["action"]["position"].asString();
 			nodeStrategy = &(*it)["strategy"];
 			break;
 		}
 	}
 
-	if(sLastPlayerPosition=="") {
+	if (sLastPlayerPosition == "") {
 		return false;
 	}
 
 	for (Json::ArrayIndex i = 0; i < nodeStrategy->size(); i++) {
 		auto name = ComboMapping[i];
 		auto value = (*nodeStrategy)[i].asDouble();
-		rangeRatio[name]=value;
+		rangeRatio[name] = value;
 	}
 
 	//加载原始范围(注释)
@@ -192,28 +157,29 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 		//m_OOPRange = player_info[0].player.range ；m_IPRange = player_info[1].player.range
 	 //else m_OOPRange = player_info[1].player.range; m_IPRange = player_info[0].player.range
 
-	const Json::Value *rangeOOP;
-	const Json::Value *rangeIP;
+	const Json::Value* rangeOOP;
+	const Json::Value* rangeIP;
 
-	if(root["player_info"][0]["relative_postflop_position"] == "OOP") {
+	if (root["player_info"][0]["relative_postflop_position"] == "OOP") {
 		rangeOOP = &root["player_info"][0]["range"];
-		rangeIP  = &root["player_info"][1]["range"];
-	} else {
+		rangeIP = &root["player_info"][1]["range"];
+	}
+	else {
 		rangeOOP = &root["player_info"][1]["range"];
-		rangeIP  = &root["player_info"][0]["range"];
-	} 
+		rangeIP = &root["player_info"][0]["range"];
+	}
 
 
 	for (Json::ArrayIndex i = 0; i < rangeOOP->size(); i++) {
 		auto name = ComboMapping[i];
 		auto value = (*rangeOOP)[i].asDouble();
-		m_OOPRange[name]=value;
+		m_OOPRange[name] = value;
 	}
 
 	for (Json::ArrayIndex i = 0; i < rangeIP->size(); i++) {
 		auto name = ComboMapping[i];
 		auto value = (*rangeIP)[i].asDouble();
-		m_IPRange[name]=value;
+		m_IPRange[name] = value;
 	}
 
 	//找出sLastPlayerPosition对应的相对位置，确定需要范围运算的是OOP还是IP(注释)
@@ -224,22 +190,25 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 		//sRelativePos = player_info[1].player.relative_postflop_position
 	// sRelativePos == "OOP" ? pRangeRatio = &m_OOPRange : pRangeRatio = &m_IPRange;
 
-	if(root["player_info"][0]["player"]["position"].asString() == sLastPlayerPosition) {
+	if (root["player_info"][0]["player"]["position"].asString() == sLastPlayerPosition) {
 		sRelativePos = root["player_info"][0]["player"]["relative_postflop_position"].asString();
-	} else 	if(root["player_info"][1]["player"]["position"].asString() == sLastPlayerPosition) {
+	}
+	else 	if (root["player_info"][1]["player"]["position"].asString() == sLastPlayerPosition) {
 		sRelativePos = root["player_info"][1]["player"]["relative_postflop_position"].asString();
 	}
 
-	if(sRelativePos=="OOP") {
+	if (sRelativePos == "OOP") {
 		pRangeRatio = &m_OOPRange;
-	} else if (sRelativePos=="IP") {
+	}
+	else if (sRelativePos == "IP") {
 		pRangeRatio = &m_IPRange;
-	} else {
+	}
+	else {
 		return false;
 	}
 
 	//rangeRatio和pRangeRatio指向的范围运算，更新范围
-	for(auto it = rangeRatio.begin();it != rangeRatio.end();it++){
+	for (auto it = rangeRatio.begin(); it != rangeRatio.end(); it++) {
 		(*pRangeRatio)[it->first] = (*pRangeRatio)[it->first] * it->second;
 	}
 
@@ -258,7 +227,7 @@ bool CRange::Load(GameType gmType, const string& sActionSquence, const Stacks& s
 }
 
 //solver模式
-bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const string& sBoardNext, const SuitReplace& suitReplace)
+bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy ,const string& sBoardNext, const SuitReplace& suitReplace)
 {
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
@@ -416,10 +385,20 @@ void CRange::Clear()
 //同构转换
 void CRange::ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace& suitReplace)
 {
-	
+	std::unordered_map<std::string, double>::iterator  it_map;
+	std::unordered_map<std::string, double> mapTemp;
+
+	for (it_map = rangeRatio.begin(); it_map != rangeRatio.end(); it_map++)
+	{
+		string key = it_map->first;
+		string strKeyIsomor = CStrategy::ConvertOneHandcard(key, suitReplace);
+		mapTemp.insert({ strKeyIsomor, it_map->second });
+	}
+	rangeRatio.clear();
+	rangeRatio.insert(mapTemp.begin(), mapTemp.end());
 }
 
-//排除公牌相关的组合
+//排除公牌相关的组合（sBoardNext格式：KsQh7s,3个或1个）
 void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoardNext)
 {
 

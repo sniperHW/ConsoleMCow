@@ -18,7 +18,7 @@ public:
 
 	double m_dEStack;
 	CCombo m_hands;
-//	Action m_lastAction;
+	Action m_lastAction;
 
 	CPlayer(Position position, const double dEStack);
 	CPlayer();

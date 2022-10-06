@@ -3,13 +3,31 @@
 
 using namespace std;
 
+CGame::CGame()
+{
+	m_dBBSize = 0;
+	m_dPot = 100;
+	m_round = preflop;
+	m_oopx = OOPA;
+}
+
 CPlayer* CGame::GetHero()
 {
+	for (auto p = m_players.begin(); p != m_players.end(); p++) {
+		if (p->second.m_blIsHero)
+			return &p->second;
+	}
+
 	return nullptr;
 }
 
 CPlayer* CGame::GetRival()
 {
+	for (auto p = m_players.begin(); p != m_players.end(); p++) {
+		if (!p->second.m_blIsHero)
+			return &p->second;
+	}
+
 	return nullptr;
 }
 
