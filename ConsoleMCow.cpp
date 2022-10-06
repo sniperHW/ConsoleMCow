@@ -209,7 +209,7 @@ int main()
 	//CBoard b;
 	//b.SetFlop("KsQs7d");
 	//cout << b.GetBoardSymbol();
-
+/*
 	{
 		CStrategy strategy;
 		strategy.LoadMacro("./test/macro.txt");
@@ -217,7 +217,7 @@ int main()
 			cout << it->first << "," << it->second << endl;
 		}		
 	}
-
+*/
 	cout << "hello";
 	cout << "by xu" << endl;
 
