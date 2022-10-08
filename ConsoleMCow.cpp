@@ -218,8 +218,7 @@ int main()
 		}		
 	}
 */
-	cout << "hello";
-	cout << "by xu" << endl;
+
 
 }
 
