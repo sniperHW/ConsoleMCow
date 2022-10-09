@@ -71,10 +71,10 @@ bool LoadConfigs(GameType gmType)
 
 int main()
 {
-	if (!LoadConfigs(Max6_NL50_SD100)) {
+	/*if (!LoadConfigs(Max6_NL50_SD100)) {
 		cout << "Load config error!" << endl;
 		return 0;
-	}
+	}*/
 
 	//CSolution solution;
 	//string sInitGame = "GameID=353545;GameType=Max6_NL50_SD100;BBSize=0.1;Pot=1.5;Plays=[UTG]98.5,[HJ]67.8,[CO]34,[BTN]120,[SB]78,[BB]286;Hero=[BTN];Hands=<KsKd>;";
@@ -209,14 +209,45 @@ int main()
 	//CBoard b;
 	//b.SetFlop("KsQs7d");
 	//cout << b.GetBoardSymbol();
+	//{
+	//	CStrategy strategy;
+	//	strategy.LoadMacro("./test/macro.txt");
+	//	for(auto it = strategy.m_macro.begin();it != strategy.m_macro.end();it++){
+	//		cout << it->first << "," << it->second << endl;
+	//			
+	//}
+
+
 	{
 		CStrategy strategy;
-		strategy.LoadMacro("./test/macro.txt");
-		for(auto it = strategy.m_macro.begin();it != strategy.m_macro.end();it++){
-			cout << it->first << "," << it->second << endl;
-				
-	}
+		vector<shared_ptr<CStrategyItem>> strategys;
 
+		shared_ptr<CStrategyItem> item1(new CStrategyItem);
+
+		item1->m_action.actionType = raise;
+		item1->m_action.fBetSize = 0.1;
+		item1->m_action.fBetSizeByCash = 0.2;
+		item1->m_action.fBetSizeByPot = 0.3;
+		item1->m_strategyData["2d2c"] = 0.1;
+		item1->m_strategyData["2h2c"] = 0.2;
+		item1->m_strategyData["2h2d"] = 0.3;
+		item1->m_evData["2d2c"] = 0.11;
+		item1->m_evData["2h2c"] = 0.12;
+		item1->m_evData["2h2d"] = 0.13;
+		strategys.push_back(item1);
+
+		strategy.DumpStrategy("strategy.txt",strategys);
+
+		strategys.clear();
+
+		strategy.ReadStrategy("strategy.txt",strategys);
+
+		cout << strategys[0]->m_action.actionType << "," << strategys[0]->m_action.fBetSize << endl;
+
+		cout << strategys[0]->m_strategyData["2d2c"] << "," << strategys[0]->m_strategyData["2h2c"] << "," << strategys[0]->m_strategyData["2h2d"] << endl;
+
+		cout << strategys[0]->m_evData["2d2c"] << "," << strategys[0]->m_evData["2h2c"] << "," << strategys[0]->m_evData["2h2d"] << endl;
+	}
 
 }
 

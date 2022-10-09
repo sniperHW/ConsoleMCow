@@ -52,6 +52,11 @@ public:
 	void DoMacro(std::string macro);
 
 	static std::string ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace);
+
+	void DumpStrategy(const std::string& sPath,  const std::vector<std::shared_ptr<CStrategyItem>>& strategy);
+	void ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
+
+
 private:
 	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 	std::unordered_map<std::string,std::string> m_macro;

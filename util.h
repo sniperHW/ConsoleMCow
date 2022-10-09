@@ -24,6 +24,23 @@ inline ActionType str2ActionType(const std::string &str) {
 	}
 }
 
+inline std::string actionType2String(ActionType a) {
+	switch(a) {
+		case call:
+			return "CALL";
+		case fold:
+			return "FOLD";
+		case raise:
+			return "RAISE";
+		case allin:
+			return "ALLIN";
+		case check:
+			return "CHECK";
+		default:
+			return "NONE";
+	}
+}
+
 template <class Type>
 Type stringToNum(const std::string& str)
 {

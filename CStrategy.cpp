@@ -949,3 +949,54 @@ void CStrategy::AlignmentByexploit()
 {
 
 }
+
+void CStrategy::DumpStrategy(const std::string& sPath,  const std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
+	std::ofstream ofs;
+	ofs.open(sPath,std::ofstream::out);
+	if(ofs.is_open()) {
+		for(auto s : strategy) {
+			ofs << actionType2String(s->m_action.actionType) << "," << s->m_action.fBetSize << "," << s->m_action.fBetSizeByCash << "," << s->m_action.fBetSizeByPot;
+			ofs << ":";
+			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++){
+				if(it != s->m_strategyData.begin()){
+					ofs << ";";
+				} 
+				ofs<<it->first <<"," << it->second;
+			}
+			ofs << ":";
+			for(auto it = s->m_evData.begin();it != s->m_evData.end();it++){				
+				if(it != s->m_evData.begin()){
+					ofs << ";";
+				} 
+				ofs<<it->first <<"," << it->second;
+			}
+			ofs << "\n";
+		}
+	}
+	ofs.close();
+}
+	
+void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
+	vector<string> lines;
+	loadFileAsLine(sPath,lines);
+	for(auto l:lines) {
+		auto blocks = split(l,':');
+		auto action = split(blocks[0],',');
+		shared_ptr<CStrategyItem> item(new CStrategyItem);
+		item->m_action.actionType = str2ActionType(action[0]);
+		item->m_action.fBetSize = stringToNum<float>(action[1]);
+		item->m_action.fBetSizeByCash = stringToNum<float>(action[2]);
+		item->m_action.fBetSizeByPot = stringToNum<float>(action[3]);
+		auto strategyDatas = split(blocks[1],';');
+		for(auto s : strategyDatas) {
+			auto strategyData = split(s,',');
+			item->m_strategyData[strategyData[0]] = stringToNum<double>(strategyData[1]);
+		}
+
+		auto evDatas = split(blocks[2],';');
+		for(auto ev : evDatas) {
+			auto evData = split(ev,',');
+			item->m_evData[evData[0]] = stringToNum<double>(evData[1]);
+		}
+	}
+}

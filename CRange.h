@@ -20,6 +20,9 @@ public:
 	std::string GetRangeStr(); //转为solver配置文件需要的格式
 	void Clear(); //?
 
+	void DumpRange(const std::string& sPath, const RangeData& range);
+	void ReadRange(const std::string& sPath, RangeData& range);
+
 private:
 	void ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace & suitReplace); //转换同构
 	void RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoardNext); //排除公牌相关的组合

@@ -19,19 +19,21 @@ extern map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;
 void loadFileAsLine(const string& path,vector<string> &lines) {
 	std::ifstream ifs;
   	ifs.open(path);
-	ifs.seekg (0, ifs.end);
-    int length = ifs.tellg();
-    ifs.seekg (0, ifs.beg);
-    char *buffer = new char[length];
-	ifs.read (buffer,length);
-	auto l = split(buffer,'\n');
-	for(auto it = l.begin();it != l.end();it++) {
-		if(*it != "") {
-			lines.push_back(*it);
+	if(ifs.is_open()){
+		ifs.seekg (0, ifs.end);
+		int length = ifs.tellg();
+		ifs.seekg (0, ifs.beg);
+		char *buffer = new char[length];
+		ifs.read (buffer,length);
+		auto l = split(buffer,'\n');
+		for(auto it = l.begin();it != l.end();it++) {
+			if(*it != "") {
+				lines.push_back(*it);
+			}
 		}
+		delete [] buffer;
+		ifs.close();
 	}
-	delete [] buffer;
-	ifs.close();
 }
 
 
@@ -403,8 +405,51 @@ void CRange::ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace& suitRe
 	rangeRatio.insert(mapTemp.begin(), mapTemp.end());
 }
 
+static bool matchBoardNext(const string &range,const string& sBoardNext) {
+	for(int i = 0;i<int(range.size());i+=2) {
+		for(int j=0;j<int(sBoardNext.size());j+=2) {
+			if(range[i] == sBoardNext[j] && range[i+1] == sBoardNext[j+1]) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 //排除公牌相关的组合（sBoardNext格式：KsQh7s,3个或1个）
 void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoardNext)
 {
+	for(auto it = rangeRatio.begin();it != rangeRatio.end();) {
+		if(matchBoardNext(it->first,sBoardNext)){
+			it = rangeRatio.erase(it);
+		} else {
+			it++;
+		}
+	}
+}
 
+
+void CRange::DumpRange(const string& sPath, const RangeData& range) {
+	std::ofstream ofs;
+	ofs.open(sPath,std::ofstream::out);
+	if(ofs.is_open()) {
+		for(auto it = range.begin();it != range.end();it++) {
+			if(it != range.begin()){
+				ofs << "\n";
+			}
+			ofs << it->first << "," << it->second;
+		}
+	}
+	ofs.close();
+}
+
+extern void loadFileAsLine(const string& path,vector<string> &lines);
+
+void CRange::ReadRange(const string& sPath, RangeData& range) {
+	vector<string> lines;
+	loadFileAsLine(sPath,lines);
+	for(auto l:lines) {
+		auto r = split(l,',');
+		range[r[0]] = stringToNum<double>(r[1]);
+	}
 }
