@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <set>
 #include <map>
+#include <memory>
 
 const int COMBO_COUNT = 1326;
 const int ISOFLOP_COUNT = 1755;

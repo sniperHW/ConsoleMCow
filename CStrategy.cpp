@@ -558,20 +558,6 @@ vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands
 	return commands;
 }
 
-void CStrategy::AlignmentByBetsize()
-{
-
-}
-
-void CStrategy::AlignmentByStackDepth()
-{
-
-}
-
-void CStrategy::AlignmentByexploit()
-{
-
-}
 
 static unordered_map<ActionType,string> getCommandActions(const string &actionStr) {
 	unordered_map<ActionType,string> actions;
@@ -947,4 +933,19 @@ void CStrategy::DoMacro(std::string macro) {
 	if(it != m_macro.end()) {
 		SpecialProcessing(it->second);
 	}
+}
+
+void CStrategy::AlignmentByBetsize()
+{
+
+}
+
+void CStrategy::AlignmentByStackDepth()
+{
+
+}
+
+void CStrategy::AlignmentByexploit()
+{
+
 }

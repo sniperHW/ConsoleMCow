@@ -15,60 +15,77 @@ static int getColor(char c){
 
 vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 {
-	vector<string> combos;
-	
-	auto card1 = sAbbr[0];
-	auto card2 = sAbbr[1];
+	string sCard1, sCard2;
+	array<string, 4> sSuits{ "s","h","d","c" };
+	vector<string> v;
 
-	//对子
-	if(card1==card2) {
-		for(auto c : ComboMapping) {
-			if(c[0] == c[2]) {
-				combos.push_back(c);
-			}			
+	if (sAbbr.size() == 2) {
+		sCard1 = sAbbr[0];
+		sCard2 = sAbbr[1];
+		if (sCard1 == sCard2) {	//pair
+			v.push_back(sCard1 + "s" + sCard1 + "h");
+			v.push_back(sCard1 + "s" + sCard1 + "d");
+			v.push_back(sCard1 + "h" + sCard1 + "d");
+			v.push_back(sCard1 + "s" + sCard1 + "c");
+			v.push_back(sCard1 + "h" + sCard1 + "c");
+			v.push_back(sCard1 + "d" + sCard1 + "c");
 		}
-	} else {
-		//AKo,AK
-		
-		if(sAbbr.size() == 2 || sAbbr[2] == 'o' ) {
-			for(auto c : ComboMapping) {
-				if(getColor(c[1]) != getColor(c[3])){
-					if(c[0] == card1 && c[2] == card2) {
-						combos.push_back(c);
-					}
-				}
+		else {	//AK
+			for (auto a : sSuits) {
+				for (auto b : sSuits)
+					v.push_back(sCard1 + a + sCard1 + b);
 			}
 		}
-
-		//AKs,AK
-		if(sAbbr.size() == 2 || sAbbr[2] == 'o' ) {
-			for(auto c : ComboMapping) {
-				if(getColor(c[1]) == getColor(c[3])){
-					if(c[0] == card1 && c[2] == card2) {
-						combos.push_back(c);
-					}
-				}
-			}				
+	}
+	else {
+		sCard1 = sAbbr[0];
+		sCard2 = sAbbr[1];
+		if (sAbbr[2] == 'o') {	//o
+			v.push_back(sCard1 + "s" + sCard2 + "h");
+			v.push_back(sCard1 + "s" + sCard2 + "d");
+			v.push_back(sCard1 + "s" + sCard2 + "c");
+			v.push_back(sCard1 + "h" + sCard2 + "s");
+			v.push_back(sCard1 + "h" + sCard2 + "d");
+			v.push_back(sCard1 + "h" + sCard2 + "c");
+			v.push_back(sCard1 + "d" + sCard2 + "s");
+			v.push_back(sCard1 + "d" + sCard2 + "h");
+			v.push_back(sCard1 + "d" + sCard2 + "c");
+			v.push_back(sCard1 + "c" + sCard2 + "s");
+			v.push_back(sCard1 + "c" + sCard2 + "h");
+			v.push_back(sCard1 + "c" + sCard2 + "d");
+		}
+		else if (sAbbr[2] == 's') {	//s
+			v.push_back(sCard1 + "s" + sCard2 + "s");
+			v.push_back(sCard1 + "h" + sCard2 + "h");
+			v.push_back(sCard1 + "d" + sCard2 + "d");
+			v.push_back(sCard1 + "c" + sCard2 + "c");
 		}
 	}
 
-	return combos;
+	return v;
 }
 
 
 string CCombo::GetAbbrSymble(const string sCombo)
 {
 	string ret;
-	ret.push_back(sCombo[0]);
-	ret.push_back(sCombo[2]); 
 
-	if(sCombo[0] != sCombo[2]) {
-		if(getColor(sCombo[1]) == getColor(sCombo[3])) {
-			ret.push_back('s');
-		}else{
-			ret.push_back('o');
-		}	
+	if (sCombo[0] == sCombo[2]) { //pair
+		ret.push_back(sCombo[0]);
+		ret.push_back(sCombo[0]);
 	}
+	else if (sCombo[1] == sCombo[3]) { //s
+		ret.push_back(sCombo[0]);
+		ret.push_back(sCombo[2]);
+		ret.push_back('s');
+	}
+	else { //o
+		ret.push_back(sCombo[0]);
+		ret.push_back(sCombo[2]);
+		ret.push_back('o');
+	}
+
+
 	return ret;
 }
 

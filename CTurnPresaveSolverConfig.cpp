@@ -32,9 +32,6 @@ bool CTurnPresaveSolverConfig::Init(GameType gmType)
 	}
 	fin.close();
 
-	for (auto s : m_sAbbrNames)
-		cout << s << endl;
-
 	return true;
 }
 
