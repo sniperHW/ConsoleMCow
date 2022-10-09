@@ -7,8 +7,6 @@
 
 using namespace std;
 
-#define _MAX_PATH 1024
-
 string CDataFrom::GetWizardFilePath(GameType gmType, const string& sNodeName)
 {
 // \Data\WizardFile\Max6_NL50_SD100\flop\HJ_vsUTG_srp<>R50-R50-R50-A\HJ_vsUTG_srp<KsQs7d>R50-R50-R50-A.json
