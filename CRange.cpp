@@ -18,7 +18,7 @@ extern map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;
 //加载文件，返回以行分割的内容（不包括空白行）
 void loadFileAsLine(const string& path,vector<string> &lines) {
 	std::ifstream ifs;
-  	ifs.open(path);
+  	ifs.open(path,std::ifstream::binary);
 	if(ifs.is_open()){
 		ifs.seekg (0, ifs.end);
 		int length = ifs.tellg();
