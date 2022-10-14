@@ -23,8 +23,9 @@ void loadFileAsLine(const string& path,vector<string> &lines) {
 		ifs.seekg (0, ifs.end);
 		int length = ifs.tellg();
 		ifs.seekg (0, ifs.beg);
-		char *buffer = new char[length];
+		char *buffer = new char[length+1];
 		ifs.read (buffer,length);
+		buffer[length] = 0;
 		auto l = split(buffer,'\n');
 		for(auto it = l.begin();it != l.end();it++) {
 			if(*it != "") {

@@ -993,10 +993,14 @@ void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_
 			item->m_strategyData[strategyData[0]] = stringToNum<double>(strategyData[1]);
 		}
 
-		auto evDatas = split(blocks[2],';');
-		for(auto ev : evDatas) {
-			auto evData = split(ev,',');
-			item->m_evData[evData[0]] = stringToNum<double>(evData[1]);
+		if(blocks[2]!="") {
+			auto evDatas = split(blocks[2],';');
+			for(auto ev : evDatas) {
+				auto evData = split(ev,',');
+				item->m_evData[evData[0]] = stringToNum<double>(evData[1]);
+			}
 		}
+
+		strategy.push_back(item);
 	}
 }

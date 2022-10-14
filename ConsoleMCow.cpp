@@ -69,6 +69,8 @@ bool LoadConfigs(GameType gmType)
 	return true;
 }
 
+extern void loadFileAsLine(const string& path,vector<string> &lines);
+
 int main()
 {
 	/*if (!LoadConfigs(Max6_NL50_SD100)) {
@@ -216,13 +218,17 @@ int main()
 	//		cout << it->first << "," << it->second << endl;
 	//			
 	//}
-
+	//vector<string> lines;
+	//loadFileAsLine("./str1.txt",lines);
+	//for(auto l : lines) {
+	//	cout << l << endl;
+	//}
 
 	{
 		CStrategy strategy;
 		vector<shared_ptr<CStrategyItem>> strategys;
 
-		shared_ptr<CStrategyItem> item1(new CStrategyItem);
+		/*shared_ptr<CStrategyItem> item1(new CStrategyItem);
 
 		item1->m_action.actionType = raise;
 		item1->m_action.fBetSize = 0.1;
@@ -238,15 +244,20 @@ int main()
 
 		strategy.DumpStrategy("strategy.txt",strategys);
 
-		strategys.clear();
+		strategys.clear();*/
 
-		strategy.ReadStrategy("strategy.txt",strategys);
+		strategy.ReadStrategy("./strategy.txt",strategys);
 
-		cout << strategys[0]->m_action.actionType << "," << strategys[0]->m_action.fBetSize << endl;
+		cout << strategys.size() << endl;
 
-		cout << strategys[0]->m_strategyData["2d2c"] << "," << strategys[0]->m_strategyData["2h2c"] << "," << strategys[0]->m_strategyData["2h2d"] << endl;
+		strategy.DumpStrategy("strategy.txt",strategys);
 
-		cout << strategys[0]->m_evData["2d2c"] << "," << strategys[0]->m_evData["2h2c"] << "," << strategys[0]->m_evData["2h2d"] << endl;
+
+		//cout << strategys[0]->m_action.actionType << "," << strategys[0]->m_action.fBetSize << endl;
+
+		//cout << strategys[0]->m_strategyData["2d2c"] << "," << strategys[0]->m_strategyData["2h2c"] << "," << strategys[0]->m_strategyData["2h2d"] << endl;
+
+		//cout << strategys[0]->m_evData["2d2c"] << "," << strategys[0]->m_evData["2h2c"] << "," << strategys[0]->m_evData["2h2d"] << endl;
 	}
 
 }

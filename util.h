@@ -51,6 +51,7 @@ Type stringToNum(const std::string& str)
 }
 
 
+/*
 inline std::vector<std::string> split(const std::string& s, char seperator)
 {
    std::vector<std::string> output;
@@ -69,6 +70,22 @@ inline std::vector<std::string> split(const std::string& s, char seperator)
     output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
 
     return output;
+}*/
+
+inline std::vector<std::string> split(const std::string& s, char c){
+    std::vector<std::string> v; 
+    std::string::size_type i = 0;
+    std::string::size_type j = s.find(c);
+
+    while (j != std::string::npos) {
+        v.push_back(s.substr(i, j-i));
+        i = ++j;
+        j = s.find(c, j);
+
+        if (j == std::string::npos)
+            v.push_back(s.substr(i, s.length()));
+    }
+	return v;
 }
 
 
