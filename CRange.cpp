@@ -9,6 +9,7 @@
 #include "globledef.h"
 #include <fstream>
 #include "CActionLine.h"
+#include <ctime>
 
 using namespace std;
 
@@ -86,9 +87,24 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	}
 
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_file-before_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
+	DumpRange(sComment, OOP);
+	 sComment = "from_file-before_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
+	DumpRange(sComment, IP);
+#endif
+
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
+
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	 sComment = "from_file-after_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
+	DumpRange(sComment, OOP);
+	 sComment = "from_file-after_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
+	DumpRange(sComment, IP);
+#endif
 
 	return true;
 }
@@ -116,12 +132,12 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		sNodeNameTmp = sReplace;
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	//sStrategyFilePath = g_dataFrom.GetWizardFilePath(gmType, sNodeNameTmp, curRound);
-	//if(sStrategyFilePath.size() == 0){
-	//	return false;
-	//}
+	sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeName);
+	if(sStrategyFilePath.size() == 0){
+		return false;
+	}
 
-	sStrategyFilePath = "./test/wizard_smple.json"; //for test/////////////////////////////////////////////////
+	//sStrategyFilePath = "./test/wizard_smple.json"; //for test/////////////////////////////////////////////////
 
 	Json::Value root;
 	std::ifstream ifs;
@@ -216,6 +232,12 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		(*pRangeRatio)[it->first] = (*pRangeRatio)[it->first] * it->second;
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_wizard-before_iso-OOP-" + sNodeName;
+	DumpRange(sComment, OOP);
+	 sComment = "from_wizard-before_iso-IP-" + sNodeName;
+	DumpRange(sComment, IP);
+#endif
 
 	//同构转换
 	if (suitReplace.blIsNeeded) {
@@ -223,9 +245,23 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		ConvertIsomorphism(m_IPRange, suitReplace);
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	 sComment = "from_wizard-before_rBoard-OOP-" + sNodeName;
+	DumpRange(sComment, OOP);
+	 sComment = "from_wizard-before_rBoard-IP-" + sNodeName;
+	DumpRange(sComment, IP);
+#endif
+
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	sComment = "from_wizard-after_rBoard-OOP-" + sNodeName;
+	DumpRange(sComment, OOP);
+	sComment = "from_wizard-after_rBoard-IP-" + sNodeName;
+	DumpRange(sComment, IP);
+#endif
 
 	return true;
 }
@@ -361,6 +397,13 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		}
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_sover-before_iso-OOP-" + sActionSquence;
+	DumpRange(sComment, OOP);
+	sComment = "from_sover-before_iso-IP-" + sActionSquence;
+	DumpRange(sComment, IP);
+#endif
+
 
 	//同构转换
 	if (suitReplace.blIsNeeded) {
@@ -368,11 +411,24 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		ConvertIsomorphism(IPRangeRatio, suitReplace);
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	sComment = "from_sover-before_rBoard-OOP-" + sActionSquence;
+	DumpRange(sComment, OOP);
+	sComment = "from_sover-before_rBoard-IP-" + sActionSquence;
+	DumpRange(sComment, IP);
+#endif
 	//和原始范围运算,更新原始范围（每个组合原始范围数据 *RangeRatio对应的比例, 能否一个transform函数加multiplies）
 
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	sComment = "from_sover-after_rBoard-OOP-" + sActionSquence;
+	DumpRange(sComment, OOP);
+	sComment = "from_sover-after_rBoard-IP-" + sActionSquence;
+	DumpRange(sComment, IP);
+#endif
 
 	return true;
 }
@@ -388,7 +444,8 @@ string CRange::GetRangeStr()
 //清空双方范围，置为0
 void CRange::Clear()
 {
-
+	m_OOPRange.clear();
+	m_IPRange.clear();
 }
 //同构转换
 void CRange::ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace& suitReplace)
@@ -430,18 +487,37 @@ void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoard
 }
 
 
-void CRange::DumpRange(const string& sPath, const RangeData& range) {
-	std::ofstream ofs;
-	ofs.open(sPath,std::ofstream::out);
+void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosition) {
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\dump\\";
+	string sCommandsPath = sConfigFolder + "commands.txt";
+	time_t t = time(nullptr);
+	string sDataPath = sConfigFolder + to_string(t) + ".txt";
+
+	ofstream ofCommands;
+	ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
+	if (ofCommands.is_open()) {
+		//格式：87969;	rRng; changeRange1;	D:\VCCode\test\ConsoleTestDataManage\ConsoleTestDataManage\data\Rng1.txt
+		string sLine = to_string(t) + "; " + "rRng; " + sComment + "; " + sDataPath;
+		ofCommands << sLine << endl;
+	}
+	ofCommands.close();
+
+	RangeData* pRange = heroRPosition == OOP ? &m_OOPRange : &m_IPRange;
+	ofstream ofs;
+	ofs.open(sDataPath,ofstream::out);
 	if(ofs.is_open()) {
-		for(auto it = range.begin();it != range.end();it++) {
-			if(it != range.begin()){
+		for(auto it = pRange->begin();it != pRange->end();it++) {
+			if(it != pRange->begin()){
 				ofs << "\n";
 			}
 			ofs << it->first << "," << it->second;
 		}
 	}
 	ofs.close();
+
 }
 
 extern void loadFileAsLine(const string& path,vector<string> &lines);

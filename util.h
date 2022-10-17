@@ -41,6 +41,41 @@ inline std::string actionType2String(ActionType a) {
 	}
 }
 
+inline std::string double2String(const double dlValue, const int nFixed) {
+	char buffer[100];
+	switch (nFixed)
+	{
+	case 1:
+		sprintf_s(buffer, sizeof(buffer), "%.1f", dlValue);
+		break;
+	case 2:
+		sprintf_s(buffer, sizeof(buffer), "%.2f", dlValue);
+		break;
+	case 7:
+		sprintf_s(buffer, sizeof(buffer), "%.7f", dlValue);
+		break;
+	default:
+		sprintf_s(buffer, sizeof(buffer), "%.1f", dlValue);
+		break;
+	}
+
+	std::string sValue = buffer;
+	auto p = sValue.end() - 1;
+	while (*p == '0' || *p == '.')
+	{
+		if (*p == '.') {
+			sValue.pop_back();
+			break;
+		}
+		else {
+			p--;
+			sValue.pop_back();
+		}
+	}
+
+	return sValue;
+}
+
 template <class Type>
 Type stringToNum(const std::string& str)
 {

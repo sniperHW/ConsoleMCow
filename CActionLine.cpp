@@ -337,6 +337,15 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 		}
 
+		//设置hero相对位置
+		if (game.m_round == flop) {
+			auto pFirst = game.m_players.begin();
+			for (auto pPlay = game.m_players.begin(); pPlay != game.m_players.end(); pPlay++) {
+				if (pPlay->second.m_blIsHero)
+					pPlay->second.m_positionRelative = pPlay == pFirst ? OOP : IP;
+			}
+		}
+
 		//将actionSquence与下注空间对齐(flop时m_sActionSquence和NodeName一致，river不需要)
 		if (game.m_round == flop)
 			m_sNodeName = m_sActionSquence;

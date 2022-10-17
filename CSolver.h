@@ -8,6 +8,7 @@
 #include "CRange.h"
 #include "CStrategyTreeConfig.h"
 
+
 class CSolverConfig
 {
 public:
@@ -23,15 +24,18 @@ public:
 	bool ToSolve(const std::string& sGameID, const CSolverConfig & config, Json::Value & result, const SolverCalcMode calcMode = calc_sync); //返回需要定义
 	void ToStop(int nGameID); //停止运算，当turn对抗结束，solver还没除结果时
 
+
 private:
-	int m_nDefaultThreadNum;
-	int m_nDefaultMaxIteration;
-	int m_nDefaultRaiseLimit;
-	float m_fDefaultAllinThreshold; //0.85
-	float m_fDefaultAccuracy; //0.5
+	int m_nDefaultThreadNum = 8;
+	int m_nDefaultMaxIteration = 200;
+	int m_nDefaultRaiseLimit = 5;
+	float m_fDefaultAllinThreshold = (float)0.85; //0.85
+	float m_fDefaultAccuracy = (float)0.5; //0.5
 	//群集相关
 
-	void MakeConfigFile(int nGameID, const CSolverConfig& config);
+	std::string MakeConfigFile(const std::string& sGameID, const CSolverConfig& config); //返回配置文件路径
+	double static GetboostRatio(const double dlSrc);
+	std::string GetSplitBoard(const std::string& sBoardOld);
 };
 
 #endif

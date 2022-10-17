@@ -4,8 +4,6 @@
 #include <regex>
 using namespace std;
 
-//for test
-#include <iostream>
 
 bool CTurnPresaveSolverConfig::Init(GameType gmType)
 {

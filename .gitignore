@@ -9,3 +9,5 @@ ConsoleMCow.sln
 mac
 /win/json
 /Debug
+/SolverConfigs
+/dump

@@ -126,7 +126,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		if (sStrategyFilePath.size() == 0)
 			return false;
 
-		sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
+//sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
 		//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 		Json::Value root;
@@ -177,15 +177,46 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		}
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_wizard-row" + sNodeName;
+	DumpStrategy(sComment);
+#endif
+
 	string sSpecial = g_strategyNodeConfigs[gmType].GetSpecial(sNodeName);
 	if (!sSpecial.empty()) {
-		//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+		SpecialProcessing(sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+		 sComment = "from_wizard-after_special" + sNodeName;
+		DumpStrategy(sComment);
+#endif
 
 	}
 
 	//处理allin和call的转换
+	if (bl2Allin) {
+		sSpecial = "Replace[whole][allin]";
+		SpecialProcessing(sSpecial);
+	}
+
+	if (blAllin2Call) {
+		sSpecial = "Replace[allin][call];Replace[raise][call]";
+		SpecialProcessing(sSpecial);
+	}
+
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	 sComment = "from_wizard-after@&" + sNodeName;
+	DumpStrategy(sComment);
+#endif
 
 	//同构转换
+	ConvertIsomorphism(suitReplace);
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	 sComment = "from_wizard-after_iso" + sNodeName;
+	DumpStrategy(sComment);
+#endif
 
 	return true;
 }
@@ -332,7 +363,19 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	if(maxRaise != nullptr) {
 		maxRaise->m_action.actionType = allin;
 	}
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_solver-row" + sActionSquence;
+	DumpStrategy(sComment);
+#endif
+
 	//同构转换
+	ConvertIsomorphism(suitReplace);
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	sComment = "from_wizard-after_iso" + sActionSquence;
+	DumpStrategy(sComment);
+#endif
 
 	return true;
 }
@@ -464,7 +507,7 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 }
 
 //将special文本命令格式化
-//for test :string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
+//string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
 vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands)
 {
 	vector<CCommForSpecialProcessing> commands;
@@ -950,11 +993,31 @@ void CStrategy::AlignmentByexploit()
 
 }
 
-void CStrategy::DumpStrategy(const std::string& sPath,  const std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
+void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy) {
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\dump\\";
+	string sCommandsPath = sConfigFolder + "commands.txt";
+	time_t t = time(nullptr);
+	string sDataPath = sConfigFolder + to_string(t) + ".txt";
+
+	ofstream ofCommands;
+	ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
+	if (ofCommands.is_open()) {
+		//格式：87969;	rRng; changeRange1;	D:\VCCode\test\ConsoleTestDataManage\ConsoleTestDataManage\data\Rng1.txt
+		string sLine = to_string(t) + "; " + "rStr; " + sComment + "; " + sDataPath;
+		ofCommands << sLine << endl;
+	}
+	ofCommands.close();
+	
+	if (pStrategy == NULL)
+		pStrategy = &m_strategy;
+
 	std::ofstream ofs;
-	ofs.open(sPath,std::ofstream::out);
+	ofs.open(sDataPath,std::ofstream::out);
 	if(ofs.is_open()) {
-		for(auto s : strategy) {
+		for(auto s : *pStrategy) {
 			ofs << actionType2String(s->m_action.actionType) << "," << s->m_action.fBetSize << "," << s->m_action.fBetSizeByCash << "," << s->m_action.fBetSizeByPot;
 			ofs << ":";
 			for(auto it = s->m_strategyData.begin();it != s->m_strategyData.end();it++){
@@ -975,6 +1038,7 @@ void CStrategy::DumpStrategy(const std::string& sPath,  const std::vector<std::s
 	}
 	ofs.close();
 }
+
 	
 void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
 	vector<string> lines;

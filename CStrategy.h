@@ -53,7 +53,7 @@ public:
 
 	static std::string ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace);
 
-	void DumpStrategy(const std::string& sPath,  const std::vector<std::shared_ptr<CStrategyItem>>& strategy);
+	void DumpStrategy(const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy = NULL);
 	void ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
 
 

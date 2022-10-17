@@ -30,13 +30,17 @@ Action CSolution::HeroAction(const string& sActionLine)
 		m_blNotOffline = false;
 		return ProcessingOffline();
 	}
-//for test
-	printTest();
 
 	switch (m_strategyFrom)
 	{
 	case from_wizard: {
 		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+
+#ifdef FOR_TEST_DUMP_
+		string sComment = "from_wizard-" + m_actionLine.m_sActionSquence;
+		strategy.DumpStrategy(sComment, NULL);
+#endif
+
 		break;
 	}
 	case from_solver_presave: {
@@ -44,6 +48,12 @@ Action CSolution::HeroAction(const string& sActionLine)
 			m_actionLine.m_sActionSquence.pop_back();
 
 		m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+
+#ifdef FOR_TEST_DUMP_
+		string sComment = "from_solver_presave-" + m_actionLine.m_sActionSquence;
+		strategy.DumpStrategy(sComment, NULL);
+#endif
+
 		break;
 	}
 	case from_solver_calc: {
@@ -55,12 +65,17 @@ Action CSolution::HeroAction(const string& sActionLine)
 		solverConfig.m_stacks = GetStacks();
 		solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
 		solverConfig.m_pRange = &m_range;
-		//solverConfig.m_strategyTree = g_strategyTreeConfigs[m_game.m_gmType].GetConfigItem(m_actionLine.m_sAbbrName);
 		m_StacksByStrategy = solverConfig.m_stacks; //策略对应筹码为实际筹码
 		m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
 		m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResult);
 		if (m_blNotOffline)
 			m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+
+#ifdef FOR_TEST_DUMP_
+		string sComment = "from_solver_realtime-" + m_actionLine.m_sActionSquence;
+		strategy.DumpStrategy(sComment, NULL);
+#endif
+
 		break;
 	}
 	case multi_players: { //flop后多人模式,留待实现
@@ -87,11 +102,6 @@ bool CSolution::ChangeRound(const string& sActionLine)
 	if (!m_actionLine.Parse(sActionLine, m_game))
 		m_blNotOffline = false;
 
-
-//for test
-printTest();
-
-
 	if (!m_blNotOffline)
 		return false;
 
@@ -100,18 +110,49 @@ printTest();
 			m_strategyFrom = multi_players;
 	}
 
+#ifdef FOR_TEST_DUMP_
+	string sComment = "";
+	RelativePosition heroRPosition;
+	for (auto it : m_game.m_players) {
+		if (it.second.m_blIsHero)
+			heroRPosition = it.second.m_positionRelative;
+	}
+#endif
+
 	//加载range(round已经为新的,m_strategyFrom为旧的)
 	if (m_game.m_round == flop) { //file模式
 		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
+
+#ifdef FOR_TEST_DUMP_
+		sComment = "from_file-" + m_actionLine.m_sNodeName;
+#endif
+
 	}
 	else if (m_strategyFrom == from_wizard) { //wizard模式
 		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+
+#ifdef FOR_TEST_DUMP_
+		sComment = "from_wizard-" + m_actionLine.m_sNodeName;
+#endif
+
 	}
 	else if (m_strategyFrom == from_solver_presave || m_strategyFrom == from_solver_realtime) { //solver模式
 		m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
+
+#ifdef FOR_TEST_DUMP_
+		sComment = "from_solver-" + m_actionLine.m_sActionSquence;
+#endif
+
 	}
 	else if (m_strategyFrom == multi_players)
 		return true;
+
+#ifdef FOR_TEST_DUMP_
+	if (sComment.size() > 0) 
+		m_range.DumpRange(sComment, heroRPosition);
+#endif
+
+
 
 	//设置本街数据来源
 	if (m_game.m_round == flop) {

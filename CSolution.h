@@ -18,6 +18,7 @@ public:
 	Action HeroAction(const std::string & sActionLine);
 	bool ChangeRound(const std::string& sActionLine);
 	void InitGame(const std::string & sInitGame);
+
 	void HeroHands(const std::string & sHands); //某些平台初始不能看到hero的手牌，需要单独接口
 
 	CSolution();

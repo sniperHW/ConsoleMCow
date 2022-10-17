@@ -5,8 +5,6 @@
 #include <fstream>
 #include "CActionLine.h"
 
-//for test
-#include <iostream>
 
 using namespace std;
 
@@ -101,38 +99,6 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	fin.close();
 	sort(m_RTTreeConfigItems.begin(), m_RTTreeConfigItems.end(), [](const pair<double, shared_ptr<CRTTreeConfigItem>>& elem1, const pair<double, shared_ptr<CRTTreeConfigItem>>& elem2) {return elem1.first < elem2.first; });
 
-//for test
-/*
-	for (auto it : m_RTTreeConfigItems) {
-		cout << it.first << "\t" ;
-		for (auto a : it.second->m_turnBet)
-			cout << a << ",";
-		cout << "\t";
-
-		for (auto a : it.second->m_turnRaise)
-			cout << a << ",";
-		cout << "\t";
-
-		for (auto a : it.second->m_turnDonk)
-			cout << a << ",";
-		cout << "\t";
-
-		for (auto a : it.second->m_riverBet)
-			cout << a << ",";
-		cout << "\t";
-
-		for (auto a : it.second->m_riverRaise)
-			cout << a << ",";
-		cout << "\t";
-
-		for (auto a : it.second->m_riverDonk)
-			cout << a << ",";
-		cout << "\t";
-
-		cout << endl;
-	}
-*/
-
 	return true;
 }
 
@@ -161,6 +127,8 @@ void CStrategyTreeConfig::GetFlopCandidateRatios(const string& sPreflopName, vec
 
 shared_ptr<CRTTreeConfigItem> CStrategyTreeConfig::GetRTTreeConfig(const Stacks& stack)
 {
+	if (m_RTTreeConfigItems.size() == 0)
+		return nullptr;
 	double dlSrp = stack.dEStack / stack.dPot;
 	pair<double, std::shared_ptr<CRTTreeConfigItem>> value = make_pair(dlSrp,nullptr);
 	auto pos = lower_bound(m_RTTreeConfigItems.begin(), m_RTTreeConfigItems.end(), value, [](auto& e1, auto& e2) {return e1.first < e2.first; });

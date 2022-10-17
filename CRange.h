@@ -18,10 +18,10 @@ public:
 	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const std::string& sBoardNext, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌
 
 	std::string GetRangeStr(); //转为solver配置文件需要的格式
-	void Clear(); //?
+	void Clear(); 
 
-	void DumpRange(const std::string& sPath, const RangeData& range);
-	void ReadRange(const std::string& sPath, RangeData& range);
+	void DumpRange(const std::string& sComment, const RelativePosition heroRPosition);
+	void ReadRange(const std::string& sPath, RangeData& range);	//本系统不用
 
 private:
 	void ConvertIsomorphism(RangeData& rangeRatio, const SuitReplace & suitReplace); //转换同构
