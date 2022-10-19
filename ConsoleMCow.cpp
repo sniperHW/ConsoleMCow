@@ -19,6 +19,7 @@
 #include "CFlopDataFromWizardConfig.h"
 #include "CDataFrom.h"
 #include "CBoard.h"
+#include <regex>
 
 using namespace std;
 
@@ -89,9 +90,87 @@ int main()
 		cout << "Load config error!" << endl;
 		return 0;
 	}
+	else
+		cout << "Load Config finished." << endl;
 
 
+/*
+	cout << "Please input commands, gameover to finish." << endl;
 
+	string sCommand, sRequireHead, sRequireContent;
+	char szBuff[1024];
+	cin.getline(szBuff,1024);
+	sCommand = szBuff;
+	cout << endl;
+	CSolution* pSolution = new CSolution;
+	while (1) {
+		if (sCommand == "gameover") {
+			delete pSolution;
+			pSolution = new CSolution;
+			cout << "New game begin, please input input commands." << endl;
+
+			memset(szBuff, 0, sizeof(szBuff));
+			cin.getline(szBuff, 1024);
+			sCommand = szBuff;
+			cout << endl;
+		}
+		else {
+			auto stSpace = sCommand.find(" ");
+			sRequireContent = sCommand.substr(stSpace +1);
+			sRequireHead = sCommand.substr(0, stSpace);
+
+
+			if (sRequireHead == "InitGame") {
+				pSolution->InitGame(sRequireContent);
+				cout << endl;
+				cout << "Please input next commands, gameover to finish." << endl;
+			}
+			else if (sRequireHead == "HeroAction") {
+				pSolution->HeroAction(sRequireContent);
+				cout << endl;
+				cout << "Please input next commands, gameover to finish." << endl;
+			}
+			else if (sRequireHead == "ChangeRound") {
+				pSolution->ChangeRound(sRequireContent);
+				cout << endl;
+				cout << "Please input next commands, gameover to finish." << endl;
+			}
+
+			memset(szBuff, 0, sizeof(szBuff));
+			cin.getline(szBuff, 1024);
+			sCommand = szBuff;
+			cout << endl;
+		}
+	}
+*/
+
+	CSolution testSolution;
+	testSolution.InitGame("GameID=1666081977;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]R3.0,[CO]F"); 
+	testSolution.ChangeRound("[BTN]R7.0,[SB]F,[BB]F,-,[HJ]C<KsKdQc>pot=15.5;EStack=[HJ]93.0,[BTN]93.0;");
+	testSolution.HeroAction("");
+
+/*
+	CBoard board;
+	string sRowBoard = "KdKcQs";
+	cout << "rowBoard:" << sRowBoard << endl;
+	board.SetFlop(sRowBoard);
+	board.SetTurn("As");
+
+	cout << "Board:" << board.GetBoardSymbol() << endl;
+	cout << "ISO_Board:" << board.GetIsoBoardSymbol() << endl;
+
+	if (IsoFlops.find(board.GetIsoBoardSymbol()) == IsoFlops.end())
+		cout << "not in ISO set" << endl;
+	else
+		cout << "in set" << endl;
+	
+	regex reg("<......>");
+	string sReplace = "<" + board.GetIsomorphismSymbol() + ">";
+	string sISONodeName = "EP_UTG_vs_2sqz3bet(HJ,BTN)<KdKcQs>X-X<As>";
+	sISONodeName = regex_replace(sISONodeName, reg, sReplace);
+	cout << sISONodeName;
+*/
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单

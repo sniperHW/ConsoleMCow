@@ -66,3 +66,18 @@ Position CGame::GetPositionBySymbol(const string& sSymbol)
 		return UTG;
 }
 
+Position CGame::GetNextPlayerPosition(const Position curPosition)
+{
+	if (m_players.size() == 0)
+		return nonepos;
+
+	auto p = m_players.find(curPosition);
+
+	if (p == m_players.end())
+		return nonepos;
+	else if (p == prev(m_players.end()))
+		return m_players.begin()->first;
+	else
+		return next(p)->first;
+}
+

@@ -55,6 +55,17 @@ string CBoard::GetBoardSymbol()
 }
 
 
+string CBoard::GetIsoBoardSymbol()
+{
+    string s = m_sIsomorphismBoard;
+    if (m_flopCards.size() > 3){
+        for (int i = 3; i < m_flopCards.size(); i++)
+            s += m_flopCards[i].m_sSymbol;
+    }
+    return s;
+}
+
+
 void  CBoard::SortThreeCard(char* csCards)
 {
     CompareAndSwapCard(csCards, csCards + 2);

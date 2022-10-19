@@ -27,6 +27,8 @@ public:
 	static GameType GetGameTypeBySymbol(const std::string& sSymbol);
 	static Position GetPositionBySymbol(const std::string& sSymbol);
 
+	Position GetNextPlayerPosition(const Position curPosition);
+
 	CGame();
 };
 

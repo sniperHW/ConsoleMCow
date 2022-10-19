@@ -6,6 +6,7 @@
 #include "globledef.h"
 #include "CCard.h"
 
+//取wizard策略、wizard范围、solver预存解需要用同构board去匹配（只转flop的）
 class CBoard
 {
 public:
@@ -20,12 +21,13 @@ public:
 	void SetTurn(const std::string & sSymbol); //同时设置同构面
 	void SetRiver(const std::string & sSymbol);
 	std::string GetBoardSymbol(); //按round拼接
+	std::string GetIsoBoardSymbol(); //flop为Iso，turn和river按原样（目前没用）
 
-	void ConvetIsomorphism();  //取得board的同构面，填写m_sIsomorphismBoard和m_suitReplace
 	const std::string & GetIsomorphismSymbol(); //同构后的标记
 	const SuitReplace & GetIsomorphismSuitReplace(); //花色替换
 	void ClearSuitReplace();
 private:
+	void ConvetIsomorphism();  //取得board的同构面，填写m_sIsomorphismBoard和m_suitReplace
 	void SortThreeCard(char* csCards);
 	void CompareAndSwapCard(char* cCard1, char* cCard2);
 	void CompareAndSwapCard(CCard& cCard1, CCard& cCard2);

@@ -62,11 +62,18 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 {
 	//\Data\RangesFile\Max6_NL50_SD100\3BET_#_vs_4callcold3bet4bet_EPfold.txt
 	char buffer[_MAX_PATH];
-	//_getcwd(buffer, _MAX_PATH);
+	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	stringstream ss;
 
-	ss << sConfigFolder << "\\Data\\" << "RangesFile\\" << GameTypeName[gmType] << "\\" << sNodeName << ".txt";
+	//ÐèÒªÈ¥µô<>
+	string sPreflopNodeName;
+	regex reg(R"((.*)\<.*\>)");
+	smatch m;
+	if (regex_search(sNodeName, m, reg)) 
+		sPreflopNodeName = m[1];
+
+	ss << sConfigFolder << "\\Data\\" << "RangesFile\\" << GameTypeName[gmType] << "\\" << sPreflopNodeName << ".txt";
 
 	return ss.str();
 }

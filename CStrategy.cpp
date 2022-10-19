@@ -95,7 +95,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		sActionSquenceTmp.pop_back();
 	}
 	
-	//获取NodeName
+	//获取NodeName(ActionLine只在换轮时计算sNodeName,所以flop从wizard读取需要独立计算)
 	parseActionSquence(sActionSquenceTmp, sPrefix, curRound, actions, actionStr);
 	if (curRound == preflop)
 		sNodeName = sPrefix;
@@ -447,7 +447,7 @@ void CStrategy::ConvertIsomorphism(const SuitReplace& suitReplace)
 	}
 }
 
-//返回匹配的序号
+//返回匹配的序号(用实际比例和候选比例取匹配，将size转为比例通过CalcBetRatio()来计算，需要知道每轮初始pot和动作序列，Estack在allin时替代计算下注总和，solver模式下，策略中raise的size要对应stackByStrategy的pot才能算出比例来填充候选范围)
 int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candidateRatios)
 {
 	double dLowbound = 0.33; //匹配小的允许超出1/3
@@ -484,7 +484,7 @@ int CStrategy::MatchBetRatio(double dActuallyRatio, const vector<double>& candid
 	return 0;
 }
 
-//计算下注比例，actions为完整序列（或到参与计算的最后一个），iLastIdx为当前需要计算的序号（0开始），dEstack只有wizard模式计算最后一个为allin的比例时才用
+//计算下注比例，actions为完整序列（或到参与计算的最后一个）最后一个一定是rival，iLastIdx为当前需要计算的序号（0开始），dEstack参数只在计算allin时有用，因为allin并不带size信息不能累加下注size，这时用有效筹码即下注总和，只有wizard模式计算最后一个为allin的比例时才用
 double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions, int iLastIdx, const double dEstack)
 {
 	double dHeroStackSum = 0; double dRivalStackSum = 0;  //计算双方下注总额，用于计算比例
@@ -496,7 +496,7 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 		}
 	}
 	else
-		dRivalStackSum = dEstack;
+		dRivalStackSum = dEstack;	//代表allin的size
 
 	for (int i = iLastIdx - 1; i >= 0; i -= 2)
 		if (actions[i].actionType == raise) { dHeroStackSum += actions[i].fBetSize; }

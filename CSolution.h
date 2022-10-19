@@ -21,10 +21,10 @@ public:
 
 	void HeroHands(const std::string & sHands); //某些平台初始不能看到hero的手牌，需要单独接口
 
+	static std::string getDataFromString(const StrategyFrom fr); //for test
+
 	CSolution();
 
-//fortest
-	void printTest();
 
 private:
 	bool m_blNotOffline;	//数据异常作脱线处理
@@ -33,7 +33,7 @@ private:
 	StrategyFrom m_strategyFrom; //获取解的模式（放弃先预存再实时模式）
 
 	Json::Value m_solverResult; //当前街的solver解
-	Stacks m_StacksByStrategy; //solver解对应的筹码数据，预存从配置中取，实时的实际填写
+	//Stacks m_StacksByStrategy; //solver解对应的筹码数据，预存从配置中取，实时的实际填写(不用，从配置中获取)
 
 	CActionLine m_actionLine;
 	CRange m_range;

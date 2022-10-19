@@ -6,14 +6,18 @@
 #include "CSolver.h"
 #include "CFlopDataFromWizardConfig.h"
 #include "CTurnPresaveSolverConfig.h"
+#include "CStackByStrategyConfig.h"
 #include "CDataFrom.h"
 #include <fstream>
+#include "util.h"
+#include "CActionLine.h"
 
 using namespace std;
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; 
 extern CSolver g_solver;
 extern map<GameType, CFlopDataFromWizardConfig> g_flopDataFromWizardConfigs;
 extern map<GameType, CTurnPresaveSolverConfig> g_turnPresaveSolverConfigs;
+extern map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig;
 
 CSolution::CSolution()
 {
@@ -21,7 +25,7 @@ CSolution::CSolution()
 	m_blNotOffline = true;
 }
 
-//未测试
+//
 Action CSolution::HeroAction(const string& sActionLine)
 {
 	CStrategy strategy;
@@ -34,7 +38,14 @@ Action CSolution::HeroAction(const string& sActionLine)
 	switch (m_strategyFrom)
 	{
 	case from_wizard: {
-		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+
+#ifdef DEBUG_
+		cout << "HeroAction Load strategy from_wizard:--------------------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << "\t" << "IsoBoard:" << m_game.m_board.GetIsomorphismSymbol() << endl << endl;
+#endif 
+
+//for test
+		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_wizard-" + m_actionLine.m_sActionSquence;
@@ -47,7 +58,23 @@ Action CSolution::HeroAction(const string& sActionLine)
 		if (m_actionLine.m_sActionSquence.find('$')) //动作序列最后是-A时会加该标记，但solver模式不需要处理
 			m_actionLine.m_sActionSquence.pop_back();
 
-		m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+		shared_ptr<Stacks> pStacksByStrategy = g_stackByStrategyConfig[m_game.m_gmType].GetItemByName(m_actionLine.m_sNodeName); //获取策略对应的筹码
+		Stacks StacksByStrategy;
+		if (pStacksByStrategy == nullptr) {
+			StacksByStrategy = GetStacks();	//没有匹配则启用实际的筹码
+			cout << "error: GetStackByStrategyConfig not matched,NodeName: " << m_actionLine.m_sNodeName << endl << endl;
+		}
+		else
+			StacksByStrategy = *pStacksByStrategy;
+
+#ifdef DEBUG_
+		cout << "HeroAction Load strategy from_solver_presave:----------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "StacksByStrategy:" << double2String(StacksByStrategy.dPot, 2) << "," << double2String(StacksByStrategy.dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << endl << endl;
+#endif 
+
+//for test
+		m_blNotOffline = true;
+		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_solver_presave-" + m_actionLine.m_sActionSquence;
@@ -57,19 +84,33 @@ Action CSolution::HeroAction(const string& sActionLine)
 		break;
 	}
 	case from_solver_calc: {
+
+#ifdef DEBUG_
+		cout << "HeroAction Load strategy from_solver_calc:--------------------------------------"<< endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << endl << endl;
+#endif 
+
 //检查并等待运算完成（需要添加代码）
-		m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+//for test
+		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());	//策略筹码即实际筹码
 	}
 	case from_solver_realtime: {
+
+#ifdef DEBUG_
+		cout << "HeroAction Load strategy from_solver_realtime:----------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << endl << endl;
+#endif 
+
+
+//for test
 		CSolverConfig solverConfig;
 		solverConfig.m_stacks = GetStacks();
 		solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
 		solverConfig.m_pRange = &m_range;
-		m_StacksByStrategy = solverConfig.m_stacks; //策略对应筹码为实际筹码
 		m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
-		m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResult);
-		if (m_blNotOffline)
-			m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+		//m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResult);
+		//if (m_blNotOffline)
+		//	m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_solver_realtime-" + m_actionLine.m_sActionSquence;
@@ -80,13 +121,20 @@ Action CSolution::HeroAction(const string& sActionLine)
 	}
 	case multi_players: { //flop后多人模式,留待实现
 
+#ifdef DEBUG_
+		cout << "HeroAction multi_players:---------------------------------------------------" << endl << endl;
+#endif 
+
 		break;
 	}
 	}//end of switch
 
 //以下留待实现
-	if (!m_blNotOffline)
+	if (!m_blNotOffline) {
+		cout << "error: ProcessingOffline" << endl;
+
 		return ProcessingOffline();
+	}
 
 	strategy.AlignmentByBetsize();
 	strategy.AlignmentByStackDepth();
@@ -95,9 +143,11 @@ Action CSolution::HeroAction(const string& sActionLine)
 	return CalcHeroAction(strategy);
 }
 
-//未测试
+//
 bool CSolution::ChangeRound(const string& sActionLine)
 {
+	Stacks stackPre = GetStacks();	//Parse后会更新stack,而计算范围要按前一条街的，所以先保留
+
 	//解析ActionLine
 	if (!m_actionLine.Parse(sActionLine, m_game))
 		m_blNotOffline = false;
@@ -121,7 +171,14 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 	//加载range(round已经为新的,m_strategyFrom为旧的)
 	if (m_game.m_round == flop) { //file模式
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
+
+#ifdef DEBUG_
+		cout << "ChangeRound Load range from_file:----------------------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << endl << endl;
+#endif 
+
+//for test
+		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_file-" + m_actionLine.m_sNodeName;
@@ -129,7 +186,15 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 	}
 	else if (m_strategyFrom == from_wizard) { //wizard模式
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+
+#ifdef DEBUG_
+		cout << "ChangeRound Load range from_wizard:--------------------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "\t" << "IsoBoard:" << m_game.m_board.GetIsomorphismSymbol() << endl << endl;
+#endif 
+
+
+//for test
+		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_wizard-" + m_actionLine.m_sNodeName;
@@ -137,22 +202,41 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 	}
 	else if (m_strategyFrom == from_solver_presave || m_strategyFrom == from_solver_realtime) { //solver模式
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), m_StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
+		Stacks StacksByStrategy = stackPre;
+		if (m_strategyFrom == from_solver_presave) {
+			shared_ptr<Stacks> pStacksByStrategy = g_stackByStrategyConfig[m_game.m_gmType].GetItemByName(m_actionLine.m_sNodeName); //获取策略对应的筹码
+			if (pStacksByStrategy == nullptr) 
+				cout << "error: GetStackByStrategyConfig not matched,NodeName: " << m_actionLine.m_sNodeName << endl << endl;
+			else
+				StacksByStrategy = *pStacksByStrategy;
+		}
+
+#ifdef DEBUG_
+		cout << "ChangeRound Load range from_solver_presave:-------------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "StacksByStrategy:" << double2String(StacksByStrategy.dPot, 2) << "," << double2String(StacksByStrategy.dEStack, 2) << endl << endl;
+#endif 
+
+//for test
+		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, stackPre, StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_solver-" + m_actionLine.m_sActionSquence;
 #endif
 
 	}
-	else if (m_strategyFrom == multi_players)
+	else if (m_strategyFrom == multi_players) {
+
+#ifdef DEBUG_
+		cout << "ChangeRound multi_players:----------------------------------------------------" << endl << endl;
+#endif 
+
 		return true;
+	}
 
 #ifdef FOR_TEST_DUMP_
 	if (sComment.size() > 0) 
 		m_range.DumpRange(sComment, heroRPosition);
 #endif
-
-
 
 	//设置本街数据来源
 	if (m_game.m_round == flop) {
@@ -171,9 +255,23 @@ bool CSolution::ChangeRound(const string& sActionLine)
 	else if(m_game.m_round == river)
 		m_strategyFrom = from_solver_realtime;
 
+#ifdef DEBUG_
+	cout << "ChangeRound set data from:" << getDataFromString(m_strategyFrom) << endl << endl;
+#endif 
+
 	//加载solver presave
 	if (m_strategyFrom == from_solver_presave) {	
-		string sFilePath = CDataFrom::GetSolverFilePath(m_game.m_gmType, m_actionLine.m_sNodeName);
+		//将m_sNodeName的flop的board转为同构
+		regex reg("<......>");
+		string sReplace = "<" + m_game.m_board.GetIsomorphismSymbol() + ">";
+		string sISONodeName = m_actionLine.m_sNodeName;
+		sISONodeName = regex_replace(sISONodeName, reg, sReplace);
+		string sFilePath = CDataFrom::GetSolverFilePath(m_game.m_gmType, sISONodeName);
+
+#ifdef DEBUG_
+		cout << "Load solver presave:" << sFilePath << endl << endl;
+#endif 
+
 		ifstream ifs;
 		ifs.open(sFilePath);
 		if (ifs.is_open()) {
@@ -199,8 +297,12 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
 		solverConfig.m_pRange = &m_range;
 		solverConfig.m_pRTTreeConfigItem = g_strategyTreeConfigs[m_game.m_gmType].GetRTTreeConfig(GetStacks());
-		m_StacksByStrategy = solverConfig.m_stacks; //策略对应筹码为实际筹码
 		m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
+
+#ifdef DEBUG_
+		cout << "ToSolve"  << endl << endl;
+#endif 
+
 		m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResult, calc_async);
 	}
 
@@ -286,6 +388,21 @@ void CSolution::InitGame(const string& sInitGame)
 			pos->second.m_positionByPresent = *pos1;
 		}
 	}
+
+#ifdef DEBUG_
+	cout << "InitGame:--------------------------------------------------" << endl;
+	cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "Pot:" << double2String(m_game.m_dPot, 2) << "\t" << endl;
+	cout << "Players:";
+	for (auto it : m_game.m_players) {
+		cout << PositionSymble[it.first];
+		cout << "[" << PositionSymble[it.second.m_positionByPresent] << "]";
+		if (it.second.m_blIsHero)
+			cout << "(hero)";
+		cout << double2String(it.second.m_dEStack, 2);
+		cout << "--";
+	}
+	cout << endl << endl;
+#endif
 }
 
 void CSolution::HeroHands(const string& sHands)
@@ -315,15 +432,23 @@ bool CSolution::IsMultiPlayers()
 	return m_strategyFrom == multi_players ? true : false;
 }
 
-
-void CSolution::printTest()
+string CSolution::getDataFromString(const StrategyFrom fr)
 {
-	cout << "ActionSquence:" << m_actionLine.m_sActionSquence << endl;
-	cout << "AbbrName:" << m_actionLine.m_sAbbrName << endl;
-	cout << "NodeName:" << m_actionLine.m_sNodeName << endl;
-	if(m_game.m_round == preflop)
-		cout << "PreflopRowActionSquence:" << m_actionLine.GetPreflopRowActionSquence() << endl;
-	
-	cout << endl;
-	cout << endl;
+	//typedef enum { from_wizard, from_solver_presave, from_solver_realtime, from_solver_calc, multi_players }StrategyFrom;
+	switch (fr) {
+	case from_wizard:
+		return "from_wizard";
+	case from_solver_presave:
+		return "from_solver_presave";
+	case from_solver_realtime:
+		return "from_solver_realtime";
+	case from_solver_calc:
+		return "from_solver_calc";
+	case multi_players:
+		return "multi_players";
+	default:
+		return "";
+	}
 }
+
+

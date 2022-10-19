@@ -10,6 +10,9 @@
 #include "CStrategy.h"
 #include "CStrategyTreeConfig.h"
 #include <ctype.h>
+#include <iostream>
+#include "util.h"
+#include <iterator>
 
 using namespace std;
 
@@ -27,18 +30,20 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	string sBoard;
 	Stacks stacksOri{0,0};
 
-	//保存上条街的筹码
+	//保存上条街的筹码（用于计算NodeName）
 	stacksOri.dPot = game.m_dPot;
 	auto it = min_element(game.m_players.begin(), game.m_players.end(), [](auto elem1, auto elem2) {return elem1.second.m_dEStack < elem2.second.m_dEStack; });
 	stacksOri.dEStack = it->second.m_dEStack;
 
-	//判断是hero action还是change round
+	//判断是hero action还是change round(由于是增量，所以只会有一个<>,后面信息是换街相关，先解析处理)
 	reg = R"(\<(.*)\>)";
 	if (regex_search(sActionLine, m, reg)) { //change round
-		//设置 board
+		//设置 board(flop要求能落到1755个组合里)
 		sBoard = m[1];
-		if (game.m_round == preflop)
+		if (game.m_round == preflop) {
 			game.m_board.SetFlop(sBoard);
+			sBoard = game.m_board.GetBoardSymbol();
+		}
 		else if(game.m_round == flop)
 			game.m_board.SetTurn(sBoard);
 		else if (game.m_round == turn)
@@ -74,11 +79,11 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			sActionLineTmp = sActionLine.substr(0, idx);	 
 	}//end of change round
 
-	//analysis action line
+	//analysis action line（[position]actionsize,","号分割，preflop换圈有"-"）
 	vector<pair<Position,Action>> posActions;
 	regex sep(R"(\s?,\s?)");
 	regex regLimp(R"(^(C+))");
-	string sRowActionSquence{};
+	string sRowActionSquence{};	//m_sPreflopRowActionSquence为preflop全集，sRowActionSquence为增量，preflop用sRowActionSquence拼接到m_sPreflopRowActionSquence，再以此获取AbbrName,flop后则拼接到actionSquence
 	bool blFirstSec = m_sPreflopRowActionSquence.empty() ? true : false; //开局hero前第一批次行动
 	bool blFirstCycle = true; //第一圈行动，是否出现‘-’
 	if (m_sPreflopRowActionSquence.find('-') != string::npos)
@@ -90,7 +95,22 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	sregex_token_iterator e;
 	for (; p != e; ++p) {
 		if(!p->str().empty())
-			posActions.push_back(ToPosActionPair(p->str()));
+			posActions.push_back(ToPosActionPair(p->str()));	//"-"标记为none,nonepos
+	}
+
+	//检查下一行动是否为hero
+	if (!blIsChangeRound) {
+		Position nextPlayerPosition;
+		if (!posActions.empty()) {
+			if (posActions.back().first == nonepos)
+				nextPlayerPosition = game.GetNextPlayerPosition(prev(posActions.end())->first);
+			else
+				nextPlayerPosition = game.GetNextPlayerPosition(posActions.back().first);
+			if (!game.m_players[nextPlayerPosition].m_blIsHero) {
+				cout << "error: ActionLine Parse:Next player is not hero" << endl<< endl;
+				return false;
+			}
+		}
 	}
 
 	//记录player最后一次行动
@@ -172,12 +192,13 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 			else
 				aTmp.actionType = fold;
+
 			auto ipos = posActions.begin() + nFirst;
 			posActions.insert(ipos, make_pair(m_limps[0], aTmp));
 		}
 	}//end of limp
 
-	//转为rowActionSquence(多人的无意义,preflop和flop后解析规则不一样)
+	//转为rowActionSquence(多人的无意义,preflop保留"-",去掉size,flop后每个动作都有"-"分割)
 	if (game.m_round == preflop) {
 		for (auto pa : posActions) {
 			if (pa.second.actionType == none) {
@@ -186,7 +207,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 			else if(pa.second.actionType == fold) {
 				if (!blFirstCycle) {//不是第一轮则F要保留，players中也要暂时保留
-					sRowActionSquence += ToActionSymbol(pa.second, false);
+					sRowActionSquence += ToActionSymbol(pa.second, false);	//preflop不需要保留size，因此调用参数是false
 				}
 				else { //第一圈，要从players中去掉F的player
 					game.m_players.erase(pa.first);
@@ -215,7 +236,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		//拼接原ActionSquence，"O"要去掉,都没有则为“O”
 		if (m_sActionSquence.back() == '>' && sRowActionSquence.empty())
 			m_sActionSquence += "O";
-		else if (m_sActionSquence.back() == 'O')
+		else if (m_sActionSquence.back() == 'O')	//因为"只用一次"
 			m_sActionSquence.pop_back();
 		else
 			m_sActionSquence.back() == '>' ? m_sActionSquence += sRowActionSquence : m_sActionSquence = m_sActionSquence + "-" + sRowActionSquence;
@@ -233,16 +254,29 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		else {
 			ActionMatchMode match_mode = blIsChangeRound ? match_toflop : match_preflop;
 			m_sAbbrName = g_actionMatchConfigs[game.m_gmType].GetAbbrName(match_mode, m_sPreflopRowActionSquence);
-			if (m_sAbbrName.empty())
+			if (m_sAbbrName.empty()) {
+				cout << "error: ActionLineParse AbbrName not find," << "m_sPreflopRowActionSquence:" << m_sPreflopRowActionSquence << endl << endl;
 				return false;
+			}
 		}
 
 		//按AbbrName和position填写完整ActionSquence,limp需要特殊处理
 		sNodeName = m_sAbbrName;
+		
+		Position heroPosition;//HeroAction时hero为实际hero,changeRound时hero为最后call者
+		if (!blIsChangeRound)
+			heroPosition = game.GetHero()->m_position;
+		else {
+			for(auto rp = posActions.rbegin(); rp != posActions.rend(); rp++)
+				if (rp->second.actionType == call) {
+					heroPosition = rp->first;
+					break;
+				}
+		}
 
 		//替换hero
 		reg = R"(\[hero\])";
-		sNodeName = regex_replace(sNodeName, reg, PositionSymble[game.GetHero()->m_positionByPresent]);
+		sNodeName = regex_replace(sNodeName, reg, PositionSymble[game.m_players[heroPosition].m_positionByPresent]);
 
 		//替换rivals
 		reg = R"(\[rivals\])";
@@ -258,7 +292,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		if (blFirstSec) { //hero第一次行动用posActions，因为m_players中保留着为行动的玩家
 			for (auto p : posActions) {
 				if (p.second.actionType != fold && p.second.actionType != none) {
-					if (!game.m_players[p.first].m_blIsHero) {
+					if (p.first != heroPosition) {
 						if (find(m_limps.begin(), m_limps.end(), p.first) == m_limps.end()) //排除limp者
 							sRivals.empty() ? sRivals += PositionSymble[game.m_players[p.first].m_positionByPresent] : sRivals = sRivals + "," + PositionSymble[game.m_players[p.first].m_positionByPresent];
 					}
@@ -267,7 +301,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		}
 		else {	//非第一圈用game.m_players
 			for (auto p : game.m_players) {
-				if (!p.second.m_blIsHero) {
+				if (p.first != heroPosition) {
 					if (find(m_limps.begin(), m_limps.end(), p.first) == m_limps.end()) //排除limp者
 						sRivals.empty() ? sRivals += PositionSymble[p.second.m_positionByPresent] : sRivals = sRivals + "," + PositionSymble[p.second.m_positionByPresent];
 				}
@@ -337,24 +371,23 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 		}
 
-		//设置hero相对位置
+		//设置相对位置
 		if (game.m_round == flop) {
 			auto pFirst = game.m_players.begin();
 			for (auto pPlay = game.m_players.begin(); pPlay != game.m_players.end(); pPlay++) {
-				if (pPlay->second.m_blIsHero)
 					pPlay->second.m_positionRelative = pPlay == pFirst ? OOP : IP;
 			}
 		}
 
 		//将actionSquence与下注空间对齐(flop时m_sActionSquence和NodeName一致，river不需要)
 		if (game.m_round == flop)
-			m_sNodeName = m_sActionSquence;
+			m_sNodeName = m_sActionSquence;	//preflop的m_sNodeName和m_sActionSquence一样
 		else if (game.m_round == turn) {
 			vector<Action> actions;
 			string sPrefix, actionStrNotUsed;
 			Round rNotUsed;
 			CStrategy::parseActionSquence(m_sActionSquence, sPrefix, rNotUsed, actions, actionStrNotUsed);
-			m_sNodeName = GetNodeName(game.m_gmType, stacksOri, game.m_oopx, actions, sPrefix);
+			m_sNodeName = GetNodeName(game.m_gmType, stacksOri, game.m_oopx, actions, sPrefix);	//只在换轮时填写，turn用于定位预存solver解，只有存在预存解的才在配置中，否则保持原数据
 
 			string sSuffix;
 			auto pos = m_sNodeName.find('>');
@@ -371,11 +404,39 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		m_sNodeName = m_sNodeName + "<" + sBoard + ">";
 
 	}
+
+#ifdef DEBUG_
+	cout << endl;
+	cout << "ActionLine:" << sActionLine << endl;
+	cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+	if (blIsChangeRound)
+		cout << "ActionLineParse ChangeRound://///////////////////////////////////////////////////////////////////" << endl;
+	else 
+		cout << "ActionLineParse HeroAction ://///////////////////////////////////////////////////////////////////" << endl;
+	cout << "gmType:" << GameTypeName[game.m_gmType] << "\t" << "OOPX:" << getOOPXString(game.m_oopx) << "\t" << "Board:" << game.m_board.GetBoardSymbol() << "\t" << "Pot:" << double2String(game.m_dPot, 2) << "\t" << "Round:" << getRoundString(game.m_round) << endl;
+	cout << "Players:";
+	for (auto it : game.m_players) {
+		cout << PositionSymble[it.first];
+		cout << "[" << PositionSymble[it.second.m_positionByPresent] << "]";
+		if (game.m_round != preflop)
+			cout << "[" << getRelativePositionString(it.second.m_positionRelative) << "]";
+		if (it.second.m_blIsHero)
+			cout << "(hero)";
+		cout << double2String(it.second.m_dEStack,2);
+		cout << "--";		
+	}
+	cout << endl;
+	cout << "ActionSquence:" << m_sActionSquence << endl;
+	cout << "AbbrName:" << m_sAbbrName << endl;
+	cout << "NodeName:" << m_sNodeName << endl;
+	cout << endl ;
+#endif
+
 	return true;
 }
 
 
-//获取NodeName(和下注空间对齐)
+//获取NodeName(和下注空间对齐，只在换轮时更新，flop从wizard获取数据要独立计算）
 string CActionLine::GetNodeName(const GameType gmType, const Stacks& stacks, const OOPX oopx, const vector<Action>& actions, const string& sPrefix)
 {
 	string sSquence, sPreflopName;
@@ -435,7 +496,7 @@ string CActionLine::GetNodeName(const GameType gmType, const Stacks& stacks, con
 				}
 			}
 
-			//计算dActuallyRatio,当前正则计算的actions的元素的比例
+			//计算dActuallyRatio,当前正在计算的actions的元素的比例
 			dActuallyRatio = CStrategy::CalcBetRatio(stacks.dPot, actions, nCount - 1);
 
 			if (candidateRatios.empty()) { //无候选范围代表该NodeName不会被用于flop wizard和turn solver presave,因此保留原比例即可
@@ -653,9 +714,42 @@ void CActionLine::EraseBlank(std::string& sSource)
 	}
 }
 
-//for test
-std::string CActionLine::GetPreflopRowActionSquence()
+string CActionLine::getOOPXString(const OOPX oopx)
 {
-	return m_sPreflopRowActionSquence;
+	switch (oopx) {
+	case OOPA:
+		return "OOPA";
+	case OOPD:
+		return "OOPD";
+	default:
+		return "";
+	}
 }
 
+string CActionLine::getRoundString(const Round round)
+{
+	switch (round) {
+	case preflop:
+		return "preflop";
+	case flop:
+		return "flop";
+	case turn:
+		return "turn";
+	case river:
+		return "river";
+	default:
+		return "";
+	}
+}
+
+string CActionLine::getRelativePositionString(const RelativePosition rp)
+{
+	switch (rp) {
+	case OOP:
+		return "OOP";
+	case IP:
+		return "IP";
+	default:
+		return "";
+	}
+}

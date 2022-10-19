@@ -20,8 +20,8 @@
 #define FOR_TEST_DUMP_DETAIL_
 #endif 
 
-#ifndef RUNTIME_OUTPUT_
-#define RUNTIME_OUTPUT_
+#ifndef DEBUG_
+#define DEBUG_
 #endif 
 
 const int COMBO_COUNT = 1326;

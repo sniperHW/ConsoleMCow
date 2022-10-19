@@ -63,6 +63,10 @@ const shared_ptr<Stacks> CStackByStrategyConfig::GetItemByName(const string& sNo
 {
 	string sNodeNameWithoutBoard = CActionLine::GetNodeNameWithoutBoard(sNodeName);
 
+	//需要去掉-个<>
+	while (sNodeNameWithoutBoard.back() == '<' || sNodeNameWithoutBoard.back() == '>')
+		sNodeNameWithoutBoard.pop_back();
+
 	auto pos = m_configItems.find(sNodeNameWithoutBoard);
 	if (pos != m_configItems.end())
 		return pos->second;
