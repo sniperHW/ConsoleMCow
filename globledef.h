@@ -12,9 +12,9 @@
 #include <memory>
 
 //for test
-#ifndef FOR_TEST_DUMP_
-#define FOR_TEST_DUMP_
-#endif 
+//#ifndef FOR_TEST_DUMP_
+//#define FOR_TEST_DUMP_
+//#endif 
 
 #ifndef FOR_TEST_DUMP_DETAIL_
 #define FOR_TEST_DUMP_DETAIL_

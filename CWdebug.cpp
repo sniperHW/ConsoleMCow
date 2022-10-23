@@ -1,39 +1,24 @@
 //#include "pch.h"
 #include "CWdebug.h"
+#include "util.h"
+#include <fstream>
 
 using namespace std;
 
-CWdebug::CWdebug()
-{
 
+void CWdebug::Log(const string& sLog)
+{
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\Log\\";
+	string sFilePath = sConfigFolder + "Log.txt";
+
+	ofstream fout(sFilePath, ios_base::out | ios_base::app);
+
+	if (fout.is_open()) 
+		fout << getTimeString() << "\t" << sLog << endl;
+
+	fout.close();
 }
 
-CWdebug::~CWdebug()
-{
-
-}
-
-void CWdebug::AddLog(const string& sLog)
-{
-
-}
-
-void CWdebug::AddRange(const RangeData& rangeData)
-{
-
-}
-
-void CWdebug::AddAction(const StrategyData& strategyData)
-{
-
-}
-
-void CWdebug::Add(const vector<CStrategyItem>& strategy)
-{
-
-}
-
-void CWdebug::Clear(bool log , bool data)
-{
-
-}

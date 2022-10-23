@@ -85,27 +85,37 @@ Type stringToNum(const std::string& str)
     return num;
 }
 
-
-/*
-inline std::vector<std::string> split(const std::string& s, char seperator)
+inline std::string getTimeString()
 {
-   std::vector<std::string> output;
+	struct tm newtime;
+	char am_pm[] = "AM";
+	__time64_t long_time;
+	char timebuf[26];
+	errno_t err;
 
-    std::string::size_type prev_pos = 0, pos = 0;
+	// Get time as 64-bit integer.
+	_time64(&long_time);
+	// Convert to local time.
+	err = _localtime64_s(&newtime, &long_time);
+	if (err)
+		exit(1);
 
-    while((pos = s.find(seperator, pos)) != std::string::npos)
-    {
-        std::string substring( s.substr(prev_pos, pos-prev_pos) );
+	if (newtime.tm_hour > 12)        // Set up extension.
+		strcpy_s(am_pm, sizeof(am_pm), "PM");
+	if (newtime.tm_hour > 12)        // Convert from 24-hour
+		newtime.tm_hour -= 12;        // to 12-hour clock.
+	if (newtime.tm_hour == 0)        // Set hour to 12 if midnight.
+		newtime.tm_hour = 12;
 
-        output.push_back(substring);
+	// Convert to an ASCII representation.
+	err = asctime_s(timebuf, 26, &newtime);
+	if (err)
+		exit(1);
 
-        prev_pos = ++pos;
-    }
-
-    output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
-
-    return output;
-}*/
+	char buff[100];
+	sprintf_s(buff, sizeof(buff), "%.19s %s", timebuf, am_pm);
+	return std::string(buff);
+}
 
 inline std::vector<std::string> split(const std::string& s, char c){
     std::vector<std::string> v; 

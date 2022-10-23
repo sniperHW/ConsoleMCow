@@ -13,6 +13,7 @@
 #include <iostream>
 #include "util.h"
 #include <iterator>
+#include "CWdebug.h"
 
 using namespace std;
 
@@ -22,6 +23,8 @@ extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 //例：[HJ]C,[BTN]C,[SB]F<KsQd7h>pot=15;EStack=[HJ]95.5,[BB]67;
 bool CActionLine::Parse(const string& sActionLine, CGame& game)
 {
+	CWdebug::Log(game.m_sID + " "+ sActionLine);
+
 	regex reg;
 	smatch m;
 	bool blIsChangeRound = false;
@@ -89,7 +92,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	if (m_sPreflopRowActionSquence.find('-') != string::npos)
 		blFirstCycle = false;
 	bool blLimpDoubleR = false; //limp者后续两个R
-	Position firstLimperPositionByPresent;
+
 
 	sregex_token_iterator p(sActionLineTmp.cbegin(), sActionLineTmp.cend(), sep, -1);
 	sregex_token_iterator e;
@@ -98,12 +101,13 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			posActions.push_back(ToPosActionPair(p->str()));	//"-"标记为none,nonepos
 	}
 
+	sActionLine;
 	//检查下一行动是否为hero
 	if (!blIsChangeRound) {
 		Position nextPlayerPosition;
 		if (!posActions.empty()) {
 			if (posActions.back().first == nonepos)
-				nextPlayerPosition = game.GetNextPlayerPosition(prev(posActions.end())->first);
+				nextPlayerPosition = game.GetNextPlayerPosition(prev(posActions.end()-1)->first);
 			else
 				nextPlayerPosition = game.GetNextPlayerPosition(posActions.back().first);
 			if (!game.m_players[nextPlayerPosition].m_blIsHero) {
@@ -143,7 +147,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 				}
 			}
 			if (m_limps.size() > 0)
-				firstLimperPositionByPresent = game.m_players[m_limps[0]].m_positionByPresent; 
+				m_firstLimperPositionByPresent = game.m_players[m_limps[0]].m_positionByPresent;
 		}
 		//将posActions的limp者合成一个对posActions的第一个替换为firstLimp(position固定为m_limps的第一个)，替换后其他删除
 		pair<Position, Action> removeValue{ nonepos,{none,100,100,100} }; //对posActions中的limp者计数，并标志为删除value
@@ -284,7 +288,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		if (m_limps.size() > 0) { //如果有limp，m_players中还有limp者则加入m_limps的第一个位置
 			for (auto p : game.m_players) {
 				if (find(m_limps.begin(), m_limps.end(), p.first) != m_limps.end()){
-					sRivals += PositionSymble[firstLimperPositionByPresent];
+					sRivals += PositionSymble[m_firstLimperPositionByPresent];
 					break;
 				}
 			}

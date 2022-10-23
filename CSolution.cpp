@@ -44,8 +44,7 @@ Action CSolution::HeroAction(const string& sActionLine)
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << "\t" << "IsoBoard:" << m_game.m_board.GetIsomorphismSymbol() << endl << endl;
 #endif 
 
-//for test
-		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_wizard-" + m_actionLine.m_sActionSquence;
@@ -55,7 +54,7 @@ Action CSolution::HeroAction(const string& sActionLine)
 		break;
 	}
 	case from_solver_presave: {
-		if (m_actionLine.m_sActionSquence.find('$')) //动作序列最后是-A时会加该标记，但solver模式不需要处理
+		if (m_actionLine.m_sActionSquence.find('$') != string::npos) //动作序列最后是-A时会加该标记，但solver模式不需要处理
 			m_actionLine.m_sActionSquence.pop_back();
 
 		shared_ptr<Stacks> pStacksByStrategy = g_stackByStrategyConfig[m_game.m_gmType].GetItemByName(m_actionLine.m_sNodeName); //获取策略对应的筹码
@@ -73,8 +72,8 @@ Action CSolution::HeroAction(const string& sActionLine)
 #endif 
 
 //for test
-		m_blNotOffline = true;
-		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
+//m_blNotOffline = true;
+		m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, GetStacks(), StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_solver_presave-" + m_actionLine.m_sActionSquence;
@@ -269,6 +268,8 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		string sFilePath = CDataFrom::GetSolverFilePath(m_game.m_gmType, sISONodeName);
 
 #ifdef DEBUG_
+		if (IsoFlops.find(sISONodeName) == IsoFlops.end())
+			cout << "error: not in ISO set,sISONodeName:" << sISONodeName << endl;
 		cout << "Load solver presave:" << sFilePath << endl << endl;
 #endif 
 

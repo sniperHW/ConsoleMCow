@@ -8,7 +8,7 @@
 class CActionLine
 {
 public:
-	std::string m_sActionSquence; //preflop_nodeName + board + 动作序列（R后为size）
+	std::string m_sActionSquence; //preflop_nodeName + board + 动作序列（R后为size）,记忆之前的动作
 	std::string m_sAbbrName; //抽象了preflop的position和board
 	std::string m_sNodeName; //将m_sActionSquence的动作序列转为标准下注空间的比例(R后为比例，无预存解设置的保持原比例)，只在turn换街时有效
 
@@ -23,6 +23,7 @@ public:
 
 private:
 	std::string m_sPreflopRowActionSquence;
+	Position m_firstLimperPositionByPresent; //由于limp的玩家只在第一圈计算，所以要记忆到成员变量
 	std::vector<Position> m_limps; //limp替换模式标志：Limps.size()>0
 
 	std::pair<Position, Action> ToPosActionPair(const std::string& sSymbol);

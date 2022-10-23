@@ -4,7 +4,7 @@
 #define CSTRATEGY_ITEM_H_
 
 #include "globledef.h"
-
+/*
 class CStrategyItem
 {
 public:
@@ -12,5 +12,5 @@ public:
 	StrategyData m_strategyData;
 	EVData m_evData;
 };
-
+*/
 #endif

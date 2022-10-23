@@ -82,7 +82,8 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	vector<Action> actions;
 	string sStrategyFilePath;
 	string sActionSquenceTmp = sActionSquence;
-	bool blAllin2Call, bl2Allin = false;
+	bool blAllin2Call = false;
+	bool bl2Allin = false;
 	bool blCreateStrategy = false;
 
 	//解析需要allin和call转换的标准
@@ -123,15 +124,21 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	{
 		//获取节点名称对应的文件路径，未找到则返回false,代表offline
 		sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeName);
-		if (sStrategyFilePath.size() == 0)
+		if (sStrategyFilePath.size() == 0) {
+			cout << "error:GetWizardFilePath() retrun nothing,gmType:" << gmType << ",sNodeName:" << sNodeName << endl;
 			return false;
+		}
 
-//sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
+//for test
+sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
 		//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 		Json::Value root;
 		std::ifstream ifs;
 		ifs.open(sStrategyFilePath);
+
+		if (ifs.is_open() == false)
+			cout << "error:open wizard file failed,path:" << sStrategyFilePath << endl;
 
 		Json::CharReaderBuilder builder;
 		//builder["collectComments"] = true;
@@ -159,7 +166,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 					auto name = ComboMapping[i];
 					auto value = strategy[i].asDouble();
 					strategyItem->m_strategyData[name] = value;
-					cout << name << "," << value << endl;
+					//cout << name << "," << value << endl;
 				}
 
 				auto evs = (*it)["evs"];
@@ -167,7 +174,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 					auto name = ComboMapping[i];
 					auto value = evs[i].asDouble();
 					strategyItem->m_evData[name] = value;
-					cout << name << "," << value << endl;
+					//cout << name << "," << value << endl;
 				}
 				m_strategy.push_back(strategyItem);
 			}
@@ -187,7 +194,8 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		SpecialProcessing(sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
 
 #ifdef FOR_TEST_DUMP_DETAIL_
-		 sComment = "from_wizard-after_special" + sNodeName;
+		cout << "Load strategy from wizard,SpecialProcessing():" << sSpecial << endl;
+		sComment = "from_wizard-after_special" + sNodeName;
 		DumpStrategy(sComment);
 #endif
 
@@ -206,16 +214,24 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 
 
 #ifdef FOR_TEST_DUMP_DETAIL_
-	 sComment = "from_wizard-after@&" + sNodeName;
-	DumpStrategy(sComment);
+	if (bl2Allin || blAllin2Call) {
+		if(bl2Allin)
+			cout << "Load strategy from wizard,2Allin()" << endl;
+		else
+			cout << "Load strategy from wizard,Allin2Call()" << endl;
+		sComment = "from_wizard-after@&" + sNodeName;
+		DumpStrategy(sComment);
+	}
 #endif
 
 	//同构转换
 	ConvertIsomorphism(suitReplace);
 
 #ifdef FOR_TEST_DUMP_DETAIL_
-	 sComment = "from_wizard-after_iso" + sNodeName;
-	DumpStrategy(sComment);
+	if(suitReplace.blIsNeeded){
+		sComment = "from_wizard-after_iso" + sNodeName;
+		DumpStrategy(sComment);
+	}
 #endif
 
 	return true;
@@ -1039,7 +1055,7 @@ void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std
 	ofs.close();
 }
 
-	
+//本程序不用，测试程序中用	
 void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
 	vector<string> lines;
 	loadFileAsLine(sPath,lines);

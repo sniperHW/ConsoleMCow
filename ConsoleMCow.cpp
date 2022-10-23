@@ -86,6 +86,7 @@ extern void loadFileAsLine(const string& path,vector<string> &lines);
 
 int main()
 {
+
 	if (!LoadConfigs(Max6_NL50_SD100)) {
 		cout << "Load config error!" << endl;
 		return 0;
@@ -96,7 +97,6 @@ int main()
 
 /*
 	cout << "Please input commands, gameover to finish." << endl;
-
 	string sCommand, sRequireHead, sRequireContent;
 	char szBuff[1024];
 	cin.getline(szBuff,1024);
@@ -144,11 +144,30 @@ int main()
 	}
 */
 
+
 	CSolution testSolution;
-	testSolution.InitGame("GameID=1666081977;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]F,[HJ]R3.0,[CO]F"); 
-	testSolution.ChangeRound("[BTN]R7.0,[SB]F,[BB]F,-,[HJ]C<KsKdQc>pot=15.5;EStack=[HJ]93.0,[BTN]93.0;");
-	testSolution.HeroAction("");
+
+
+
+
+//	testSolution.InitGame("GameID=1666422279;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<AhAd>;");
+//	testSolution.HeroAction("[UTG]C,[HJ]F,[CO]F,[BTN]F,[SB]C"); 
+//	testSolution.HeroAction("[BB]R2.0,-,[UTG]F,[SB]R4.0");
+
+	//test presave
+	testSolution.InitGame("GameID=1666449280;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
+	testSolution.HeroAction("[BTN]R4.0,[SB]F,[BB]F,-,[HJ]R8.0");
+	testSolution.ChangeRound("[BTN]C<8s9s9s>pot=21.5;EStack=[HJ]90.0,[BTN]90.0;");
+	testSolution.HeroAction("[HJ]R7.1");
+
+	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<KsKdQc>pot=6.5;EStack=[HJ]97.5,[BTN]97.5;");
+	//testSolution.HeroAction("[HJ]R2.1");
+
+	//test utg_vs_hj_3bet
+	//testSolution.InitGame("GameID=1666359512;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<AhAd>;");
+	//testSolution.HeroAction("");
+	//testSolution.HeroAction("[UTG]R3.0,[HJ]R7.0,[CO]F,[BTN]F,[SB]F,[BB]F,-");
 
 /*
 	CBoard board;

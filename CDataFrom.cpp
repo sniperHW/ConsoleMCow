@@ -26,7 +26,16 @@ string CDataFrom::GetWizardFilePath(GameType gmType, const string& sNodeName)
 		ss << sConfigFolder << "\\Data\\" << "WizardFile\\" << GameTypeName[gmType] << "\\preflop\\" << sNodeName << ".json";
 	}
 
-	return ss.str();
+	string sReplaceBrackets = ss.str();
+	for (int i = 0; i < sReplaceBrackets.size(); i++)
+	{
+		if (sReplaceBrackets[i] == '<')
+			sReplaceBrackets[i] = '{';
+		if (sReplaceBrackets[i] == '>')
+			sReplaceBrackets[i] = '}';
+	}
+
+	return sReplaceBrackets;
 }
 
 string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName)
@@ -55,7 +64,16 @@ string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName)
 		ss << sConfigFolder << "\\Data\\" << "SolverFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".json";
 	}
 
-	return ss.str();
+	string sReplaceBrackets = ss.str();
+	for (int i = 0; i < sReplaceBrackets.size(); i++)
+	{
+		if (sReplaceBrackets[i] == '<')
+			sReplaceBrackets[i] = '{';
+		if (sReplaceBrackets[i] == '>')
+			sReplaceBrackets[i] = '}';
+	}
+
+	return sReplaceBrackets;
 }
 
 string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
