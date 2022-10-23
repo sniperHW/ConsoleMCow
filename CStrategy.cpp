@@ -129,8 +129,8 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 			return false;
 		}
 
-//for test
-sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
+		//for test
+		sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
 		//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 		Json::Value root;
@@ -161,21 +161,47 @@ sStrategyFilePath = "./test/2h2d2c.json"; //for test////////////////////////////
 				if (strategyItem->m_action.actionType == raise && strategyItem->m_action.fBetSize > maxBetSize) {
 					maxRaise = strategyItem;
 				}
+				
+
+
 				auto strategy = (*it)["strategy"];
-				for (Json::ArrayIndex i = 0; i < strategy.size(); i++) {
-					auto name = ComboMapping[i];
-					auto value = strategy[i].asDouble();
-					strategyItem->m_strategyData[name] = value;
-					//cout << name << "," << value << endl;
+				if(strategy.size() == 1326) {
+					for (Json::ArrayIndex i = 0; i < strategy.size(); i++) {
+						auto name = ComboMapping[i];
+						auto value = strategy[i].asDouble();
+						strategyItem->m_strategyData[name] = value;
+						//cout << name << "," << value << endl;
+					}
+				} else {
+					for (Json::ArrayIndex i = 0; i < strategy.size(); i++) {
+						auto names = CCombo::GetCombosByAbbr(AbbrComboMapping[i]);    //ComboMapping[i];
+						auto value = strategy[i].asDouble();
+						for(auto name : names) {
+							strategyItem->m_strategyData[name] = value;
+						}
+						//cout << name << "," << value << endl;
+					}	
 				}
 
 				auto evs = (*it)["evs"];
-				for (Json::ArrayIndex i = 0; i < evs.size(); i++) {
-					auto name = ComboMapping[i];
-					auto value = evs[i].asDouble();
-					strategyItem->m_evData[name] = value;
-					//cout << name << "," << value << endl;
+				if(evs.size() == 1326) {
+					for (Json::ArrayIndex i = 0; i < evs.size(); i++) {
+						auto name = ComboMapping[i];
+						auto value = evs[i].asDouble();
+						strategyItem->m_evData[name] = value;
+						//cout << name << "," << value << endl;
+					}
+				}else {
+					for (Json::ArrayIndex i = 0; i < evs.size(); i++) {
+						auto names = CCombo::GetCombosByAbbr(AbbrComboMapping[i]); //ComboMapping[i];
+						auto value = evs[i].asDouble();
+						for(auto name : names) {
+							strategyItem->m_strategyData[name] = value;
+						}						
+						//cout << name << "," << value << endl;
+					}
 				}
+
 				m_strategy.push_back(strategyItem);
 			}
 			if (maxRaise != nullptr) {
