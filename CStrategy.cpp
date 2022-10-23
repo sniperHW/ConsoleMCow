@@ -291,7 +291,7 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 			}
 		}
 	} else if (action.actionType == allin) {
-		/*float  maxBet = 0.0f;
+		float  maxBet = 0.0f;
 		string maxName = "";
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
@@ -299,17 +299,24 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 				if(bet>=maxBet){
 					maxBet=bet;
 					maxName=*it2;
-					next=&(nodeChildren[*it2]);
+					next=&(nodeChildren[*it2]);		//？这之后策略中的是否会把ActionType设为allin
 				}
 			}				
 		}
+
+		//如果实际行动中对方动作是allin那一定是选择BET最大值（代表allin）,这情况下是不用比例去匹配的，策略中也要把ActionType设为allin
+		//既然已经allin，也就无需跟踪下一步了
+		//原来讲的allin要计算比例仅指对候选来说，allin也要作为一种raise来供选择，并不是对实际动作序列里allin的处理，是因为wizard解allin（对手raise可能很大接近allin而当对手allin处理）
+		//，是不知道size的，所以要有效筹码替代，但solver中allin也是用bet表示，有size,所以不需要特别处理
+/*
 		if(maxName != "") {
 			Action a;
 			a.actionType = raise;
 			a.fBetSize = maxBet;
 			actionsByStrategy.push_back(a);
 			cout << maxName << endl;
-		}*/
+		}
+
 		vector<string> names;
 		vector<double>  bets;
 		for(auto it2 = members.begin();it2 != members.end();++it2){
@@ -330,21 +337,34 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 			actionsByStrategy.push_back(a);
 			cout << names[i] << endl;
 		}		
+*/
+
 	} else if (action.actionType == raise) {
 		vector<string> names;
-		vector<double>  bets;
-		for(auto it2 = members.begin();it2 != members.end();++it2){
+		vector<double> bets;
+		vector<Action> actionsByStrategyTmp = actionsByStrategy;	//因为要拿候选bet节点逐个替换进去计算
+		for(auto it2 = members.begin();it2 != members.end();++it2){	//？最大的BET应该也在其中
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				//加入当前要计算的子节点
+				Action actionCur;	
+				actionCur.actionType = raise;
+				actionCur.fBetSize = getBetByStr(*it2);
+				actionsByStrategyTmp.push_back(actionCur);
+
 				names.push_back(*it2);
-				/////////CalcBetRatio
-				auto v = CalcBetRatio(getBetByStr(*it2),actionsByStrategy,int(actionsByStrategy.size()),stacksByStrategy.dPot);	
-				bets.push_back(v);
+				/////////CalcBetRatio计算该节点的比例
+				auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp,int(actionsByStrategyTmp.size()));
+				bets.push_back(v);	//候选比例
 			}
 		}
 
-		auto i = MatchBetRatio(action.fBetSize,bets);
+		//计算实际比例
+		double dActuallyRatio = CalcBetRatio(stacks.dPot, actions, int(actionsByStrategyTmp.size())); //只计算到当前一个（？iLastIdx这样写有没问题）
+		//匹配比例
+		auto i = MatchBetRatio(dActuallyRatio,bets);
+
 		if(i>=0){
-			next = &(nodeChildren[names[i]]);
+			next = &(nodeChildren[names[i]]);	
 			Action a;
 			a.actionType = raise;
 			a.fBetSize = getBetByStr(names[i]);
