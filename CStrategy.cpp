@@ -264,7 +264,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 }
 
 
-const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,const vector<Action>& actions,double stack){//const StackByStrategy& stack,bool last) {
+const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,const vector<Action>& actions,vector<Action>& actionsByStrategy, const Stacks& stacks, const Stacks& stacksByStrategy){//double stack){//const StackByStrategy& stack,bool last) {
 	const Json::Value *next = nullptr; 
 	const Json::Value &nodeChildren = (*node)["childrens"];
 	auto members = nodeChildren.getMemberNames();
@@ -272,6 +272,9 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if(*it2 == "CHECK") {
 				next = &(nodeChildren[*it2]);
+				Action a;
+				a.actionType = check;
+				actionsByStrategy.push_back(a);
 				cout << *it2 << endl;
 				break;
 			}
@@ -280,12 +283,15 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if(*it2 == "CALL") {
 				next = &(nodeChildren[*it2]);
+				Action a;
+				a.actionType = call;
+				actionsByStrategy.push_back(a);
 				cout << *it2 << endl;
 				break;
 			}
 		}
 	} else if (action.actionType == allin) {
-		float  maxBet = 0.0f;
+		/*float  maxBet = 0.0f;
 		string maxName = "";
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
@@ -298,16 +304,19 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 			}				
 		}
 		if(maxName != "") {
+			Action a;
+			a.actionType = raise;
+			a.fBetSize = maxBet;
+			actionsByStrategy.push_back(a);
 			cout << maxName << endl;
-		}
-	} else if (action.actionType == raise) {
+		}*/
 		vector<string> names;
 		vector<double>  bets;
 		for(auto it2 = members.begin();it2 != members.end();++it2){
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 				names.push_back(*it2);
 				/////////CalcBetRatio
-				auto v = CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),stack);	
+				auto v = CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),stacks.dEStack);	
 				bets.push_back(v);
 			}
 		}
@@ -315,6 +324,31 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 		auto i = MatchBetRatio(action.fBetSize,bets);
 		if(i>=0){
 			next = &(nodeChildren[names[i]]);
+			Action a;
+			a.actionType = raise;
+			a.fBetSize = getBetByStr(names[i]);
+			actionsByStrategy.push_back(a);
+			cout << names[i] << endl;
+		}		
+	} else if (action.actionType == raise) {
+		vector<string> names;
+		vector<double>  bets;
+		for(auto it2 = members.begin();it2 != members.end();++it2){
+			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+				names.push_back(*it2);
+				/////////CalcBetRatio
+				auto v = CalcBetRatio(getBetByStr(*it2),actionsByStrategy,int(actionsByStrategy.size()),stacksByStrategy.dPot);	
+				bets.push_back(v);
+			}
+		}
+
+		auto i = MatchBetRatio(action.fBetSize,bets);
+		if(i>=0){
+			next = &(nodeChildren[names[i]]);
+			Action a;
+			a.actionType = raise;
+			a.fBetSize = getBetByStr(names[i]);
+			actionsByStrategy.push_back(a);
 			cout << names[i] << endl;
 		}
 	}
@@ -361,13 +395,10 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
 	vector<Action> actions={};
+	vector<Action> actionsByStrategy={};
 	int actionSquenceSize = int(actionSquence.size());  
 	for(auto i = 0; i < actionSquenceSize;i++) {
-		double sstack = 0;
-		if(i==actionSquenceSize-1) {
-			sstack = stacks.dEStack;
-		}
-		const Json::Value *next = geActionNode(node,actionSquence[i],actions,sstack);
+		const Json::Value *next = geActionNode(node,actionSquence[i],actions,actionsByStrategy,stacks,stacksByStrategy);
 		//cout << actionSquence[i].actionType << "," << next << endl;
 		if(next == nullptr) {
 			return false;

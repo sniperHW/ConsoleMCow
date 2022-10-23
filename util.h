@@ -43,6 +43,23 @@ inline std::string actionType2String(ActionType a) {
 
 inline std::string double2String(const double dlValue, const int nFixed) {
 	char buffer[100];
+#ifdef MAC
+	switch (nFixed)
+	{
+	case 1:
+		snprintf(buffer, sizeof(buffer), "%.1f", dlValue);
+		break;
+	case 2:
+		snprintf(buffer, sizeof(buffer), "%.2f", dlValue);
+		break;
+	case 7:
+		snprintf(buffer, sizeof(buffer), "%.7f", dlValue);
+		break;
+	default:
+		snprintf(buffer, sizeof(buffer), "%.1f", dlValue);
+		break;
+	}
+#else
 	switch (nFixed)
 	{
 	case 1:
@@ -58,6 +75,7 @@ inline std::string double2String(const double dlValue, const int nFixed) {
 		sprintf_s(buffer, sizeof(buffer), "%.1f", dlValue);
 		break;
 	}
+#endif
 
 	std::string sValue = buffer;
 	auto p = sValue.end() - 1;
@@ -84,6 +102,16 @@ Type stringToNum(const std::string& str)
     iss >> num;
     return num;
 }
+
+
+#ifdef MAC 
+
+inline std::string getTimeString()
+{
+	return "";
+}
+
+#else 
 
 inline std::string getTimeString()
 {
@@ -116,6 +144,8 @@ inline std::string getTimeString()
 	sprintf_s(buff, sizeof(buff), "%.19s %s", timebuf, am_pm);
 	return std::string(buff);
 }
+
+#endif
 
 inline std::vector<std::string> split(const std::string& s, char c){
     std::vector<std::string> v; 
