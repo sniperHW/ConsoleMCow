@@ -20,6 +20,8 @@
 #include "CDataFrom.h"
 #include "CBoard.h"
 #include <regex>
+#include "CWdebug.h"
+
 
 using namespace std;
 
@@ -143,24 +145,26 @@ int main()
 		}
 	}
 */
+//	CWdebug::DeleteDump();
 
 
-	CSolution testSolution;
+	for (auto it : AbbrComboMapping)
+		cout << it << "\t";
 
 
 
+//	CSolution testSolution;
+	//test presave
+//	testSolution.InitGame("GameID=1666449280;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+//	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
+//	testSolution.HeroAction("[BTN]R4.0,[SB]F,[BB]F,-,[HJ]R8.0");
+//	testSolution.ChangeRound("[BTN]C<8s9s9s>pot=21.5;EStack=[HJ]90.0,[BTN]90.0;");
+//	testSolution.HeroAction("[HJ]R7.1");
 
 //	testSolution.InitGame("GameID=1666422279;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<AhAd>;");
 //	testSolution.HeroAction("[UTG]C,[HJ]F,[CO]F,[BTN]F,[SB]C"); 
 //	testSolution.HeroAction("[BB]R2.0,-,[UTG]F,[SB]R4.0");
-
-	//test presave
-	testSolution.InitGame("GameID=1666449280;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
-	testSolution.HeroAction("[BTN]R4.0,[SB]F,[BB]F,-,[HJ]R8.0");
-	testSolution.ChangeRound("[BTN]C<8s9s9s>pot=21.5;EStack=[HJ]90.0,[BTN]90.0;");
-	testSolution.HeroAction("[HJ]R7.1");
-
+// 
 	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<KsKdQc>pot=6.5;EStack=[HJ]97.5,[BTN]97.5;");
 	//testSolution.HeroAction("[HJ]R2.1");
 

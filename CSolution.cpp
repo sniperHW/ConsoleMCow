@@ -174,6 +174,8 @@ bool CSolution::ChangeRound(const string& sActionLine)
 #ifdef DEBUG_
 		cout << "ChangeRound Load range from_file:----------------------------------------------" << endl;
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << endl << endl;
+		if (IsoFlops.find(m_game.m_board.GetIsoBoardSymbol()) == IsoFlops.end())
+			cout << "error: not in ISO set,sISONodeName:" << m_game.m_board.GetIsoBoardSymbol() << endl;
 #endif 
 
 //for test
@@ -268,8 +270,6 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		string sFilePath = CDataFrom::GetSolverFilePath(m_game.m_gmType, sISONodeName);
 
 #ifdef DEBUG_
-		if (IsoFlops.find(sISONodeName) == IsoFlops.end())
-			cout << "error: not in ISO set,sISONodeName:" << sISONodeName << endl;
 		cout << "Load solver presave:" << sFilePath << endl << endl;
 #endif 
 
