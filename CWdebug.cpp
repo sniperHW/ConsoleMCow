@@ -1,5 +1,18 @@
 //#include "pch.h"
 #include "CWdebug.h"
+
+#ifdef MAC 
+
+void CWdebug::Log(const std::string& sLog)
+{
+}
+
+void CWdebug::DeleteDump()
+{
+}
+
+#else
+
 #include "util.h"
 #include <fstream>
 #include <io.h>
@@ -49,3 +62,4 @@ void CWdebug::DeleteDump()
 		remove(sFilePath.c_str());
 	}
 }
+#endif

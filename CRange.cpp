@@ -292,6 +292,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		//对策略数据中每个组合，用选定动作对应的比例去改写pRangeRatio中对应的数据（如果是第一次行动则填写1*比例，非第一次行动则填写*pRangeRatio[组合] * 比例，区分第一次目的是让不存在的组合保持0）
 		//不是最后一个动作则按之前匹配的动作选择子节点，为当前节点
 	vector<Action> actions={};
+	vector<Action> actionsByStrategy={};
 	const Json::Value *node = &root;
 	for(auto i = 0;i<int(actionSquence.size());i++){
 		if(i%2==0) {
@@ -389,7 +390,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		}
 
 		//根据动作选择下一节点
-		node = CStrategy::geActionNode(node,a,actions,0);
+		node = CStrategy::geActionNode(node,a,actions,actionsByStrategy,stacks,stacksByStrategy);
 		if(node==nullptr){
 			return false;
 		}else {

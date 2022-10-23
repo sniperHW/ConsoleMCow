@@ -44,7 +44,7 @@ public:
 
 	static int MatchBetRatio(double dActuallyRatio, const std::vector<double>&candidateRatios); 
 	static bool parseActionSquence(const std::string& sActionSquence, std::string& sPrefix, Round &round,std::vector<Action>& actions,std::string &actionStr);
-	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,const std::vector<Action>& actions,double stack);//const StackByStrategy& stack,bool last);
+	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,const std::vector<Action>& actions, std::vector<Action>& actionsByStrategy, const Stacks& stacks, const Stacks& stacksByStrategy);//double stack);//const StackByStrategy& stack,bool last);
 	static Action getActionByStr(const std::string &str); 
 	static double CalcBetRatio(const double dPot, const std::vector<Action>& actions, int iLastIdx, const double dEstack = 0); //只有allin才填写dEstack
 
