@@ -130,7 +130,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		}
 
 		//for test
-		sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
+		//sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
 
 		//加载数据到m_strategy（code X:check,RAI:allin,R*:raise,F:fold,C:call）(betsize:fBetSize,betsize_by_pot:fBetSizeByPot)
 		Json::Value root;

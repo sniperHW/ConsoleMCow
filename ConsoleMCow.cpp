@@ -148,14 +148,14 @@ int main()
 //	CWdebug::DeleteDump();
 
 
-	for (auto it : AbbrComboMapping)
-		cout << it << "\t";
+	CSolution testSolution;
+	testSolution.InitGame("GameID=1666532742;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F");
 
 
-
-//	CSolution testSolution;
+ 
 	//test presave
-//	testSolution.InitGame("GameID=1666449280;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+//	testSolution.InitGame("GameID=1666532742;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
 //	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
 //	testSolution.HeroAction("[BTN]R4.0,[SB]F,[BB]F,-,[HJ]R8.0");
 //	testSolution.ChangeRound("[BTN]C<8s9s9s>pot=21.5;EStack=[HJ]90.0,[BTN]90.0;");
