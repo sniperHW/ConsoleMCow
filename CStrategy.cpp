@@ -149,21 +149,14 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		}
 		else {
 			Json::Value solutions = root["solutions"];
-			//记录最大的bet,在最后把类型改为allin
-			std::shared_ptr<CStrategyItem> maxRaise = nullptr;
-			double maxBetSize = 0;
+
 			for (auto it = solutions.begin(); it != solutions.end(); ++it) {
 				std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 				auto action = (*it)["action"];
-				strategyItem->m_action.actionType = str2ActionType(action["type"].asString());
+				strategyItem->m_action.actionType = str2ActionType(action["type"].asString(), action["code"].asString());
 				strategyItem->m_action.fBetSize = stringToNum<float>(action["betsize"].asString());
 				strategyItem->m_action.fBetSizeByPot = stringToNum<float>(action["betsize_by_pot"].asString());
-				if (strategyItem->m_action.actionType == raise && strategyItem->m_action.fBetSize > maxBetSize) {
-					maxRaise = strategyItem;
-				}
 				
-
-
 				auto strategy = (*it)["strategy"];
 				if(strategy.size() == 1326) {
 					for (Json::ArrayIndex i = 0; i < strategy.size(); i++) {
@@ -172,14 +165,13 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 						strategyItem->m_strategyData[name] = value;
 						//cout << name << "," << value << endl;
 					}
-				} else {
+				} 
+				else if (strategy.size() == 169) {	//169
 					for (Json::ArrayIndex i = 0; i < strategy.size(); i++) {
 						auto names = CCombo::GetCombosByAbbr(AbbrComboMapping[i]);    //ComboMapping[i];
 						auto value = strategy[i].asDouble();
-						for(auto name : names) {
+						for(auto name : names) 
 							strategyItem->m_strategyData[name] = value;
-						}
-						//cout << name << "," << value << endl;
 					}	
 				}
 
@@ -196,19 +188,16 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 						auto names = CCombo::GetCombosByAbbr(AbbrComboMapping[i]); //ComboMapping[i];
 						auto value = evs[i].asDouble();
 						for(auto name : names) {
-							strategyItem->m_strategyData[name] = value;
-						}						
-						//cout << name << "," << value << endl;
+							strategyItem->m_evData[name] = value;
+						}
 					}
 				}
-
 				m_strategy.push_back(strategyItem);
-			}
-			if (maxRaise != nullptr) {
-				maxRaise->m_action.actionType = allin;
 			}
 		}
 	}
+
+
 
 #ifdef FOR_TEST_DUMP_DETAIL_
 	string sComment = "from_wizard-row" + sNodeName;

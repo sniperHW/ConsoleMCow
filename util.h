@@ -8,7 +8,7 @@
 #include <sstream>
 #include "globledef.h"
 
-inline ActionType str2ActionType(const std::string &str) {
+inline ActionType str2ActionType(const std::string &str, const std::string&code = "") {
 	if(str == "CALL" || str == "call") {
 		return call;
 	} else if(str == "FOLD" || str == "fold"){
@@ -16,7 +16,10 @@ inline ActionType str2ActionType(const std::string &str) {
 	} else if(str == "CHECK" ||str == "check"){
 		return check;
 	} else if(str == "BET" || str == "RAISE" || str == "bet" || str == "raise"){
-		return raise;
+		if (code == "RAI")
+			return allin;
+		else
+			return raise;
 	} else if (str == "ALLIN" || str == "allin") {
 		return allin;
 	}	else {
