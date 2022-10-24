@@ -300,13 +300,14 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		} else {
 			pRangeRatio = &IPRangeRatio;		
 		}
-		double sstack = 0;
-		if(i==actionSquence.size()-1) {
-			sstack = stacks.dEStack;
-		}
+		
+		//double sstack = 0;
+		//if(i==actionSquence.size()-1) {
+		//	sstack = stacks.dEStack;
+		//}
 
 		auto a = actionSquence[i];
-		auto getActionIdx = [actions] (const Json::Value *node,const Action& action,double sstack) -> int {
+		auto getActionIdx = [actions,actionsByStrategy,stacks,stacksByStrategy] (const Json::Value *node,const Action& action) -> int {
 				int index = -1;
 
 				auto members = (*node)["actions"].getMemberNames();
@@ -327,11 +328,24 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 				} else if (action.actionType == raise) {
 					vector<string> names;
 					vector<double>  bets;
+					vector<Action> actionsByStrategyTmp = actionsByStrategy;
 					for(auto it2 = members.begin();it2 != members.end();++it2){
-						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+						/*if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 							names.push_back(*it2);
-							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),sstack);	
+							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()));	
 							bets.push_back(v);
+						}*/
+						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
+							//加入当前要计算的子节点
+							Action actionCur;	
+							actionCur.actionType = raise;
+							actionCur.fBetSize = getBetByStr(*it2);
+							actionsByStrategyTmp.push_back(actionCur);
+
+							names.push_back(*it2);
+							/////////CalcBetRatio计算该节点的比例
+							auto v = CStrategy::CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp,int(actionsByStrategyTmp.size()));
+							bets.push_back(v);	//候选比例
 						}
 					}
 
@@ -352,8 +366,8 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 						names.pop_back();	
 					}
 
-
-					auto j = CStrategy::MatchBetRatio(action.fBetSize,bets);
+					double dActuallyRatio = CStrategy::CalcBetRatio(stacks.dPot, actions, int(actionsByStrategyTmp.size()));
+					auto j = CStrategy::MatchBetRatio(dActuallyRatio,bets);
 					if(j>=0){
 						for(int i = 0;i<int(members.size());i++){
 							if(names[j]==members[i]){
@@ -368,7 +382,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 			};			
 		
 
-		int j = getActionIdx(node,a,sstack);
+		int j = getActionIdx(node,a);
 
 		if(j < 0) {
 			return false;

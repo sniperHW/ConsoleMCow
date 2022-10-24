@@ -427,10 +427,13 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		auto a = getActionByStr(nodeActions[i].asString());
 		//cout << nodeActions[i].asString() << "," << a.actionType << "," << a.fBetSize << endl;
 		/////////CalcBetRatio
-		auto iLastIdx = int(actions.size());
-		actions.push_back(a);
-		auto v = CalcBetRatio(a.fBetSize,actions,iLastIdx,0);
-		actions.pop_back();
+		//auto iLastIdx = int(actions.size());
+		//actions.push_back(a);
+		vector<Action> actionsByStrategyTmp = actionsByStrategy;
+		actionsByStrategy.push_back(a);
+		auto v = CalcBetRatio(stacksByStrategy.dPot,actions,actionsByStrategy.size());
+		actionsByStrategy.pop_back();
+
 		strategyItem->m_action.actionType = a.actionType;
 		strategyItem->m_action.fBetSize = (float)v;
 		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
