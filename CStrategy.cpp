@@ -406,7 +406,8 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	vector<Action> actions={};
 	vector<Action> actionsByStrategy={};
 	int actionSquenceSize = int(actionSquence.size());  
-	for(auto i = 0; i < actionSquenceSize;i++) {
+	//定位到目标节点
+	for(auto i = 0; i < actionSquenceSize;i++) {	
 		const Json::Value *next = geActionNode(node,actionSquence[i],actions,actionsByStrategy,stacks,stacksByStrategy);
 		//cout << actionSquence[i].actionType << "," << next << endl;
 		if(next == nullptr) {
@@ -417,6 +418,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		} 
 	}
 
+	//获取目标节点下的策略数据
 	const Json::Value &nodeStrategy = (*node)["strategy"];
 	const Json::Value &nodeActions = nodeStrategy["actions"];
 	//记录最大的bet,在最后把类型改为allin
@@ -425,26 +427,29 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	for(Json::ArrayIndex i = 0;i<nodeActions.size();i++){
 		std::shared_ptr<CStrategyItem> strategyItem(new CStrategyItem);
 		auto a = getActionByStr(nodeActions[i].asString());
-		//cout << nodeActions[i].asString() << "," << a.actionType << "," << a.fBetSize << endl;
-		/////////CalcBetRatio
-		//auto iLastIdx = int(actions.size());
-		//actions.push_back(a);
-		vector<Action> actionsByStrategyTmp = actionsByStrategy;
-		actionsByStrategy.push_back(a);
-		auto v = CalcBetRatio(stacksByStrategy.dPot,actions,actionsByStrategy.size());
-		actionsByStrategy.pop_back();
 
 		strategyItem->m_action.actionType = a.actionType;
-		strategyItem->m_action.fBetSize = (float)v;
-		if(strategyItem->m_action.actionType==raise && strategyItem->m_action.fBetSize > maxBetSize) {
-			maxRaise = strategyItem;
+		if (strategyItem->m_action.actionType == raise) {
+			//计算bet节点比例
+			actionsByStrategy.push_back(a);
+			auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategy, actionsByStrategy.size());
+			actionsByStrategy.pop_back();	//计算完需要用下个节点的替代
+			strategyItem->m_action.fBetSize = a.fBetSize;
+			strategyItem->m_action.fBetSizeByPot = (float)v;
+			//记忆最大bet节点
+			if (strategyItem->m_action.actionType == raise && strategyItem->m_action.fBetSize > maxBetSize) {
+				maxRaise = strategyItem;
+				maxBetSize = strategyItem->m_action.fBetSize;
+			}
+
+			auto members = nodeStrategy["strategy"].getMemberNames();
+			for(auto it = members.begin();it != members.end();++it){
+				strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
+			}
+			m_strategy.push_back(strategyItem);
 		}
-		auto members = nodeStrategy["strategy"].getMemberNames();
-		for(auto it = members.begin();it != members.end();++it){
-			strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
-		}
-		m_strategy.push_back(strategyItem);
 	}
+	//将最大bet节点改为allin
 	if(maxRaise != nullptr) {
 		maxRaise->m_action.actionType = allin;
 	}
