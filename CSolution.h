@@ -43,7 +43,8 @@ private:
 	Action ProcessingOffline();
 
 	bool IsMultiPlayers();
-
+	
+	void DumpSelAction(const std::string& sActionLine);
 };
 
 #endif

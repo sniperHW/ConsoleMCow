@@ -12,6 +12,7 @@ public:
 	static std::string GetWizardFilePath(GameType gmType, const std::string & sNodeName);
 	static std::string GetSolverFilePath(GameType gmType, const std::string & sNodeName);
 	static std::string GetRangesFilePath(GameType gmType, const std::string & sNodeName);
+	static std::string GetStrategyFilePath(GameType gmType, const std::string& sNodeName);	//自定义格式
 
 private:
 	

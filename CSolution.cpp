@@ -21,7 +21,7 @@ extern map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig;
 
 CSolution::CSolution()
 {
-	m_strategyFrom = from_wizard;
+	m_strategyFrom = from_strategy_file;
 	m_blNotOffline = true;
 }
 
@@ -35,16 +35,42 @@ Action CSolution::HeroAction(const string& sActionLine)
 		return ProcessingOffline();
 	}
 
+	if (!m_blNotOffline) {
+		cout << "process offline" << endl;
+		return ProcessingOffline();
+	}
+
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	DumpSelAction(sActionLine);	//添加 SelA
+#endif 
+
+
 	switch (m_strategyFrom)
 	{
+	case from_strategy_file: {
+
+#ifdef DEBUG_
+		cout << "HeroAction Load strategy from_strategy_file:--------------------------------------------" << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence  << endl << endl;
+#endif 
+		m_blNotOffline = true; //for test
+		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence);
+
+#ifdef FOR_TEST_DUMP_
+		string sComment = "from_strategy_file-" + m_actionLine.m_sActionSquence;
+		strategy.DumpStrategy(sComment, NULL);
+#endif
+		break;
+	}
 	case from_wizard: {
 
 #ifdef DEBUG_
 		cout << "HeroAction Load strategy from_wizard:--------------------------------------------" << endl;
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << "\t" << "IsoBoard:" << m_game.m_board.GetIsomorphismSymbol() << endl << endl;
 #endif 
-
-		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+		m_blNotOffline = true;
+		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_wizard-" + m_actionLine.m_sActionSquence;
@@ -173,13 +199,12 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 #ifdef DEBUG_
 		cout << "ChangeRound Load range from_file:----------------------------------------------" << endl;
-		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << endl << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "ISO_Board:" << m_game.m_board.GetIsoBoardSymbol() << endl << endl;
 		if (IsoFlops.find(m_game.m_board.GetIsoBoardSymbol()) == IsoFlops.end())
 			cout << "error: not in ISO set,sISONodeName:" << m_game.m_board.GetIsoBoardSymbol() << endl;
 #endif 
 
-//for test
-		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_file-" + m_actionLine.m_sNodeName;
@@ -195,7 +220,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 
 //for test
-		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_wizard-" + m_actionLine.m_sNodeName;
@@ -217,8 +242,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "StacksByStrategy:" << double2String(StacksByStrategy.dPot, 2) << "," << double2String(StacksByStrategy.dEStack, 2) << endl << endl;
 #endif 
 
-//for test
-		//m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, stackPre, StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, stackPre, StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_solver-" + m_actionLine.m_sActionSquence;
@@ -288,6 +312,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		}
 		else {
 			m_blNotOffline = false;
+			cout << "error:solver_file open failed，  " << sFilePath << endl;
 			return false;
 		}
 	}
@@ -313,6 +338,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 Action CSolution::CalcHeroAction(const CStrategy& strategy)
 {
 	//备忘：preflop需要检查betsize的合法性
+	//当preflop，hero的手牌无对应策略，直接当fold处理（因为筹码深度可能由大变小）,flop后找牌型最接近的
 	return Action{};
 }
 
@@ -449,6 +475,50 @@ string CSolution::getDataFromString(const StrategyFrom fr)
 		return "multi_players";
 	default:
 		return "";
+	}
+}
+
+void CSolution::DumpSelAction(const std::string& sActionLine)
+{
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\dump\\";
+	string sCommandsPath = sConfigFolder + "commands.txt";
+	time_t t = time(nullptr);
+	t += rand();
+
+	smatch m;
+	regex reg(R"(\<(.*)\>)");
+	if (!regex_search(sActionLine, m, reg)) {	
+		regex sep(R"(\s?,\s?)");
+		vector<pair<Position, Action>> posActions;
+		sregex_token_iterator p(sActionLine.cbegin(), sActionLine.cend(), sep, -1);
+		sregex_token_iterator e;
+		for (; p != e; ++p) {
+			if (!p->str().empty())
+				posActions.push_back(CActionLine::ToPosActionPair(p->str()));	//"-"标记为none,nonepos
+		}
+
+		for (auto it : posActions) {
+			auto p = m_game.m_players.find(it.first);
+			if (p != m_game.m_players.end()) {
+				if (p->second.m_blIsHero) {
+					string sAction = CActionLine::ToActionSymbol(it.second, true);
+					cout << "select action:" << sAction << endl << endl;
+
+					ofstream ofCommands;
+					ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
+					if (ofCommands.is_open()) {
+						//格式：87969;	SelA; comment;	R12
+						string sLine = to_string(t) + "; " + "SelA; " + sAction + "; " + sAction;
+						ofCommands << sLine << endl;
+					}
+					ofCommands.close();
+
+				}
+			}
+		}
 	}
 }
 

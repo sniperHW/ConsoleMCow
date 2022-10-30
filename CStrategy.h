@@ -34,7 +34,7 @@ class CStrategy
 {
 public:
 
-
+	bool Load(GameType gmType, const std::string& sActionSquence); //从自定义策略文件读取
 	bool Load(GameType gmType, const std::string & sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取
 	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace & suitReplace); //从solver读取
 
@@ -54,7 +54,7 @@ public:
 	static std::string ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace);
 
 	void DumpStrategy(const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy = NULL);
-	void ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
+	bool ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
 
 
 private:

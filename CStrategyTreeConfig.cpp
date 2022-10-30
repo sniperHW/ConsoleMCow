@@ -102,7 +102,7 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	return true;
 }
 
-//sPreflopName��Ҫ������ƥ��
+//用于flop wizard模式和turn presave模式
 void CStrategyTreeConfig::GetFlopCandidateRatios(const string& sPreflopName, vector<double>& candidateRatios, const SpaceMode mode)
 {
 	candidateRatios.clear();

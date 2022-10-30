@@ -68,20 +68,21 @@ vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 
 string CCombo::GetAbbrSymble(const string sCombo)
 {
+	string sAligned = Align(sCombo);
 	string ret;
 
-	if (sCombo[0] == sCombo[2]) { //pair
-		ret.push_back(sCombo[0]);
-		ret.push_back(sCombo[0]);
+	if (sAligned[0] == sAligned[2]) { //pair
+		ret.push_back(sAligned[0]);
+		ret.push_back(sAligned[0]);
 	}
-	else if (sCombo[1] == sCombo[3]) { //s
-		ret.push_back(sCombo[0]);
-		ret.push_back(sCombo[2]);
+	else if (sAligned[1] == sAligned[3]) { //s
+		ret.push_back(sAligned[0]);
+		ret.push_back(sAligned[2]);
 		ret.push_back('s');
 	}
 	else { //o
-		ret.push_back(sCombo[0]);
-		ret.push_back(sCombo[2]);
+		ret.push_back(sAligned[0]);
+		ret.push_back(sAligned[2]);
 		ret.push_back('o');
 	}
 
@@ -91,7 +92,7 @@ string CCombo::GetAbbrSymble(const string sCombo)
 
 void CCombo::SetHands(const string sCombo)
 {
-	m_sSymbol = sCombo;
+	m_sSymbol = Align(sCombo);
 
 	CCard m_Card1;
 	CCard m_Card2;
@@ -104,5 +105,44 @@ void CCombo::SetHands(const string sCombo)
 
 	//顺序转为1326中一个
 
+}
+
+std::string CCombo::Align(const std::string sSrc)
+{
+	if (sSrc.size() != 4)
+		return "";
+
+	string r;
+	map<char, int> charsOrdered{ {'A', 13}, { 'K',12 }, { 'Q',11 }, { 'J',10 }, { 'T',9 }, { '9',8 }, { '8',7 }, { '7',6 }, { '6',5 }, { '5',4 }, { '4',3 }, { '3',2 }, { '2',1 }};
+	set<char> charsSuit{'h','d','c','s'};
+
+	if (charsOrdered.find(sSrc[0]) == charsOrdered.end() || charsOrdered.find(sSrc[2]) == charsOrdered.end())
+		return "";
+	if (charsSuit.find(sSrc[1]) == charsSuit.end() || charsSuit.find(sSrc[3]) == charsSuit.end())
+		return "";
+
+
+
+	if (sSrc[0] == sSrc[2]) {	//对子
+		if (!(sSrc[1] == 's' && sSrc[3] == 'h' || sSrc[1] == 's' && sSrc[3] == 'd' || sSrc[1] == 'h' && sSrc[3] == 'd' || sSrc[1] == 's' && sSrc[3] == 'c' || sSrc[1] == 'h' && sSrc[3] == 'c' || sSrc[1] == 'd' && sSrc[3] == 'c')) {
+			r.append(1, sSrc[0]);
+			r.append(1, sSrc[3]);
+			r.append(1, sSrc[2]);
+			r.append(1, sSrc[1]);
+		}
+		else
+			r = sSrc;
+	}
+	else {	
+		if(charsOrdered[sSrc[0]] > charsOrdered[sSrc[2]])
+			r = sSrc;
+		else {
+			r.append(1, sSrc[2]);
+			r.append(1, sSrc[1]);
+			r.append(1, sSrc[0]);
+			r.append(1, sSrc[3]);
+		}
+	}
+	return r;
 }
 

@@ -52,28 +52,6 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		else if (game.m_round == turn)
 			game.m_board.SetRiver(sBoard);
 
-		//设置pot
-		reg = R"(pot=(.*);)";
-		if (regex_search(sActionLine, m, reg))
-			game.m_dPot = stod(m[1]);
-
-		//设置EStack
-		reg = R"(EStack=(.*);)";
-		string sEStacks;
-		if (regex_search(sActionLine, m, reg))
-			sEStacks = m[1];
-		if (regex_search(sActionLine, m, reg)) {
-			regex sep(R"(\s?,\s?)");
-			sregex_token_iterator p(sEStacks.cbegin(), sEStacks.cend(), sep, -1);
-			sregex_token_iterator e;
-			for (; p != e; ++p) {
-				regex regpos(R"(\[(.*)\](.*))");
-				string s = p->str();
-				if (regex_search(s, m, regpos))
-					game.m_players[CGame::GetPositionBySymbol(m[1])].m_dEStack = stod(m[2]);
-			}
-		}
-
 		blIsChangeRound = true;
 
 		//截取<>前的用于分析
@@ -259,7 +237,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			ActionMatchMode match_mode = blIsChangeRound ? match_toflop : match_preflop;
 			m_sAbbrName = g_actionMatchConfigs[game.m_gmType].GetAbbrName(match_mode, m_sPreflopRowActionSquence);
 			if (m_sAbbrName.empty()) {
-				cout << "error: ActionLineParse AbbrName not find," << "m_sPreflopRowActionSquence:" << m_sPreflopRowActionSquence << endl << endl;
+				cout << "error: ActionLineParse AbbrName not find," << "GameType:" << GameTypeName[game.m_gmType] << "; " << "m_sPreflopRowActionSquence:" << m_sPreflopRowActionSquence << endl << endl;
 				return false;
 			}
 		}
@@ -364,6 +342,26 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			game.m_round = turn;
 		else if (game.m_round == turn)
 			game.m_round = river;
+
+		//设置pot
+		reg = R"(pot=(.*);)";
+		if (regex_search(sActionLine, m, reg))
+			game.m_dPot = stod(m[1]);
+
+		//设置EStack
+		reg = R"(EStack=(.*);)";
+		if (regex_search(sActionLine, m, reg)) {
+			string sEStacks = m[1];
+			regex sep(R"(\s?,\s?)");
+			sregex_token_iterator p(sEStacks.cbegin(), sEStacks.cend(), sep, -1);
+			sregex_token_iterator e;
+			for (; p != e; ++p) {
+				regex regpos(R"(\[(.*)\](.*))");
+				string s = p->str();
+				if (regex_search(s, m, regpos))
+					game.m_players[CGame::GetPositionBySymbol(m[1])].m_dEStack = stod(m[2]);
+			}
+		}
 
 		//去除fold的玩家
 		for (auto it = game.m_players.begin(); it != game.m_players.end();) {
@@ -620,8 +618,10 @@ GameType CActionLine::GetCurGameType(const CGame& game)
 	for (auto player : game.m_players) {
 		if (player.second.m_blIsHero)
 			dHeroEStack = player.second.m_dEStack;
-		else
-			dRivalMaxEStack = player.second.m_dEStack > dRivalMaxEStack ? player.second.m_dEStack : dRivalMaxEStack;
+		else {
+			if (player.second.m_lastAction.actionType != fold)
+				dRivalMaxEStack = player.second.m_dEStack > dRivalMaxEStack ? player.second.m_dEStack : dRivalMaxEStack;
+		}
 	}
 
 	dChose = dHeroEStack <= dRivalMaxEStack ? dHeroEStack : dRivalMaxEStack;
@@ -631,7 +631,7 @@ GameType CActionLine::GetCurGameType(const CGame& game)
 //按有效筹码匹配候选深度
 int CActionLine::MatchStackDepth(double dEStack)
 {
-	double dLowbound = 0.4; //匹配小的允许超出1/3
+	double dLowbound = 0.4; //匹配小的允许超出
 
 	if (dEStack <= CandicateStackDepth[0])
 		return CandicateStackDepth[0];
@@ -658,8 +658,8 @@ GameType CActionLine::GetGameTypeByStackDepth(int nStackDepth)
 {
 	//如果非Max6_NL50，则另行实现
 	switch (nStackDepth) {
-	case 30:
-		return Max6_NL50_SD30;
+	case 20:
+		return Max6_NL50_SD20;
 	case 50:
 		return Max6_NL50_SD50;
 	case 75:

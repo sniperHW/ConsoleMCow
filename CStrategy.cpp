@@ -9,6 +9,7 @@
 #include "CDataFrom.h"
 #include "CCombo.h"
 #include "CActionLine.h"
+#include<algorithm>
 
 
 using namespace std;
@@ -20,7 +21,6 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	auto pos = sActionSquence.rfind('>');
 	if(pos != string::npos && pos != sActionSquence.size()-1) {
 		actionStr = sActionSquence.substr(pos+1,sActionSquence.size());
-		cout << "---------------\n" << actionStr << endl;
 		auto v = split(actionStr,'-');
 		for(auto it = v.begin();it != v.end();it++) {
 			auto c = (*it)[0];
@@ -74,6 +74,94 @@ bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix
 	return true;
 }
 
+//从自定义策略文件读取(preflop全部用该模式)
+bool CStrategy::Load(GameType gmType, const std::string& sActionSquence)
+{
+	bool blAllin2Call = false;
+	bool bl2Allin = false;
+	bool blCreateStrategy = false;
+	string sNodeName = sActionSquence;
+
+	//解析需要allin和call转换的标准
+	if (sNodeName.find('$') != string::npos) {
+		bl2Allin = true;
+		sNodeName.pop_back();
+	}
+	if (sNodeName.find('@') != string::npos) {
+		blAllin2Call = true;
+		sNodeName.pop_back();
+	}
+
+	//从策略配置中获取替换和special设置，存在替换则启用替换的名称
+	string sReplace = g_strategyNodeConfigs[gmType].GetReplace(sNodeName);
+	if (sReplace == "special")
+		blCreateStrategy = true;
+	else if (!sReplace.empty())
+		sNodeName = sReplace;
+
+	//如果策略不是由special指定，则从策略文件中加载
+	if (!blCreateStrategy)
+	{
+		//获取节点名称对应的文件路径，未找到则返回false,代表offline
+		string sStrategyFilePath = CDataFrom::GetStrategyFilePath(gmType, sNodeName);
+		if (sStrategyFilePath.size() == 0) {
+			cout << "error:GetStrategyFilePath() retrun nothing,gmType:" << gmType << ",sNodeName:" << sNodeName << endl;
+			return false;
+		}
+
+		//for test
+		//sStrategyFilePath = "./test/2h2d2c.json"; //for test/////////////////////////////////////////////////
+
+		//加载数据到m_strategy
+		if (ReadStrategy(sStrategyFilePath, m_strategy) == false){
+			cout << "error:open strategy file failed,path:" << sStrategyFilePath << endl;
+			return false;
+		}
+	}
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	string sComment = "from_strategy-row" + sNodeName;
+	DumpStrategy(sComment);
+#endif
+
+	string sSpecial = g_strategyNodeConfigs[gmType].GetSpecial(sNodeName);
+	if (!sSpecial.empty()) {
+		SpecialProcessing(sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+		cout << "Load strategy from strategyFile,SpecialProcessing():" << sSpecial << endl;
+		sComment = "from_strategy-after_special" + sNodeName;
+		DumpStrategy(sComment);
+#endif
+
+	}
+
+	//处理allin和call的转换
+	if (bl2Allin) {
+		sSpecial = "Replace[whole][allin]";
+		SpecialProcessing(sSpecial);
+	}
+
+	if (blAllin2Call) {
+		sSpecial = "Replace[allin][call];Replace[raise][call]";
+		SpecialProcessing(sSpecial);
+	}
+
+
+#ifdef FOR_TEST_DUMP_DETAIL_
+	if (bl2Allin || blAllin2Call) {
+		if (bl2Allin)
+			cout << "Load strategy from strategyFile,2Allin()" << endl;
+		else
+			cout << "Load strategy from strategyFile,Allin2Call()" << endl;
+		sComment = "from_strategyFile-after@&" + sNodeName;
+		DumpStrategy(sComment);
+	}
+#endif
+
+	return true;
+}
+
 //从wizard读取
 bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
@@ -106,7 +194,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (curRound == flop) {
 		if (suitReplace.blIsNeeded) {
-			regex reg("<.*>");
+			regex reg("<......>");
 			string sReplace = "<" + sIsoBoard + ">";
 			sNodeName = regex_replace(sNodeName, reg, sReplace);
 		}
@@ -118,6 +206,11 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 		blCreateStrategy = true;
 	else if (!sReplace.empty())
 		sNodeName = sReplace;
+
+#ifdef DEBUG
+	cout << "Replace:" << sReplace << endl;
+#endif // DEBUG
+
 
 	//如果策略不是由special指定，则从策略文件中加载
 	if (!blCreateStrategy)
@@ -252,7 +345,10 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 	return true;
 }
 
-
+//如果实际行动中对方动作是allin那一定是选择BET最大值（代表allin）,这情况下是不用比例去匹配的，策略中也要把ActionType设为allin
+//既然已经allin，也就无需跟踪下一步了
+//原来讲的allin要计算比例仅指对候选来说，allin也要作为一种raise来供选择，并不是对实际动作序列里allin的处理，是因为wizard解allin（对手raise可能很大接近allin而当对手allin处理）
+//，是不知道size的，所以要有效筹码替代，但solver中allin也是用bet表示，有size,所以不需要特别处理
 const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action& action,const vector<Action>& actions,vector<Action>& actionsByStrategy, const Stacks& stacks, const Stacks& stacksByStrategy){//double stack){//const StackByStrategy& stack,bool last) {
 	const Json::Value *next = nullptr; 
 	const Json::Value &nodeChildren = (*node)["childrens"];
@@ -264,7 +360,6 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 				Action a;
 				a.actionType = check;
 				actionsByStrategy.push_back(a);
-				cout << *it2 << endl;
 				break;
 			}
 		}
@@ -275,7 +370,6 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 				Action a;
 				a.actionType = call;
 				actionsByStrategy.push_back(a);
-				cout << *it2 << endl;
 				break;
 			}
 		}
@@ -292,47 +386,11 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 				}
 			}				
 		}
-
-		//如果实际行动中对方动作是allin那一定是选择BET最大值（代表allin）,这情况下是不用比例去匹配的，策略中也要把ActionType设为allin
-		//既然已经allin，也就无需跟踪下一步了
-		//原来讲的allin要计算比例仅指对候选来说，allin也要作为一种raise来供选择，并不是对实际动作序列里allin的处理，是因为wizard解allin（对手raise可能很大接近allin而当对手allin处理）
-		//，是不知道size的，所以要有效筹码替代，但solver中allin也是用bet表示，有size,所以不需要特别处理
-/*
-		if(maxName != "") {
-			Action a;
-			a.actionType = raise;
-			a.fBetSize = maxBet;
-			actionsByStrategy.push_back(a);
-			cout << maxName << endl;
-		}
-
-		vector<string> names;
-		vector<double>  bets;
-		for(auto it2 = members.begin();it2 != members.end();++it2){
-			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
-				names.push_back(*it2);
-				/////////CalcBetRatio
-				auto v = CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()),stacks.dEStack);	
-				bets.push_back(v);
-			}
-		}
-
-		auto i = MatchBetRatio(action.fBetSize,bets);
-		if(i>=0){
-			next = &(nodeChildren[names[i]]);
-			Action a;
-			a.actionType = raise;
-			a.fBetSize = getBetByStr(names[i]);
-			actionsByStrategy.push_back(a);
-			cout << names[i] << endl;
-		}		
-*/
-
 	} else if (action.actionType == raise) {
 		vector<string> names;
 		vector<double> bets;
 		vector<Action> actionsByStrategyTmp = actionsByStrategy;	//因为要拿候选bet节点逐个替换进去计算
-		for(auto it2 = members.begin();it2 != members.end();++it2){	//？最大的BET应该也在其中
+		for(auto it2 = members.begin();it2 != members.end();++it2){	
 			if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
 				//加入当前要计算的子节点
 				Action actionCur;	
@@ -342,13 +400,14 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 
 				names.push_back(*it2);
 				/////////CalcBetRatio计算该节点的比例
-				auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp,int(actionsByStrategyTmp.size()));
+				auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp,int(actionsByStrategyTmp.size()-1));
+				actionsByStrategyTmp.pop_back();
 				bets.push_back(v);	//候选比例
 			}
 		}
 
 		//计算实际比例
-		double dActuallyRatio = CalcBetRatio(stacks.dPot, actions, int(actionsByStrategyTmp.size())); //只计算到当前一个（？iLastIdx这样写有没问题）
+		double dActuallyRatio = CalcBetRatio(stacks.dPot, actions, int(actions.size()-1)); //只计算到当前一个
 		//匹配比例
 		auto i = MatchBetRatio(dActuallyRatio,bets);
 
@@ -358,7 +417,6 @@ const Json::Value *CStrategy::geActionNode(const Json::Value *node,const Action&
 			a.actionType = raise;
 			a.fBetSize = getBetByStr(names[i]);
 			actionsByStrategy.push_back(a);
-			cout << names[i] << endl;
 		}
 	}
 
@@ -395,7 +453,6 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		cout << actionStr << "," << actionStr[0] << endl;
 		return false;
 	}
-	cout << "size," << actionSquence.size() << "," << sPrefix  << ",round," << round <<endl; 
 		
 	//sCSquence为“O”，则目标节点为根节点
 	//对每个“-”分割的动作sAction，逐层匹配子节点，如果sAction = X,则选择CHECK子节点为目标节点，如果sAction = A,则选择BET(最大值)为目标节点
@@ -403,19 +460,18 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 	//目标节点后无子节点则返回false
 	//加载数据到m_strategy，（action对应： CHECK:check,BET(最大值):allin,BET:raise,FOLD:fold,CALL:call）(BET*:*对应fBetSize,fBetSizeByPot不填)	
 	const Json::Value *node = &root;
+
 	vector<Action> actions={};
 	vector<Action> actionsByStrategy={};
 	int actionSquenceSize = int(actionSquence.size());  
 	//定位到目标节点
 	for(auto i = 0; i < actionSquenceSize;i++) {	
+		actions.push_back(actionSquence[i]);
 		const Json::Value *next = geActionNode(node,actionSquence[i],actions,actionsByStrategy,stacks,stacksByStrategy);
-		//cout << actionSquence[i].actionType << "," << next << endl;
-		if(next == nullptr) {
+		if(next == nullptr) 
 			return false;
-		}else {
-			actions.push_back(actionSquence[i]);
+		else
 			node = next;
-		} 
 	}
 
 	//获取目标节点下的策略数据
@@ -432,7 +488,7 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 		if (strategyItem->m_action.actionType == raise) {
 			//计算bet节点比例
 			actionsByStrategy.push_back(a);
-			auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategy, actionsByStrategy.size());
+			auto v = CalcBetRatio(stacksByStrategy.dPot, actionsByStrategy, (int)actionsByStrategy.size()-1)/100;
 			actionsByStrategy.pop_back();	//计算完需要用下个节点的替代
 			strategyItem->m_action.fBetSize = a.fBetSize;
 			strategyItem->m_action.fBetSizeByPot = (float)v;
@@ -441,29 +497,31 @@ bool CStrategy::Load(GameType gmType, const Json::Value& root, const string& sAc
 				maxRaise = strategyItem;
 				maxBetSize = strategyItem->m_action.fBetSize;
 			}
-
-			auto members = nodeStrategy["strategy"].getMemberNames();
-			for(auto it = members.begin();it != members.end();++it){
-				strategyItem->m_strategyData[*it] = nodeStrategy["strategy"][*it][i].asFloat();
-			}
-			m_strategy.push_back(strategyItem);
 		}
+		auto members = nodeStrategy["strategy"].getMemberNames();
+		for (auto it = members.begin(); it != members.end(); ++it) 
+			strategyItem->m_strategyData[CCombo::Align(* it)] = nodeStrategy["strategy"][*it][i].asFloat();
+
+		m_strategy.push_back(strategyItem);
 	}
 	//将最大bet节点改为allin
 	if(maxRaise != nullptr) {
 		maxRaise->m_action.actionType = allin;
 	}
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_solver-row" + sActionSquence;
-	DumpStrategy(sComment);
-#endif
+//#ifdef FOR_TEST_DUMP_DETAIL_
+//	string sComment = "from_solver-row" + sActionSquence;
+//	DumpStrategy(sComment);
+//#endif
+
 
 	//同构转换
 	ConvertIsomorphism(suitReplace);
 
+
+
 #ifdef FOR_TEST_DUMP_DETAIL_
-	sComment = "from_wizard-after_iso" + sActionSquence;
+	string sComment = "from_solver-after_iso" + sActionSquence;
 	DumpStrategy(sComment);
 #endif
 
@@ -505,7 +563,7 @@ string  CStrategy::ConvertOneHandcard(std::string& sCard, const SuitReplace& sui
 		}
 		}
 	}
-	return strConveted;
+	return CCombo::Align(strConveted);
 }
 void CStrategy::ConvertIsomorphismOneMap(std::unordered_map<std::string, double>* pMap, const SuitReplace& suitReplace)
 {
@@ -899,7 +957,7 @@ void CStrategy::Assign(const string &action,const unordered_map<string, bool> &r
 		bool   isRatio=false;
 		fetchRaiseParam(it->second,num,isRatio);
 		strategyItem->m_action.actionType = it->first;
-		strategyItem->m_action.fBetSize = num;
+		strategyItem->m_action.fBetSize = (float)num;
 		for(auto it2 = rangeMap.begin();it2 != rangeMap.end();it2++) {
 			strategyItem->m_strategyData[it2->first] = 1;
 			//ev怎么办?????
@@ -1047,7 +1105,7 @@ void CStrategy::SpecialProcessing(const std::string& sCommand)
 	}
 }
 
-extern void loadFileAsLine(const string& path,vector<string> &lines);
+extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 void CStrategy::LoadMacro(std::string path) 
 {
@@ -1090,6 +1148,7 @@ void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std
 	sConfigFolder = sConfigFolder + "\\dump\\";
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
+	t += rand();
 	string sDataPath = sConfigFolder + to_string(t) + ".txt";
 
 	ofstream ofCommands;
@@ -1129,10 +1188,11 @@ void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std
 	ofs.close();
 }
 
-//本程序不用，测试程序中用	
-void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
+//
+bool CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
 	vector<string> lines;
-	loadFileAsLine(sPath,lines);
+	if (loadFileAsLine(sPath, lines) == false)
+		return false;
 	for(auto l:lines) {
 		auto blocks = split(l,':');
 		auto action = split(blocks[0],',');
@@ -1157,4 +1217,6 @@ void CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_
 
 		strategy.push_back(item);
 	}
+
+	return true;
 }

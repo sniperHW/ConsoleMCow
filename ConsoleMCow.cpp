@@ -84,7 +84,7 @@ bool LoadConfigs(GameType gmType)
 	return true;
 }
 
-extern void loadFileAsLine(const string& path,vector<string> &lines);
+extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 int main()
 {
@@ -145,23 +145,42 @@ int main()
 		}
 	}
 */
-//	CWdebug::DeleteDump();
+	CWdebug::DeleteDump();
 
 
 	CSolution testSolution;
-	testSolution.InitGame("GameID=1666532742;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F");
+
+	vector<char> chars{ 'A','K','Q','J','T','9','8','7','6','5','4','3','2' };
+	vector<char> charsSuit{ 'h','d','c','s' };
+
+
+
+	//test bypresent
+	//testSolution.InitGame("GameID=1666862283;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
+	//testSolution.HeroAction("[UTG]R2.0");
+	//testSolution.ChangeRound("[HJ]C");
+
+//test presave
+
+	testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
+	testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
+	testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");
+	testSolution.HeroAction("[HJ]R12");
+	testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
+//	testSolution.HeroAction("[BTN]R30,[HJ]R53");
+
 
 
  
 	//test presave
-//	testSolution.InitGame("GameID=1666532742;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-//	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
-//	testSolution.HeroAction("[BTN]R4.0,[SB]F,[BB]F,-,[HJ]R8.0");
-//	testSolution.ChangeRound("[BTN]C<8s9s9s>pot=21.5;EStack=[HJ]90.0,[BTN]90.0;");
-//	testSolution.HeroAction("[HJ]R7.1");
+//	testSolution.InitGame("GameID=1666879573;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]150.0,[HJ]150.0,[CO]150.0,[BTN]150.0,[SB]150.0,[BB]150.0;Hero=[HJ];Hands=<AhAd>;");
+//	testSolution.HeroAction("[UTG]R2.5");
+//	testSolution.ChangeRound("[HJ]C,[CO]F,[BTN]F,[SB]F,[BB]F<KsKdKc>pot=6.5;EStack=[UTG]147.5,[HJ]147.5;");
+//	testSolution.HeroAction("[UTG]R2.1");
+//	testSolution.HeroAction("[HJ]C<9s>pot=10.7;EStack=[UTG]145.4,[HJ]145.4;");
 
-//	testSolution.InitGame("GameID=1666422279;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<AhAd>;");
+//	testSolution.InitGame("GameID=1666422279;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
 //	testSolution.HeroAction("[UTG]C,[HJ]F,[CO]F,[BTN]F,[SB]C"); 
 //	testSolution.HeroAction("[BB]R2.0,-,[UTG]F,[SB]R4.0");
 // 

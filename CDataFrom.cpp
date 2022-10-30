@@ -91,7 +91,38 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 	if (regex_search(sNodeName, m, reg)) 
 		sPreflopNodeName = m[1];
 
-	ss << sConfigFolder << "\\Data\\" << "RangesFile\\" << GameTypeName[gmType] << "\\" << sPreflopNodeName << ".txt";
+	ss << sConfigFolder << "\\Data\\" << "RangeFile\\" << GameTypeName[gmType] << "\\" << sPreflopNodeName << ".txt";
 
 	return ss.str();
+}
+
+std::string CDataFrom::GetStrategyFilePath(GameType gmType, const std::string& sNodeName)
+{
+	// \Data\WizardFile\Max6_NL50_SD100\flop\HJ_vsUTG_srp<>R50-R50-R50-A\HJ_vsUTG_srp<KsQs7d>R50-R50-R50-A.txt
+
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	regex reg(R"(.*\<.*\>.*)");
+	string sNodeNameWithoutBoard;
+	stringstream ss;
+
+	if (regex_match(sNodeName, reg)) {	//flop
+		sNodeNameWithoutBoard = CActionLine::GetNodeNameWithoutBoard(sNodeName);
+		ss << sConfigFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".txt";
+	}
+	else {	//preflop
+		ss << sConfigFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\preflop\\" << sNodeName << ".txt";
+	}
+
+	string sReplaceBrackets = ss.str();
+	for (int i = 0; i < sReplaceBrackets.size(); i++)
+	{
+		if (sReplaceBrackets[i] == '<')
+			sReplaceBrackets[i] = '{';
+		if (sReplaceBrackets[i] == '>')
+			sReplaceBrackets[i] = '}';
+	}
+
+	return sReplaceBrackets;
 }

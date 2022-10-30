@@ -60,23 +60,24 @@ bool CRangeNodeConfig::Init(GameType gmType)
 string CRangeNodeConfig::GetReplace(const string& sNodeName)
 {
 	//需要去掉最后一个<.*>
-	string sNodeNameTmp = sNodeName;
-	auto p = sNodeNameTmp.find_last_of('<');
-	sNodeNameTmp = sNodeNameTmp.substr(0, p);
+	string sPrefix, sSuffix;
+	auto p = sNodeName.find_last_of('<');
+	sPrefix = sNodeName.substr(0, p);
+	sSuffix = sNodeName.substr(p, sNodeName.size());
 
-	auto result = m_configItems.find(sNodeName);
+	auto result = m_configItems.find(sPrefix);
 	if (result != m_configItems.end())
-		return result->second->m_sReplaceNodeName;
+		return result->second->m_sReplaceNodeName + sSuffix;
 
 	regex reg;
 	for (auto it : m_regexConfigItems) {
 		reg = it.first;
-		if (regex_match(sNodeName, reg)) {
+		if (regex_match(sPrefix, reg)) {
 			if (it.second->blReplace) {
-				return regex_replace(sNodeName, reg, it.second->m_sReplaceNodeName);
+				return regex_replace(sPrefix, reg, it.second->m_sReplaceNodeName) + sSuffix;
 			}
 			else
-				return it.second->m_sReplaceNodeName;
+				return it.second->m_sReplaceNodeName + sSuffix;
 		}
 	}
 

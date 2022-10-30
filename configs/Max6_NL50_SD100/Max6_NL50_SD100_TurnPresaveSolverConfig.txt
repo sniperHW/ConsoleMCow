@@ -8,6 +8,14 @@
 [hero]_vs[rivals]_srp<>X-R75
 [hero]_vs[rivals]_srp<>X-R125
 
+BB_vsSB_limp<>X
+BB_vsSB_limp<>R75
+BB_vsSB_limp<>R150
+[hero]_vs[rivals]_srp<>X-R75
+[hero]_vs[rivals]_srp<>X-R150
+[hero]_vs[rivals]_srp<>X-R75-R50
+[hero]_vs[rivals]_srp<>R75-R50
+
 [hero]_vs[rival]_3bet<>X
 [hero]_vs[rival]_3bet<>X-R33
 [hero]_vs[rival]_3bet<>R33

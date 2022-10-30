@@ -10,6 +10,7 @@
 #include <fstream>
 #include "CActionLine.h"
 #include <ctime>
+#include <algorithm>
 
 using namespace std;
 
@@ -17,25 +18,29 @@ extern map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;
 
 
 //加载文件，返回以行分割的内容（不包括空白行）
-void loadFileAsLine(const string& path,vector<string> &lines) {
+bool loadFileAsLine(const string& path,vector<string> &lines) {
 	std::ifstream ifs;
   	ifs.open(path,std::ifstream::binary);
-	if(ifs.is_open()){
-		ifs.seekg (0, ifs.end);
+	if (ifs.is_open()) {
+		ifs.seekg(0, ifs.end);
 		int length = ifs.tellg();
-		ifs.seekg (0, ifs.beg);
-		char *buffer = new char[length+1];
-		ifs.read (buffer,length);
+		ifs.seekg(0, ifs.beg);
+		char* buffer = new char[length + 1];
+		ifs.read(buffer, length);
 		buffer[length] = 0;
-		auto l = split(buffer,'\n');
-		for(auto it = l.begin();it != l.end();it++) {
-			if(*it != "") {
+		auto l = split(buffer, '\n');
+		for (auto it = l.begin(); it != l.end(); it++) {
+			if (*it != "") {
 				lines.push_back(*it);
 			}
 		}
-		delete [] buffer;
+		delete[] buffer;
 		ifs.close();
+
+		return true;
 	}
+	else
+		return false;
 }
 
 
@@ -44,63 +49,51 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 {
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeName);
-	if (sPath.size() == 0)
+	if (sPath.size() == 0){
+		cout << "error:range file not found," << sPath << endl;
 		return false;
+	}
 
 	//从范围文件加载数据，OOP和IP对应
 	vector<string> lines;
-	loadFileAsLine("./test/LP_#_vs_4cold3bet4bet.txt",lines);
-
-	string *oopStr = nullptr;
-	string *ipStr = nullptr;
+	if (!loadFileAsLine(sPath, lines)){
+		cout << "error:range file loadFileAsLine return false,path:" << sPath << endl;
+		return false;
+	}
 
 	for(auto i = 0;i < int(lines.size());i++) {
-		if(lines[i].find("OOP") != string::npos){
-			oopStr = &lines[i+1];
-		} else if(lines[i].find("IP") != string::npos){
+		string* oopStr = nullptr;
+		string* ipStr = nullptr;
+
+		if (lines[i].find("OOP=") != string::npos) {
+			oopStr = &lines[i + 1];
+			auto pairsOOP = split(*oopStr, ',');
+			for (auto it = pairsOOP.begin(); it != pairsOOP.end(); it++) {
+				auto v = split(*it, ':');
+				auto name = v[0];
+				auto value = stringToNum<double>(v[1]);
+				m_OOPRange[name] = value;
+			}
+		}
+		else if(lines[i].find("IP=") != string::npos){
 			ipStr = &lines[i+1];
+
+			auto pairsIP = split(*ipStr,',');
+			for(auto it = pairsIP.begin();it != pairsIP.end();it++){
+				auto v = split(*it,':');
+				auto name = v[0];
+				auto value = stringToNum<double>(v[1]);
+				m_IPRange[name] = value;
+			}
 		}
 	}
-
-	if(oopStr == nullptr) {
-		return false;
-	}
-
-	auto pairsOOP = split(*oopStr,',');
-	for(auto it = pairsOOP.begin();it != pairsOOP.end();it++){
-		auto v = split(*it,':');
-		auto name = v[0];
-		auto value = stringToNum<double>(v[1]);
-		m_OOPRange[name] = value;
-	}
-
-	if(ipStr == nullptr) {
-		return false;
-	}
-
-	auto pairsIP = split(*ipStr,',');
-	for(auto it = pairsIP.begin();it != pairsIP.end();it++){
-		auto v = split(*it,':');
-		auto name = v[0];
-		auto value = stringToNum<double>(v[1]);
-		m_IPRange[name] = value;
-	}
-
-
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_file-before_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
-	DumpRange(sComment, OOP);
-	 sComment = "from_file-before_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
-	DumpRange(sComment, IP);
-#endif
 
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
 
-
 #ifdef FOR_TEST_DUMP_DETAIL_
-	 sComment = "from_file-after_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
+	 string sComment = "from_file-after_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
 	DumpRange(sComment, OOP);
 	 sComment = "from_file-after_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
 	DumpRange(sComment, IP);
@@ -121,7 +114,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (suitReplace.blIsNeeded) {
-		regex reg("<.*>");
+		regex reg("<......>");
 		string sReplace = "<" + sIsoBoard + ">";
 		sNodeNameTmp = regex_replace(sNodeName, reg, sReplace);
 	}
@@ -131,8 +124,13 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	if (!sReplace.empty())
 		sNodeNameTmp = sReplace;
 
+#ifdef _DEBUG
+	cout << "replace:" << sReplace << endl;
+#endif // _DEBUG
+
+
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeName);
+	sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeNameTmp);
 	if(sStrategyFilePath.size() == 0){
 		return false;
 	}
@@ -266,159 +264,160 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	return true;
 }
 
+
 //solver模式
-bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy ,const string& sBoardNext, const SuitReplace& suitReplace)
+bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const string& sBoardNext, const SuitReplace& suitReplace)
 {
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
 	RangeData* pRangeRatio = nullptr;
 
-
-	//解析ActionSquence,取最后一个<>后的序列sCSquence
-	vector<Action> actionSquence={};
-	string sPrefix=""; 
+	//解析ActionSquence,去掉最后一个<>,取最后一个<>后的序列sCSquence
+	vector<Action> actionSquence = {};
+	string sPrefix = "";
 	Round round;
-	string actionStr="";
-	if(!CStrategy::parseActionSquence(sActionSquence,sPrefix,round,actionSquence,actionStr)) {
+	string actionStr = "";
+
+	auto pTurnBoard = sActionSquence.find_last_of('<');
+	string sActionSquenceTmp = sActionSquence.substr(0, pTurnBoard);
+
+	if (!CStrategy::parseActionSquence(sActionSquenceTmp, sPrefix, round, actionSquence, actionStr)) {
 		return false;
 	}
-	if(actionSquence.size()==0) {
+	if (actionSquence.size() == 0) {
 		return false;
 	}
 
 	//对actionSquence中每一个动作（只有X，R，C，其中X只会出现在第一个，最后一个一定是C或X，没有A和O）
-		//确定是操作OOP还是IP（奇数是OOP，偶数是IP，赋值pRangeRatio）
-		//当前节点（第一个为root）下选择对应的动作，和策略中方法一样，但R不需要匹配A
-		//对策略数据中每个组合，用选定动作对应的比例去改写pRangeRatio中对应的数据（如果是第一次行动则填写1*比例，非第一次行动则填写*pRangeRatio[组合] * 比例，区分第一次目的是让不存在的组合保持0）
-		//不是最后一个动作则按之前匹配的动作选择子节点，为当前节点
-	vector<Action> actions={};
-	vector<Action> actionsByStrategy={};
-	const Json::Value *node = &root;
-	for(auto i = 0;i<int(actionSquence.size());i++){
-		if(i%2==0) {
+	 //确定是操作OOP还是IP（奇数是OOP，偶数是IP，赋值pRangeRatio）
+	 //当前节点（第一个为root）下选择对应的动作，和策略中方法一样，但R不需要匹配A
+	 //对策略数据中每个组合，用选定动作对应的比例去改写pRangeRatio中对应的数据（如果是第一次行动则填写1*比例，非第一次行动则填写*pRangeRatio[组合] * 比例，区分第一次目的是让不存在的组合保持0）
+	 //不是最后一个动作则按之前匹配的动作选择子节点，为当前节点
+	vector<Action> actions = {};
+	vector<Action> actionsByStrategy = {};
+	const Json::Value* node = &root;
+	for (auto i = 0; i<int(actionSquence.size()); i++) {
+		if (i % 2 == 0) 
 			pRangeRatio = &OOPRangeRatio;
-		} else {
-			pRangeRatio = &IPRangeRatio;		
-		}
-		
-		//double sstack = 0;
-		//if(i==actionSquence.size()-1) {
-		//	sstack = stacks.dEStack;
-		//}
-
+		else
+			pRangeRatio = &IPRangeRatio;
+		actions.push_back(actionSquence[i]);
 		auto a = actionSquence[i];
-		auto getActionIdx = [actions,actionsByStrategy,stacks,stacksByStrategy] (const Json::Value *node,const Action& action) -> int {
-				int index = -1;
 
-				auto members = (*node)["actions"].getMemberNames();
-				if(action.actionType == check) {
-					for(int i = 0;i<int(members.size());i++){
-						if(members[i] == "CHECK") {
-							index = i;
-							break;
-						}	
-					}
-				} else if(action.actionType == call) {
-					for(int i = 0;i<int(members.size());i++){
-						if(members[i] == "CALL") {
-							index = i;
-							break;
-						}	
-					}
-				} else if (action.actionType == raise) {
-					vector<string> names;
-					vector<double>  bets;
-					vector<Action> actionsByStrategyTmp = actionsByStrategy;
-					for(auto it2 = members.begin();it2 != members.end();++it2){
-						/*if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
-							names.push_back(*it2);
-							auto v = CStrategy::CalcBetRatio(getBetByStr(*it2),actions,int(actions.size()));	
-							bets.push_back(v);
-						}*/
-						if((*it2).find("BET") != string::npos || (*it2).find("RAISE") != string::npos) {
-							//加入当前要计算的子节点
-							Action actionCur;	
-							actionCur.actionType = raise;
-							actionCur.fBetSize = getBetByStr(*it2);
-							actionsByStrategyTmp.push_back(actionCur);
+		auto getActionIdx = [actions, stacks, stacksByStrategy](const Json::Value* node, const Action& action, vector<Action>& actionsByStrategy, const Json::Value*& nextNode) -> int {
+			int index = -1;
+			const Json::Value& nodeChildren = (*node)["childrens"];
+			auto members = (*node)["actions"];
 
-							names.push_back(*it2);
-							/////////CalcBetRatio计算该节点的比例
-							auto v = CStrategy::CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp,int(actionsByStrategyTmp.size()));
-							bets.push_back(v);	//候选比例
-						}
+			if (action.actionType == check) {
+				for (Json::ArrayIndex i = 0; i < members.size(); i++) {
+					if (members[i].asString() == "CHECK") {
+						index = i;
+						nextNode = &(nodeChildren[members[i].asString()]);
+						Action a;
+						a.actionType = check;
+						actionsByStrategy.push_back(a);
+						break;
 					}
-
-					if(bets.size()>1){
-						//找到最大值
-						double max = 0;
-						double maxIdx = -1;
-						for(int i = 0;i < int(bets.size());i++){
-							if(bets[i]>max){
-								maxIdx = i;
-							}
-						}
-						//跟最后一个元素交换位置
-						swap(bets[maxIdx],bets[bets.size()-1]);
-						swap(names[maxIdx],names[names.size()-1]);
-						//将最大值丢弃
-						bets.pop_back();
-						names.pop_back();	
+				}
+			}
+			else if (action.actionType == call) {
+				for (Json::ArrayIndex i = 0; i < members.size(); i++) {
+					if (members[i].asString() == "CALL") {
+						index = i;
+						nextNode = &(nodeChildren[members[i].asString()]);
+						Action a;
+						a.actionType = call;
+						actionsByStrategy.push_back(a);
+						break;
 					}
-
-					double dActuallyRatio = CStrategy::CalcBetRatio(stacks.dPot, actions, int(actionsByStrategyTmp.size()));
-					auto j = CStrategy::MatchBetRatio(dActuallyRatio,bets);
-					if(j>=0){
-						for(int i = 0;i<int(members.size());i++){
-							if(names[j]==members[i]){
-								index=i;
-								break;
-							}
-						}
+				}
+			}
+			else if (action.actionType == raise) {
+				vector<string> names;
+				vector<double>  bets;
+				vector<Action> actionsByStrategyTmp = actionsByStrategy;
+				for (auto it2 = members.begin(); it2 != members.end(); ++it2) {
+					if ((*it2).asString().find("BET") != string::npos || (*it2).asString().find("RAISE") != string::npos) {
+						//加入当前要计算的子节点
+						Action actionCur;
+						actionCur.actionType = raise;
+						actionCur.fBetSize = getBetByStr((*it2).asString());
+						actionsByStrategyTmp.push_back(actionCur);
+						names.push_back((*it2).asString());
+						/////////CalcBetRatio计算该节点的比例
+						auto v = CStrategy::CalcBetRatio(stacksByStrategy.dPot, actionsByStrategyTmp, int(actionsByStrategyTmp.size()-1));
+						bets.push_back(v); //候选比例
+						actionsByStrategyTmp.pop_back();
 					}
 				}
 
-				return index;
-			};			
-		
+				if (bets.size() > 1) {
+					//找到最大值
+					double max = 0;
+					double maxIdx = -1;
+					for (int i = 0; i < int(bets.size()); i++) {
+						if (bets[i] > max) {
+							maxIdx = i;
+							max = bets[i];
+						}
+					}
+					//跟最后一个元素交换位置
+					swap(bets[maxIdx], bets[bets.size() - 1]);
+					swap(names[maxIdx], names[names.size() - 1]);
+					//将最大值丢弃
+					bets.pop_back();
+					names.pop_back();
+				}
 
-		int j = getActionIdx(node,a);
+				double dActuallyRatio = CStrategy::CalcBetRatio(stacks.dPot, actions, int(actions.size()-1));
+				auto j = CStrategy::MatchBetRatio(dActuallyRatio, bets);
+				if (j >= 0) {
+					for (Json::ArrayIndex i = 0; i < members.size(); i++) {
+						if (names[j] == members[i].asString()) {
+							nextNode = &(nodeChildren[members[i].asString()]);
+							index = i;
+							Action a;
+							a.actionType = raise;
+							a.fBetSize = getBetByStr(members[i].asString());
+							actionsByStrategy.push_back(a);
+							break;
+						}
+					}
+				}
+			}
 
-		if(j < 0) {
+			return index;
+		};
+
+		//选择当前策略
+		const Json::Value* nextNode;
+		int j = getActionIdx(node, a, actionsByStrategy, nextNode);
+		if (j < 0) {
 			return false;
 		}
 
-		const Json::Value &nodeStrategy = (*node)["strategy"];
+		//取比例数据
+		const Json::Value& nodeStrategy = (*node)["strategy"];
 		auto members = nodeStrategy["strategy"].getMemberNames();
-		for(auto it = members.begin();it != members.end();++it){
+		//		auto members = nodeStrategy.getMemberNames();
+		for (auto it = members.begin(); it != members.end(); ++it) {
 			auto name = *it;
 			auto value = nodeStrategy["strategy"][name][j].asFloat();
 
 			auto mapIt = pRangeRatio->find(name);
-			if(mapIt == pRangeRatio->end()) {
+			if (mapIt == pRangeRatio->end()) {
 				//第一次1*value
 				(*pRangeRatio)[name] = value;
-			} else {
+			}
+			else {
 				mapIt->second *= value;
 			}
 		}
 
-		//根据动作选择下一节点
-		node = CStrategy::geActionNode(node,a,actions,actionsByStrategy,stacks,stacksByStrategy);
-		if(node==nullptr){
-			return false;
-		}else {
-			actions.push_back(a);
-		}
+		//选择下一节点
+		node = nextNode;
 	}
-
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_sover-before_iso-OOP-" + sActionSquence;
-	DumpRange(sComment, OOP);
-	sComment = "from_sover-before_iso-IP-" + sActionSquence;
-	DumpRange(sComment, IP);
-#endif
-
 
 	//同构转换
 	if (suitReplace.blIsNeeded) {
@@ -426,24 +425,42 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		ConvertIsomorphism(IPRangeRatio, suitReplace);
 	}
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	sComment = "from_sover-before_rBoard-OOP-" + sActionSquence;
-	DumpRange(sComment, OOP);
-	sComment = "from_sover-before_rBoard-IP-" + sActionSquence;
-	DumpRange(sComment, IP);
-#endif
-	//和原始范围运算,更新原始范围（每个组合原始范围数据 *RangeRatio对应的比例, 能否一个transform函数加multiplies）
+	//和原始范围运算,更新原始范围（每个组合原始范围数据 *RangeRatio对应的比例）
+	for (auto it : OOPRangeRatio) {
+		auto p = m_OOPRange.find(it.first);
+		if (p != m_OOPRange.end())
+			p->second *= it.second;
+		else { 
+#ifdef DEBUG_
+			cout << endl << "rangeOOP not find:" << it.first << endl;
+#endif // DEBUG_
+		}
+	}
+
+	for (auto it : IPRangeRatio) {
+		auto p = m_IPRange.find(it.first);
+		if (p != m_IPRange.end())
+			p->second *= it.second;
+		else { 
+#ifdef DEBUG_
+			cout << endl << "rangeIP not find:" << it.first << endl;
+#endif // DEBUG_
+		}
+	}
 
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
 
+
+
 #ifdef FOR_TEST_DUMP_DETAIL_
-	sComment = "from_sover-after_rBoard-OOP-" + sActionSquence;
+	string sComment = "from_sover-after_rBoard-OOP-" + sActionSquence;
 	DumpRange(sComment, OOP);
 	sComment = "from_sover-after_rBoard-IP-" + sActionSquence;
 	DumpRange(sComment, IP);
 #endif
+
 
 	return true;
 }
@@ -501,7 +518,6 @@ void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoard
 	}
 }
 
-
 void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosition) {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
@@ -509,6 +525,7 @@ void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosit
 	sConfigFolder = sConfigFolder + "\\dump\\";
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
+	t += rand();
 	string sDataPath = sConfigFolder + to_string(t) + ".txt";
 
 	ofstream ofCommands;
@@ -535,7 +552,7 @@ void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosit
 
 }
 
-extern void loadFileAsLine(const string& path,vector<string> &lines);
+extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 void CRange::ReadRange(const string& sPath, RangeData& range) {
 	vector<string> lines;

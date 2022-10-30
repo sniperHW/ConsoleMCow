@@ -41,8 +41,8 @@ GameType CGame::GetGameTypeBySymbol(const string& sSymbol)
 		return Max6_NL50_SD75;
 	else if (sSymbol == "Max6_NL50_SD50")
 		return Max6_NL50_SD50;
-	else if (sSymbol == "Max6_NL50_SD30")
-		return Max6_NL50_SD30;
+	else if (sSymbol == "Max6_NL50_SD20")
+		return Max6_NL50_SD20;
 	else
 		return Max6_NL50_SD100;
 

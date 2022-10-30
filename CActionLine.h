@@ -20,14 +20,13 @@ public:
 	static std::string getOOPXString(const OOPX oopx);
 	static std::string getRoundString(const Round round);
 	static std::string getRelativePositionString(const RelativePosition rp);
+	static std::pair<Position, Action> ToPosActionPair(const std::string& sSymbol);
+	static std::string ToActionSymbol(const Action& a, bool blRemainSize = true);
 
 private:
 	std::string m_sPreflopRowActionSquence;
 	Position m_firstLimperPositionByPresent; //由于limp的玩家只在第一圈计算，所以要记忆到成员变量
 	std::vector<Position> m_limps; //limp替换模式标志：Limps.size()>0
-
-	std::pair<Position, Action> ToPosActionPair(const std::string& sSymbol);
-	std::string ToActionSymbol(const Action& a, bool blRemainSize=true);
 
 	GameType GetCurGameType(const CGame& game);
 	int MatchStackDepth(double dEStack);
