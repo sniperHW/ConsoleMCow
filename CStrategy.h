@@ -25,9 +25,12 @@ public:
 	std::vector<std::string> m_conditions;
 };
 
-struct condition {
-	double     m_ev;
-	bool       m_less;//if true <,else >	
+
+struct Condition {
+	std::string sObj; //目前只有EV,""代表无条件
+	bool	blLess;
+	bool	blEqueal;
+	double	dlValue;
 };
 
 class CStrategy
@@ -56,22 +59,27 @@ public:
 	void DumpStrategy(const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy = NULL);
 	bool ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
 
+//for test
+void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
+std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
+	void Assign(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
+	void Discard(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap, const std::vector<Condition>& conditions);
+	void Replace(const std::string &action1,const std::string &action2,const std::unordered_map<std::string, bool> &rangeMap, const std::vector<Condition>& conditions);
 
 private:
-	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
+
 	std::unordered_map<std::string,std::string> m_macro;
 	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	
 	
-	void Assign(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
-	void Discard(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap,condition *cond);
-	void Replace(const std::string &action1,const std::string &action2,const std::unordered_map<std::string, bool> &rangeMap,condition *cond);
-	void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
 
-
-
+	
 	std::vector<CCommForSpecialProcessing> GetCommands(const std::string& sCommands);
+	void DiscardOne(std::shared_ptr<CStrategyItem>& strategyItem, std::shared_ptr<CStrategyItem>& foldItem, const std::unordered_map<std::string, bool>& rangeMap, const Condition& condition);
+	void ReplaceOne(std::shared_ptr<CStrategyItem>& srcStrategy, std::shared_ptr<CStrategyItem>& desStrategy, std::shared_ptr<CStrategyItem>& allinStrategy, const std::unordered_map<std::string, bool>& rangeMap, const Condition& condition);
+
+
 
 	
 private:

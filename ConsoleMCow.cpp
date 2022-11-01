@@ -146,29 +146,149 @@ int main()
 	}
 */
 	CWdebug::DeleteDump();
-
-
 	CSolution testSolution;
 
-	vector<char> chars{ 'A','K','Q','J','T','9','8','7','6','5','4','3','2' };
-	vector<char> charsSuit{ 'h','d','c','s' };
 
 
 
-	//test bypresent
-	//testSolution.InitGame("GameID=1666862283;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
-	//testSolution.HeroAction("[UTG]R2.0");
-	//testSolution.ChangeRound("[HJ]C");
+//test special
+
+	CStrategy testStrategy;
+
+	vector<string> combosAK = CCombo::GetCombosByAbbr("AK");
+	vector<string> combosAKs = CCombo::GetCombosByAbbr("AKs");
+
+	shared_ptr<CStrategyItem> strategyItemAllin(new CStrategyItem);
+	strategyItemAllin->m_action.actionType = allin;
+	strategyItemAllin->m_action.fBetSize = 0;
+	for (auto it: ComboMapping)
+		strategyItemAllin->m_strategyData[it] = 0;
+	for (auto it : combosAK)
+		strategyItemAllin->m_strategyData[it] = 0.1;
+	//strategyItemAllin->m_strategyData["AcKc"] = 0.009;
+
+	strategyItemAllin->m_evData["AhKh"] = 0.1;
+	strategyItemAllin->m_evData["AcKc"] = 0.2;
+	strategyItemAllin->m_evData["AdKd"] = 0;
+	strategyItemAllin->m_evData["AsKs"] = 0.09;
+
+
+	shared_ptr<CStrategyItem> strategyItemRaise(new CStrategyItem);
+	strategyItemRaise->m_action.actionType = raise;
+	strategyItemRaise->m_action.fBetSize = 2;
+	for (auto it : ComboMapping)
+		strategyItemRaise->m_strategyData[it] = 0;
+	for (auto it : combosAK)
+		strategyItemRaise->m_strategyData[it] = 0.4;
+	strategyItemRaise->m_strategyData["AcKc"] = 0;
+
+	strategyItemRaise->m_evData["AhKh"] = 0.1;
+	strategyItemRaise->m_evData["AcKc"] = 0.2;
+	strategyItemRaise->m_evData["AdKd"] = 0;
+	strategyItemRaise->m_evData["AsKs"] = 0.09;
+
+	shared_ptr<CStrategyItem> strategyItemCall(new CStrategyItem);
+	strategyItemCall->m_action.actionType = call;
+	for (auto it : ComboMapping)
+		strategyItemCall->m_strategyData[it] = 0;
+	for (auto it : combosAK)
+		strategyItemCall->m_strategyData[it] = 0.2;
+
+
+	shared_ptr<CStrategyItem> strategyItemFold(new CStrategyItem);
+	strategyItemFold->m_action.actionType = fold;
+	for (auto it : ComboMapping) {
+		strategyItemFold->m_strategyData[it] = 1;
+	}
+	for (auto it : combosAK)
+	{
+		strategyItemFold->m_strategyData[it] = 0.3;
+	}
+	strategyItemFold->m_strategyData["AcKc"] = 0.7;
+
+
+	testStrategy.m_strategy.push_back(strategyItemAllin);
+	testStrategy.m_strategy.push_back(strategyItemRaise);
+	testStrategy.m_strategy.push_back(strategyItemCall);
+	testStrategy.m_strategy.push_back(strategyItemFold);
+
+
+
+	//for test
+	for (auto it : testStrategy.m_strategy)
+	{
+		int nCount = 0;
+		cout << "actiontype:" << CActionLine::ToActionSymbol(it->m_action) << endl;
+		for (auto e : it->m_strategyData) {
+			if (CCombo::GetAbbrSymble(e.first) == "AKs" || CCombo::GetAbbrSymble(e.first) == "AKo") {
+				cout << e.first << ":" << e.second << ", ";
+				nCount++;
+			}
+		}
+		cout << endl << "Count:" << nCount << endl << endl;
+	}
+
+
+	
+
+
+	//string sCommand = "Assign[raise2](AKs)";
+	//string sCommand = "Discard[allin](AKs)<EV+=0.1>";
+	//string sCommand = "Replace[whole][raise](AKs)<EV+=0.1>";
+	string sCommand = "Replace[call][raise](AKs)";
+	testStrategy.SpecialProcessing(sCommand);
+
+
+
+	//for test
+	for (auto it : testStrategy.m_strategy)
+	{
+		int nCount = 0;
+		cout << "actiontype:" << CActionLine::ToActionSymbol(it->m_action) << endl;
+		for (auto e : it->m_strategyData) {
+			if (CCombo::GetAbbrSymble(e.first) == "AKs" || CCombo::GetAbbrSymble(e.first) == "AKo") {
+				cout << e.first << ":" << e.second << ", ";
+				nCount++;
+			}
+		}
+		cout << endl << "Count:" << nCount << endl << endl;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//test limp
+/*
+	testSolution.InitGame("GameID=1667099118;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]F,[SB]C");
+	testSolution.ChangeRound("[BB]X<As9hTh>pot=2.0;EStack=[SB]99.0,[BB]99.0;");
+	testSolution.HeroAction("[SB]R3.0");
+	testSolution.ChangeRound("[BB]C<Ks>pot=8.0;EStack=[SB]96.0,[BB]96.0;");
+*/	
+
+
+
+
 
 //test presave
+	//testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	//testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
+	//testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
+	//testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");
+	//testSolution.HeroAction("[HJ]R12");
+	//testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
 
-	testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
-	testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
-	testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");
-	testSolution.HeroAction("[HJ]R12");
-	testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
-//	testSolution.HeroAction("[BTN]R30,[HJ]R53");
 
 
 

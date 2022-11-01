@@ -84,14 +84,16 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 	string sConfigFolder = buffer;
 	stringstream ss;
 
+/* 在调用初处理，以保存代码一致性
 	//需要去掉<>
 	string sPreflopNodeName;
 	regex reg(R"((.*)\<.*\>)");
 	smatch m;
 	if (regex_search(sNodeName, m, reg)) 
 		sPreflopNodeName = m[1];
+*/
 
-	ss << sConfigFolder << "\\Data\\" << "RangeFile\\" << GameTypeName[gmType] << "\\" << sPreflopNodeName << ".txt";
+	ss << sConfigFolder << "\\Data\\" << "RangeFile\\" << GameTypeName[gmType] << "\\" << sNodeName << ".txt";
 
 	return ss.str();
 }

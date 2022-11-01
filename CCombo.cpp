@@ -33,7 +33,7 @@ vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 		else {	//AK
 			for (auto a : sSuits) {
 				for (auto b : sSuits)
-					v.push_back(sCard1 + a + sCard1 + b);
+					v.push_back(sCard1 + a + sCard2 + b);
 			}
 		}
 	}

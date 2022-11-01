@@ -45,10 +45,19 @@ bool loadFileAsLine(const string& path,vector<string> &lines) {
 
 
 //file模式
-bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoardNext)
+bool CRange::Load(GameType gmType, const string& sNodeName)
 {
+	string sNodeNameTmp = sNodeName;
+	string sBoardNext;
+
+	auto pTurnBoard = sNodeName.find_last_of('<');
+	if (pTurnBoard != string::npos) {
+		sNodeNameTmp = sNodeName.substr(0, pTurnBoard);
+		sBoardNext = sNodeName.substr(pTurnBoard + 1, sNodeName.size() - pTurnBoard - 2);
+	}
+
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeName);
+	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeNameTmp);
 	if (sPath.size() == 0){
 		cout << "error:range file not found," << sPath << endl;
 		return false;
@@ -102,40 +111,43 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	return true;
 }
 
-//wizard模式(未测试)
-bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoardNext, const SuitReplace& suitReplace, const string& sIsoBoard)
+//wizard模式
+bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 	string sNodeNameTmp = sNodeName;
+	string sBoardNext;
 	string sStrategyFilePath;
-	string sActionSquenceTmp;
-	RangeData rangeRatio;
+	RangeData strategyRatio;
 	string sLastPlayerPosition;
 	RangeData* pRangeRatio = nullptr;
+
+	auto pTurnBoard = sNodeName.find_last_of('<');
+	if (pTurnBoard != string::npos) {
+		sNodeNameTmp = sNodeName.substr(0, pTurnBoard);
+		sBoardNext = sNodeName.substr(pTurnBoard+1, sNodeName.size()- pTurnBoard-2);
+	}
 
 	//flop需要处理同构，存在同构替换则替换节点名称中的board部分
 	if (suitReplace.blIsNeeded) {
 		regex reg("<......>");
 		string sReplace = "<" + sIsoBoard + ">";
-		sNodeNameTmp = regex_replace(sNodeName, reg, sReplace);
+		sNodeNameTmp = regex_replace(sNodeNameTmp, reg, sReplace);
 	}
 
 	//从策略配置中获取替换和replace设置，存在替换则启用替换的名称
 	string sReplace = g_rangeNodeConfigs[gmType].GetReplace(sNodeNameTmp);
-	if (!sReplace.empty())
+	if (!sReplace.empty()){
 		sNodeNameTmp = sReplace;
-
 #ifdef _DEBUG
 	cout << "replace:" << sReplace << endl;
 #endif // _DEBUG
-
+	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 	sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeNameTmp);
 	if(sStrategyFilePath.size() == 0){
 		return false;
 	}
-
-	//sStrategyFilePath = "./test/wizard_smple.json"; //for test/////////////////////////////////////////////////
 
 	Json::Value root;
 	std::ifstream ifs;
@@ -161,13 +173,14 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	}
 
 	if (sLastPlayerPosition == "") {
+		cout << "error:sLastPlayerPosition empty" << endl;
 		return false;
 	}
 
 	for (Json::ArrayIndex i = 0; i < nodeStrategy->size(); i++) {
 		auto name = ComboMapping[i];
 		auto value = (*nodeStrategy)[i].asDouble();
-		rangeRatio[name] = value;
+		strategyRatio[name] = value;
 	}
 
 	//加载原始范围(注释)
@@ -178,15 +191,14 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 	const Json::Value* rangeOOP;
 	const Json::Value* rangeIP;
 
-	if (root["player_info"][0]["relative_postflop_position"] == "OOP") {
-		rangeOOP = &root["player_info"][0]["range"];
-		rangeIP = &root["player_info"][1]["range"];
+	if (root["players_info"][0]["relative_postflop_position"] == "OOP") {
+		rangeOOP = &root["players_info"][0]["range"];
+		rangeIP = &root["players_info"][1]["range"];
 	}
 	else {
-		rangeOOP = &root["player_info"][1]["range"];
-		rangeIP = &root["player_info"][0]["range"];
+		rangeOOP = &root["players_info"][1]["range"];
+		rangeIP = &root["players_info"][0]["range"];
 	}
-
 
 	for (Json::ArrayIndex i = 0; i < rangeOOP->size(); i++) {
 		auto name = ComboMapping[i];
@@ -208,11 +220,11 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		//sRelativePos = player_info[1].player.relative_postflop_position
 	// sRelativePos == "OOP" ? pRangeRatio = &m_OOPRange : pRangeRatio = &m_IPRange;
 
-	if (root["player_info"][0]["player"]["position"].asString() == sLastPlayerPosition) {
-		sRelativePos = root["player_info"][0]["player"]["relative_postflop_position"].asString();
+	if (root["players_info"][0]["player"]["position"].asString() == sLastPlayerPosition) {
+		sRelativePos = root["players_info"][0]["player"]["relative_postflop_position"].asString();
 	}
-	else 	if (root["player_info"][1]["player"]["position"].asString() == sLastPlayerPosition) {
-		sRelativePos = root["player_info"][1]["player"]["relative_postflop_position"].asString();
+	else if (root["players_info"][1]["player"]["position"].asString() == sLastPlayerPosition) {
+		sRelativePos = root["players_info"][1]["player"]["relative_postflop_position"].asString();
 	}
 
 	if (sRelativePos == "OOP") {
@@ -222,20 +234,17 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		pRangeRatio = &m_IPRange;
 	}
 	else {
+		cout << "error:sRelativePos not OOP IP" << endl;
 		return false;
 	}
 
 	//rangeRatio和pRangeRatio指向的范围运算，更新范围
-	for (auto it = rangeRatio.begin(); it != rangeRatio.end(); it++) {
-		(*pRangeRatio)[it->first] = (*pRangeRatio)[it->first] * it->second;
+	for (auto it = strategyRatio.begin(); it != strategyRatio.end(); it++) {
+		auto p = pRangeRatio->find(it->first);
+		if(p != pRangeRatio->end())
+			p->second = p->second * it->second;
 	}
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_wizard-before_iso-OOP-" + sNodeName;
-	DumpRange(sComment, OOP);
-	 sComment = "from_wizard-before_iso-IP-" + sNodeName;
-	DumpRange(sComment, IP);
-#endif
 
 	//同构转换
 	if (suitReplace.blIsNeeded) {
@@ -243,19 +252,12 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 		ConvertIsomorphism(m_IPRange, suitReplace);
 	}
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	 sComment = "from_wizard-before_rBoard-OOP-" + sNodeName;
-	DumpRange(sComment, OOP);
-	 sComment = "from_wizard-before_rBoard-IP-" + sNodeName;
-	DumpRange(sComment, IP);
-#endif
-
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
 
 #ifdef FOR_TEST_DUMP_DETAIL_
-	sComment = "from_wizard-after_rBoard-OOP-" + sNodeName;
+	string sComment = "from_wizard-after_rBoard-OOP-" + sNodeName;
 	DumpRange(sComment, OOP);
 	sComment = "from_wizard-after_rBoard-IP-" + sNodeName;
 	DumpRange(sComment, IP);
@@ -266,7 +268,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const string& sBoard
 
 
 //solver模式
-bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const string& sBoardNext, const SuitReplace& suitReplace)
+bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace)
 {
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
@@ -278,8 +280,13 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 	Round round;
 	string actionStr = "";
 
+	string sActionSquenceTmp = sActionSquence;
+	string sBoardNext;
 	auto pTurnBoard = sActionSquence.find_last_of('<');
-	string sActionSquenceTmp = sActionSquence.substr(0, pTurnBoard);
+	if (pTurnBoard != string::npos) {
+		sActionSquenceTmp = sActionSquence.substr(0, pTurnBoard);
+		sBoardNext = sActionSquence.substr(pTurnBoard + 1, sActionSquence.size() - pTurnBoard - 2);
+	}
 
 	if (!CStrategy::parseActionSquence(sActionSquenceTmp, sPrefix, round, actionSquence, actionStr)) {
 		return false;

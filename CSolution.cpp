@@ -69,8 +69,8 @@ Action CSolution::HeroAction(const string& sActionLine)
 		cout << "HeroAction Load strategy from_wizard:--------------------------------------------" << endl;
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "oopx:" << CActionLine::getOOPXString(m_game.m_oopx) << "\t" << "IsoBoard:" << m_game.m_board.GetIsomorphismSymbol() << endl << endl;
 #endif 
-		m_blNotOffline = true;
-		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+		//m_blNotOffline = true;
+		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		string sComment = "from_wizard-" + m_actionLine.m_sActionSquence;
@@ -199,12 +199,12 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 #ifdef DEBUG_
 		cout << "ChangeRound Load range from_file:----------------------------------------------" << endl;
-		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "ISO_Board:" << m_game.m_board.GetIsoBoardSymbol() << endl << endl;
+		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "NodeName:" << m_actionLine.m_sNodeName << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << ", ISO_Board:" << m_game.m_board.GetIsoBoardSymbol() << endl << endl;
 		if (IsoFlops.find(m_game.m_board.GetIsoBoardSymbol()) == IsoFlops.end())
 			cout << "error: not in ISO set,sISONodeName:" << m_game.m_board.GetIsoBoardSymbol() << endl;
 #endif 
 
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName);
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_file-" + m_actionLine.m_sNodeName;
@@ -220,7 +220,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 
 //for test
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_actionLine.m_sNodeName, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_wizard-" + m_actionLine.m_sNodeName;
@@ -242,7 +242,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		cout << "gmType:" << GameTypeName[m_game.m_gmType] << "\t" << "ActionSquence:" << m_actionLine.m_sActionSquence << "\t" << "Board:" << m_game.m_board.GetBoardSymbol() << "\t" << "Stacks:" << double2String(GetStacks().dPot, 2) << "," << double2String(GetStacks().dEStack, 2) << "\t" << "StacksByStrategy:" << double2String(StacksByStrategy.dPot, 2) << "," << double2String(StacksByStrategy.dEStack, 2) << endl << endl;
 #endif 
 
-		m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, stackPre, StacksByStrategy, m_game.m_board.GetBoardSymbol(), m_game.m_board.GetIsomorphismSuitReplace());
+		m_blNotOffline = m_range.Load(m_game.m_gmType, m_solverResult, m_actionLine.m_sActionSquence, stackPre, StacksByStrategy, m_game.m_board.GetIsomorphismSuitReplace());
 
 #ifdef FOR_TEST_DUMP_
 		sComment = "from_solver-" + m_actionLine.m_sActionSquence;

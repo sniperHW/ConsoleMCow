@@ -245,16 +245,19 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		//按AbbrName和position填写完整ActionSquence,limp需要特殊处理
 		sNodeName = m_sAbbrName;
 		
-		Position heroPosition;//HeroAction时hero为实际hero,changeRound时hero为最后call者
+		Position heroPosition = nonepos;//HeroAction时hero为实际hero,changeRound时hero为最后call者
 		if (!blIsChangeRound)
 			heroPosition = game.GetHero()->m_position;
 		else {
 			for(auto rp = posActions.rbegin(); rp != posActions.rend(); rp++)
-				if (rp->second.actionType == call) {
+				if (rp->second.actionType == call || rp->second.actionType == check) {
 					heroPosition = rp->first;
 					break;
 				}
 		}
+
+		if (heroPosition == nonepos)
+			cout << "error: heroPosition = nonepos" << endl;
 
 		//替换hero
 		reg = R"(\[hero\])";

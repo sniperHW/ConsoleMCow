@@ -1,4 +1,4 @@
-BB_vsSB_limp； bet:75 150;	raise:50 100;	donk:75 150
+BB_vsSB_limp;	bets:75 150;	raise:50 100;	donk:75 150
 .*_vs.*_srp;	bet:33 50 75 125;	raise:50 100;	donk:33
 .*_vs.*_3bet;	bet:33 67 130;	raise:33 55 100;	donk:33
 EP_.*_vs_2sqz3bet\(.*\);	bet:33 67 130;	raise:33 55 100;	donk:33
