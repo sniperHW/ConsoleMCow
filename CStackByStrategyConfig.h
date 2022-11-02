@@ -3,8 +3,7 @@
 #define CSTACK_BY_STRATEGY_CONFIG_H_
 
 #include "globledef.h"
-#include <memory>
-#include <map>
+
 
 //与solver预存解对应，用于将solver解的size转为比例
 class CStackByStrategyConfig

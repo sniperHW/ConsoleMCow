@@ -11,11 +11,13 @@
 #include "CActionLine.h"
 #include<algorithm>
 #include<unordered_set>
-
+#include "CSpecialProcessingMacroConfig.h"
 
 using namespace std;
 extern map<GameType, CStrategyNodeConfig> g_strategyNodeConfigs; //策略节点配置
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
+extern map<GameType, CSpecialProcessingMacroConfig> g_specialProcessingMacroConfig;
+
 
 bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
 	//查找最后的>
@@ -124,7 +126,7 @@ bool CStrategy::Load(GameType gmType, const std::string& sActionSquence)
 
 	string sSpecial = g_strategyNodeConfigs[gmType].GetSpecial(sNodeName);
 	if (!sSpecial.empty()) {
-		SpecialProcessing(sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+		SpecialProcessing(gmType,sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
 
 #ifdef FOR_TEST_DUMP_DETAIL_
 		cout << "Load strategy from strategyFile,SpecialProcessing():" << sSpecial << endl;
@@ -136,13 +138,13 @@ bool CStrategy::Load(GameType gmType, const std::string& sActionSquence)
 
 	//处理allin和call的转换
 	if (bl2Allin) {
-		sSpecial = "Replace[whole][allin]";
-		SpecialProcessing(sSpecial);
+		sSpecial = "$";
+		SpecialProcessing(gmType,sSpecial);
 	}
 
 	if (blAllin2Call) {
-		sSpecial = "Replace[allin][call];Replace[raise][call]";
-		SpecialProcessing(sSpecial);
+		sSpecial = "@";
+		SpecialProcessing(gmType,sSpecial);
 	}
 
 
@@ -297,7 +299,7 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 
 	string sSpecial = g_strategyNodeConfigs[gmType].GetSpecial(sNodeName);
 	if (!sSpecial.empty()) {
-		SpecialProcessing(sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
+		SpecialProcessing(gmType,sSpecial);	//处理special，策略由special指定时需要构建策略，//pStrategyNodeConfigItem->m_sSpecialProcessing
 
 //#ifdef FOR_TEST_DUMP_DETAIL_
 //		cout << "Load strategy from wizard,SpecialProcessing():" << sSpecial << endl;
@@ -309,13 +311,13 @@ bool CStrategy::Load(GameType gmType, const string& sActionSquence, const Stacks
 
 	//处理allin和call的转换
 	if (bl2Allin) {
-		sSpecial = "Replace[whole][allin]";
-		SpecialProcessing(sSpecial);
+		sSpecial = "$";
+		SpecialProcessing(gmType,sSpecial);
 	}
 
 	if (blAllin2Call) {
-		sSpecial = "Replace[allin][call];Replace[raise][call]";
-		SpecialProcessing(sSpecial);
+		sSpecial = "@";
+		SpecialProcessing(gmType,sSpecial);
 	}
 
 	//同构转换
@@ -1156,6 +1158,8 @@ void CStrategy::Replace(const string &action1,const string &action2,const unorde
 					blIncludeAllin = true;
 			}
 	}
+	if (srcStrategys.empty())
+		return;
 
 	//replace的目标策略
 	shared_ptr<CStrategyItem > desStrategy = nullptr;
@@ -1200,9 +1204,16 @@ void CStrategy::Replace(const string &action1,const string &action2,const unorde
 
 }
 
-void CStrategy::SpecialProcessing(const std::string& sCommand)
+void CStrategy::SpecialProcessing(const GameType gmType, const std::string& sCommand)
 {
-	auto commands = GetCommands(sCommand);
+	string sCommandTmp = sCommand;
+	//匹配宏指令
+	string sActually  = g_specialProcessingMacroConfig[gmType].GetActuallyCommand(sCommand);
+	if (!sActually.empty())
+		sCommandTmp = sActually;
+
+	//处理指令
+	auto commands = GetCommands(sCommandTmp);
 	for(auto c : commands) {
 		unordered_map<string, bool> rangeMap;
 		for(auto r : c.m_range) 		//将ranges中所有的combo添加到_ranges中
@@ -1240,24 +1251,6 @@ void CStrategy::SpecialProcessing(const std::string& sCommand)
 
 extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
-void CStrategy::LoadMacro(std::string path) 
-{
-	vector<string> lines;
-	loadFileAsLine(path,lines);
-	for(auto l:lines) {
-		auto v = split(l,'\t');	
-		if(v.size() == 2) {
-			m_macro[v[0]] = v[1];
-		}
-	}
-}
-
-void CStrategy::DoMacro(std::string macro) {
-	auto it = m_macro.find(macro);
-	if(it != m_macro.end()) {
-		SpecialProcessing(it->second);
-	}
-}
 
 void CStrategy::AlignmentByBetsize()
 {

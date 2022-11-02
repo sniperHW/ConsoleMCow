@@ -52,7 +52,6 @@ public:
 	static double CalcBetRatio(const double dPot, const std::vector<Action>& actions, int iLastIdx, const double dEstack = 0); //只有allin才填写dEstack
 
 	void LoadMacro(std::string path);
-	void DoMacro(std::string macro);
 
 	static std::string ConvertOneHandcard(std::string& sCard, const SuitReplace& suitReplace);
 
@@ -60,7 +59,7 @@ public:
 	bool ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy);
 
 //for test
-void SpecialProcessing(const std::string& sCommand); //按spcial配置处理m_strategy
+void SpecialProcessing(const GameType gmType, const std::string& sCommand); //按spcial配置处理m_strategy
 std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 	void Assign(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap);//std::vector<std::string> &range);
 	void Discard(const std::string &action,const std::unordered_map<std::string, bool> &rangeMap, const std::vector<Condition>& conditions);
@@ -68,8 +67,6 @@ std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 
 private:
 
-	std::unordered_map<std::string,std::string> m_macro;
-	
 	void ConvertIsomorphism(const SuitReplace & suitReplace); //将m_strategy进行同构转换
 	
 	

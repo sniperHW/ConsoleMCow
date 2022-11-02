@@ -3,7 +3,6 @@
 #ifndef CRANGE_NODE_CONFIG_H_
 #define CRANGE_NODE_CONFIG_H_
 
-#include <memory>
 #include "globledef.h"
 #include <utility>
 

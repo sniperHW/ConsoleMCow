@@ -1,0 +1,9 @@
+default(3bet)		Discard[whole]; Assign[allin](AA,AKs,Ako,KK,QQ,JJ)
+default(4betS)		Discard[whole]; Assign[allin](AA,KK,AKs)
+default(4betL)		Discard[whole]; Assign[allin]( AA,KK,AKs,AKo,QQ)
+default(5betallinS)		Discard[whole]; Assign[allin](AA)
+default(5betallinL)		Discard[whole]; Assign[allin](AA,KK)
+default(5bet)		Discard[whole]; Assign[allin](AA,KK,AKs)
+default(6bet)		Discard[whole]; Assign[allin](AA)
+@	Replace[allin][call]; Replace[raise][call]
+$	Replace[call][allin]

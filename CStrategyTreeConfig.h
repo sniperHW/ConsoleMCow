@@ -5,7 +5,7 @@
 
 #include"globledef.h"
 #include <utility>
-#include <memory>
+
 
 class CRTTreeConfigItem
 {

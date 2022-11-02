@@ -21,7 +21,7 @@
 #include "CBoard.h"
 #include <regex>
 #include "CWdebug.h"
-
+#include "CSpecialProcessingMacroConfig.h"
 
 using namespace std;
 
@@ -33,6 +33,8 @@ map<GameType, CActionMatchConfig> g_actionMatchConfigs; //preflop节点匹配表
 map<GameType, CFlopDataFromWizardConfig> g_flopDataFromWizardConfigs; //flop策略数据为wizard匹配表
 map<GameType, CTurnPresaveSolverConfig> g_turnPresaveSolverConfigs; //flop策略数据为solver匹配表
 map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig; //预存solver策略对应的筹码
+map<GameType, CSpecialProcessingMacroConfig> g_specialProcessingMacroConfig; //预存special processing 宏指令
+
 CSolver g_solver;
 
 bool LoadConfigs(GameType gmType)
@@ -80,6 +82,13 @@ bool LoadConfigs(GameType gmType)
 		return false;
 	else
 		g_stackByStrategyConfig[gmType] = StackByStrategyConfig;
+
+	CSpecialProcessingMacroConfig SpecialProcessingMacroConfig;
+	if (!SpecialProcessingMacroConfig.Init(gmType))
+		return false;
+	else
+		g_specialProcessingMacroConfig[gmType] = SpecialProcessingMacroConfig;
+
 
 	return true;
 }
@@ -236,7 +245,7 @@ int main()
 	//string sCommand = "Discard[allin](AKs)<EV+=0.1>";
 	//string sCommand = "Replace[whole][raise](AKs)<EV+=0.1>";
 	string sCommand = "Replace[call][raise](AKs)";
-	testStrategy.SpecialProcessing(sCommand);
+	testStrategy.SpecialProcessing(Max6_NL50_SD100,sCommand);
 
 
 
