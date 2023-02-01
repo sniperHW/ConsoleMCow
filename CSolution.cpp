@@ -185,6 +185,11 @@ bool CSolution::ChangeRound(const string& sActionLine)
 			m_strategyFrom = multi_players;
 	}
 
+#ifdef FOR_TEST_DUMP_DETAIL_
+	DumpActionBeforeChangeRound();
+#endif 
+
+
 #ifdef FOR_TEST_DUMP_
 	string sComment = "";
 	RelativePosition heroRPosition;
@@ -480,6 +485,7 @@ string CSolution::getDataFromString(const StrategyFrom fr)
 
 void CSolution::DumpSelAction(const std::string& sActionLine)
 {
+
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
@@ -487,6 +493,7 @@ void CSolution::DumpSelAction(const std::string& sActionLine)
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();
+
 
 	smatch m;
 	regex reg(R"(\<(.*)\>)");
@@ -505,7 +512,7 @@ void CSolution::DumpSelAction(const std::string& sActionLine)
 			if (p != m_game.m_players.end()) {
 				if (p->second.m_blIsHero) {
 					string sAction = CActionLine::ToActionSymbol(it.second, true);
-					cout << "select action:" << sAction << endl << endl;
+					//cout << "select action:" << sAction << endl << endl;
 
 					ofstream ofCommands;
 					ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
@@ -520,6 +527,38 @@ void CSolution::DumpSelAction(const std::string& sActionLine)
 			}
 		}
 	}
+
+}
+
+void CSolution::DumpActionBeforeChangeRound()
+{
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\dump\\";
+	string sCommandsPath = sConfigFolder + "commands.txt";
+	time_t t = time(nullptr);
+	t += rand();
+
+	for (auto play : m_game.m_players) {
+		if (play.second.m_blIsHero) {
+			Action heroLastAction = play.second.m_lastAction;
+			if (heroLastAction.actionType != none) {
+				string sAction = CActionLine::ToActionSymbol(play.second.m_lastAction, true);
+
+				ofstream ofCommands;
+				ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
+				if (ofCommands.is_open()) {
+					//¸ñÊ½£º87969;	SelA_BeforeCR; comment;	R12
+					string sLine = to_string(t) + "; " + "SelA_BeforeCR; " + sAction + "; " + sAction;
+					ofCommands << sLine << endl;
+				}
+				ofCommands.close();
+			}
+			break;
+		}
+	}
+
 }
 
 

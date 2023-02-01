@@ -45,6 +45,7 @@ private:
 	bool IsMultiPlayers();
 	
 	void DumpSelAction(const std::string& sActionLine);
+	void DumpActionBeforeChangeRound();
 };
 
 #endif

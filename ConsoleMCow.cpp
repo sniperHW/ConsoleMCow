@@ -161,7 +161,7 @@ int main()
 
 
 //test special
-
+/*
 	CStrategy testStrategy;
 
 	vector<string> combosAK = CCombo::GetCombosByAbbr("AK");
@@ -263,7 +263,7 @@ int main()
 		cout << endl << "Count:" << nCount << endl << endl;
 	}
 
-
+*/
 
 
 
@@ -291,12 +291,12 @@ int main()
 
 
 //test presave
-	//testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-	//testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
-	//testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
-	//testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");
-	//testSolution.HeroAction("[HJ]R12");
-	//testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
+	testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
+	testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
+	testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
+	testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");	//pot和estack模拟客户端程序计算有误差，不影响测试
+	testSolution.HeroAction("[HJ]R12");
+//	testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
 
 
 

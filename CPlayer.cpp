@@ -8,6 +8,7 @@ CPlayer::CPlayer(Position position, const double dEStack) : m_position(position)
 	m_blIsHero = false;
 	m_positionByPresent = m_position;
 	m_positionRelative = OOP;
+	m_lastAction = { none,0,0,0 };
 }
 
 CPlayer::CPlayer()

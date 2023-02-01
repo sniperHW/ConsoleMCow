@@ -79,7 +79,6 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			posActions.push_back(ToPosActionPair(p->str()));	//"-"标记为none,nonepos
 	}
 
-	sActionLine;
 	//检查下一行动是否为hero
 	if (!blIsChangeRound) {
 		Position nextPlayerPosition;
