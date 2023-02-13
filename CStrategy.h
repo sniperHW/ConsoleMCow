@@ -5,6 +5,7 @@
 
 #include "globledef.h"
 #include "json/json.h"
+#include "CGame.h"
 
 class CStrategyItem
 {
@@ -50,6 +51,11 @@ public:
 	static const Json::Value *geActionNode(const Json::Value *node,const Action& action,const std::vector<Action>& actions, std::vector<Action>& actionsByStrategy, const Stacks& stacks, const Stacks& stacksByStrategy);//double stack);//const StackByStrategy& stack,bool last);
 	static Action getActionByStr(const std::string &str); 
 	static double CalcBetRatio(const double dPot, const std::vector<Action>& actions, int iLastIdx, const double dEstack = 0); //只有allin才填写dEstack
+
+	//多人对抗函数
+	//static std::vector<std::pair<Position, Action>> parseMultiActionSquence(const std::string& sOriActionInfo, std::vector<std::pair<Position, Action>> posActions);
+	static std::vector<std::pair<Position, Action>> parseMultiActionSquence(const std::string& sOriActionInfo);
+	static double CalcMultiBetRatio(const double dPot, const std::vector<std::pair<Position, Action>>& posActions);
 
 	void LoadMacro(std::string path);
 

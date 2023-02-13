@@ -1,5 +1,6 @@
 //#include "pch.h"
 #include "CGame.h"
+#include<algorithm>
 
 using namespace std;
 
@@ -79,5 +80,28 @@ Position CGame::GetNextPlayerPosition(const Position curPosition)
 		return m_players.begin()->first;
 	else
 		return next(p)->first;
+}
+
+//多人时hero位置（只分前中后）
+Multi_Position CGame::GetHeroMultiPosition()
+{
+	map<Position, int>SquenceByPosition{ {SB,1},{BB,2},{UTG,3},{HJ,4},{CO,5},{BTN,6} };
+	vector<int> tmp;
+	int nHeroIdx = 0;
+	for (auto player : m_players) {
+		if (player.second.m_lastAction.actionType != fold) {
+			if (player.second.m_blIsHero)
+				nHeroIdx = SquenceByPosition[player.first];
+			else
+				tmp.push_back(SquenceByPosition[player.first]);
+		}
+	}
+	if (nHeroIdx > *max_element(tmp.begin(), tmp.end()))
+		return multi_back;
+	else if (nHeroIdx < *min_element(tmp.begin(), tmp.end()))
+		return multi_front;
+	else
+		return multi_between;
+
 }
 

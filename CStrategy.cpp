@@ -634,6 +634,129 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 	return dRatio;
 }
 
+//解析多人格式，和2人不同（allin如果小于R则当C），而且是解析整条当前街（不是增量）
+vector<pair<Position, Action>> CStrategy::parseMultiActionSquence(const string& sOriActionInfo)
+{
+	vector<pair<Position, Action>> posActions;
+	string sOriActionInfoTmp = sOriActionInfo;
+	auto pos = sOriActionInfo.rfind('>');
+	if (pos != string::npos && pos != sOriActionInfo.size() - 1) 
+		sOriActionInfoTmp = sOriActionInfo.substr(pos + 1, sOriActionInfo.size());
+
+	if (sOriActionInfoTmp.empty())
+		return posActions;
+
+	regex sep(R"(\s?,\s?)");
+	sregex_token_iterator p(sOriActionInfoTmp.cbegin(), sOriActionInfoTmp.cend(), sep, -1);
+	sregex_token_iterator e;
+	float fLastRaiseSize = 0;
+	for (; p != e; ++p) {
+		if (!p->str().empty()) {
+			string sSymbol = p->str();
+			Action a{ none,0,0,0 };
+			regex regAction(R"(\]([FRCAX])(.*))");
+			Position p;
+			regex regPosition(R"(\[(.*)\])");
+			smatch m;
+
+			if (regex_search(sSymbol, m, regPosition)) 
+				p = CGame::GetPositionBySymbol(m[1]);
+
+			if (regex_search(sSymbol, m, regAction)) {
+				if (m[1].str() == "X") {
+					a.actionType = check;
+				}
+				else if (m[1].str() == "R") {
+					a.actionType = raise;
+					a.fBetSize = stof(m[2].str());
+					if (a.fBetSize > fLastRaiseSize)
+						fLastRaiseSize = a.fBetSize;
+				}
+				else if (m[1].str() == "A") {
+					a.actionType = allin;
+					a.fBetSize = stof(m[2].str());
+					if (a.fBetSize > fLastRaiseSize)
+						fLastRaiseSize = a.fBetSize;
+					if(a.fBetSize < fLastRaiseSize) //allin如果小于R则当C
+						a.actionType = call;
+				}
+				else if (m[1].str() == "C") {
+					a.actionType = call;
+				}
+				else if (m[1].str() == "F") {
+					a.actionType = fold;
+				}
+			}
+
+			posActions.push_back(make_pair(p, a));
+		}
+	}
+
+	return posActions;
+}
+
+//计算多人下注比例（为最后一个R的比例），公式为：下注额-与最近R的size的差值/下注前底池总和+与最近R的size的差值
+//注：当计算hero下注比例时最后call的不能省略
+double CStrategy::CalcMultiBetRatio(const double dPot, const vector<pair<Position, Action>>& posActions)
+{
+	double ret = 0;
+	vector<pair<Position, Action>> posActionsTmp = posActions;
+
+	for (int i = (int)posActionsTmp.size() - 1; i >= 0; i--) { //去掉末尾call的
+		if (posActionsTmp[i].second.actionType != raise && posActionsTmp[i].second.actionType != allin) {
+			posActionsTmp.pop_back();
+		}
+		else
+			break;
+	}
+
+	if (posActionsTmp.empty())
+		return 0;
+
+	//记录位置对应的累计下注额
+	map<Position, double> posSizes;
+	double dRecentRSize = 0;
+	double dPotBeforeBet = dPot; //除最后一次下注外的底池总和
+	for (int i = 0; i < posActionsTmp.size(); i++) {
+		if (posActionsTmp[i].second.actionType == raise || posActionsTmp[i].second.actionType == allin) {
+			dRecentRSize = posActionsTmp[i].second.fBetSize;
+			posSizes[posActionsTmp[i].first] += posActionsTmp[i].second.fBetSize;
+			if(i != posActionsTmp.size() - 1)
+				dPotBeforeBet += posActionsTmp[i].second.fBetSize;
+		}
+		else if (posActionsTmp[i].second.actionType == call) {
+			posSizes[posActionsTmp[i].first] += dRecentRSize;
+			if (i != posActionsTmp.size() - 1)
+				dPotBeforeBet += dRecentRSize;
+		}
+	}
+
+	//最后R的位置
+	Position posLastR = posActionsTmp.back().first;
+
+	//下注额（最后R）
+	double dBetSize = posActionsTmp[posActionsTmp.size() - 1].second.fBetSize;
+
+	//与最近R的size的差值(最后一次不计)
+	double dLastRSizeDif = 0;
+	Position posBeforeLastR;
+	for (auto p = posActionsTmp.rbegin() + 1; p != posActionsTmp.rend(); p++) {
+		if (p->second.actionType == raise || p->second.actionType == allin) {
+			posBeforeLastR = p->first;
+			break;
+		}
+	}
+	dLastRSizeDif = posSizes[posBeforeLastR] - posSizes[posLastR] + dBetSize;
+
+	ret = (dBetSize - dLastRSizeDif) / (dPotBeforeBet + dLastRSizeDif);
+
+	if (ret == 0)
+		cout << "error: CalcMultiBetRatio can't be 0." << endl;
+
+	return ret;
+}
+
+
 //将special文本命令格式化
 //string sPara{"Replace[call,allin][raise,fold](AKo,AKs,AA)<EV+0.1>;Discard[call];Discard[raise]<EV-=0>"}; 
 vector<CCommForSpecialProcessing> CStrategy::GetCommands(const string& sCommands)

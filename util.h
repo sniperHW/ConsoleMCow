@@ -106,6 +106,126 @@ Type stringToNum(const std::string& str)
     return num;
 }
 
+template <class Type>
+bool compareBySymbol(const Type value, const CompareSymbol compare_symbol, const Type base_value)
+{
+	//cs_less, cs_less_equal,cs_equal,cs_large,cs_large_equal
+	if (base_value == 0)
+		return true;
+
+	switch (compare_symbol) {
+	case cs_less:
+		return value < base_value;
+	case cs_less_equal:
+		return value <= base_value;
+	case cs_equal:
+		return value == base_value;
+	case cs_large:
+		return value > base_value;
+	case cs_large_equal:
+		return value >= base_value;
+	}
+	return false;
+}
+
+inline Round str2round(const std::string& sRound)
+{
+	if (sRound == "flop")
+		return flop;
+	else if(sRound == "turn")
+		return turn;
+	else if (sRound == "river")
+		return river;
+	else
+		return preflop; 
+}
+
+//typedef enum { cs_less, cs_less_equal,cs_equal,cs_large,cs_large_equal }CompareSymbol;
+inline CompareSymbol str2compareSymbol(const std::string& sSymbol)
+{
+	if (sSymbol == "<")
+		return cs_less;
+	else if (sSymbol == "<=")
+		return cs_less_equal;
+	else if (sSymbol == "=")
+		return cs_equal;
+	else if (sSymbol == ">")
+		return cs_large;
+	else if (sSymbol == ">=")
+		return cs_large_equal;
+	else
+		return cs_equal;
+}
+
+//typedef enum { multi_front, multi_between, multi_back, multi_none }Multi_Position; //none代表不做判断
+inline Multi_Position str2multiPosition(const std::string& sSymbol)
+{
+	if (sSymbol == "front")
+		return multi_front;
+	else if (sSymbol == "between")
+		return multi_between;
+	else if (sSymbol == "back")
+		return multi_back;
+	else
+		return multi_none;
+}
+
+//typedef enum { hero_initiative, hero_passive, hero_none }Multi_HeroActive; //none代表不做判断
+inline Multi_HeroActive str2heroActive(const std::string& sSymbol)
+{
+	if (sSymbol == "initiative")
+		return hero_initiative;
+	else if (sSymbol == "passive")
+		return hero_passive;
+	else
+		return hero_none;
+}
+/*
+const int ev_nuts = 0;
+const int ev_sec_nuts = 1;
+const int ev_large = 2;
+const int ev_sec_large = 3;
+const int ev_middle = 4;
+const int ev_small = 5;
+const int ev_catch_bulff = 6;
+
+const int evsub_large = 0;
+const int evsub_middle = 1;
+const int evsub_small = 2;
+*/
+inline RankGroup str2rankGroup(const std::string& sSymbol)
+{
+	RankGroup rg;
+	std::string sMain, sSub;
+	auto sz = sSymbol.find(',');
+	sMain = sSymbol.substr(0, sz);
+	sSub = sSymbol.substr(sz+1, std::string::npos);
+
+	if (sMain == "ev_nuts")
+		rg.nMainGroup = 0;
+	else if (sMain == "ev_sec_nuts")
+		rg.nMainGroup = 1;
+	else if (sMain == "ev_large")
+		rg.nMainGroup = 2;
+	else if (sMain == "ev_sec_large")
+		rg.nMainGroup = 3;
+	else if (sMain == "ev_middle")
+		rg.nMainGroup = 4;
+	else if (sMain == "ev_small")
+		rg.nMainGroup = 5;
+	else if (sMain == "ev_catch_bulff")
+		rg.nMainGroup = 6;
+
+	if (sSub == "evsub_large")
+		rg.nSubGroup = 0;
+	else if (sSub == "evsub_middle")
+		rg.nSubGroup = 1;
+	else if (sSub == "evsub_small")
+		rg.nSubGroup = 2;
+
+	return rg;
+}
+
 
 #ifdef MAC 
 

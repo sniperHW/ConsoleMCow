@@ -1,0 +1,1 @@
+flop;	.*-X;	<=3;<=0.75;	;front	;initiative;	raise;	0.5;	ev_nuts,evsub_large;	ev_nuts,evsub_large;	0;0.67;			

@@ -29,6 +29,8 @@ public:
 
 	Position GetNextPlayerPosition(const Position curPosition);
 
+	Multi_Position GetHeroMultiPosition();
+
 	CGame();
 };
 

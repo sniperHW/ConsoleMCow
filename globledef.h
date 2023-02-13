@@ -101,4 +101,164 @@ typedef struct tagStacks {
 	double dPot;	//实际底池
 }Stacks;
 
+
+
+//以下是牌型分析相关定义
+
+typedef enum { MAX_HIGH_CARD, MAX_PAIR, MAX_TWO_PAIR, MAX_THREE_OF_A_KIND, MAX_STRAIGHT, MAX_FLUSH, MAX_FULL_HOUSE, MAX_FOUR_OF_A_KIND, MAX_STRAIGHT_FLUSH, DRAW_STRAIGHT, DRAW_FLUSH, DRAW_OTHERS, DRAW_NONE }PokerClass;
+const std::map<char, int> c2p{ {'2',2},{'3',3},{'4',4},{'5',5},{'6',6},{'7',7},{'8',8},{'9',9},{'T',10},{'J',11},{'Q',12},{'K',13},{'A',14} };
+const std::map<char, Suit> c2s{ {'h',h},{'c',c}, {'s',s}, {'d',d} };
+const std::vector<std::string> PokerClassString{ "HIGH_CARD", "PAIR", "TWO_PAIR", "THREE_OF_A_KIND", "STRAIGHT", "FLUSH", "FULL_HOUSE", " FOUR_OF_A_KIND", "STRAIGHT_FLUSH", "DRAW_STRAIGHT", "DRAW_FLUSH", "DRAW_OTHERS", "DRAW_NONE" };
+
+const int ev_nuts = 0;
+const int ev_sec_nuts = 1;
+const int ev_large = 2;
+const int ev_sec_large = 3;
+const int ev_middle = 4;
+const int ev_small = 5;
+const int ev_catch_bulff = 6;
+
+const int evsub_large = 0;
+const int evsub_middle = 1;
+const int evsub_small = 2;
+
+class myCard {
+public:
+    Suit m_suit;
+    int m_point;
+
+    bool operator == (const myCard& p) const {
+        return m_point == p.m_point && m_suit == p.m_suit;
+    }
+
+    friend bool operator > (myCard& p1, myCard& p2) {
+        return p1.m_point > p2.m_point;
+    }
+
+    bool operator <  (const myCard& p2) const {
+        return m_point < p2.m_point;
+    }
+
+
+    myCard(const std::string& c) {
+        m_point = c2p.at(c[0]);
+        m_suit = c2s.at(c[1]);
+    }
+
+    myCard(const Suit suit, const int point) {
+        m_suit = suit;
+        m_point = point;
+    }
+
+    myCard() {};
+
+};
+const std::vector<std::string> Deck{ "2h","2c","2d","2s","3h","3c","3d","3s", "4h","4c","4d","4s", "5h","5c","5d","5s", "6h","6c","6d","6s", "7h","7c","7d","7s", "8h","8c","8d","8s", "9h","9c","9d","9s", "Th","Tc","Td","Ts", "Jh","Jc","Jd","Js", "Qh","Qc","Qd","Qs", "Kh","Kc","Kd","Ks", "Ah","Ac","Ad","As" };
+typedef std::vector<myCard> MyCards;
+
+//draw牌结构
+typedef struct tag_DrawStruct {
+    PokerClass pokerClass; //牌型,DRAW_
+    int nNeedHandsNum = 0;
+    int nOutsNum = 0;           //顺花相关outs
+    int nRank;
+    int nAppendOutsNum = 0;    //其他outs
+}DrawStruct;
+
+//成手牌结构
+typedef struct tag_MadehandStruct {
+    int nNeedHandsNum = 0; //0则代表不成立
+    PokerClass pokerClass; //牌型
+    int nRank; //按不同牌型解释
+    int nAppend = 0;//根据牌型设定的附加说明
+}MadehandStruct;
+
+//公牌结构
+typedef struct tag_PublicStruct {
+    PokerClass pokerClass; //最大牌型
+    int nNeedtoFlush = 0; //1,2,3
+    int nNeedtoStraight = 0; //1,2
+    int nPair = 0;
+    int nAppend = 0; //当river为同花顺、顺、葫芦时，1代表是nuts,2代表转为抓咋牌
+}PublicStruct;
+
+typedef struct tag_OnecardToStraight {
+    std::vector<int> cardPoints;
+    std::vector<int> outsPoints;
+}OnecardToStraight;
+
+typedef struct tag_RankGroup {
+    //int nMadeOrDraw = 0; //0成牌，1draw牌
+    int nMainGroup = -1; //7大类
+    int nSubGroup = -1;  //3小类
+    double dlScore = 0;
+
+
+    bool operator > (const tag_RankGroup& p) const//raise 
+    {
+        if (nMainGroup == -1)
+            return false;
+        if (nMainGroup != -1 && p.nMainGroup == -1)
+            return true;
+
+        if (nMainGroup < p.nMainGroup)
+            return true;
+        else if (nMainGroup == p.nMainGroup) {
+            if (nSubGroup < p.nSubGroup)
+                return true;
+        }
+        else
+            return false;
+
+        return true;
+
+    }
+
+    bool operator >= (const tag_RankGroup& p) const//raise 
+    {
+        if (nMainGroup == -1)
+            return false;
+        if (nMainGroup != -1 && p.nMainGroup == -1)
+            return true;
+
+        if (nMainGroup < p.nMainGroup)
+            return true;
+        else if (nMainGroup == p.nMainGroup) {
+            if (nSubGroup <= p.nSubGroup)
+                return true;
+        }
+        else
+            return false;
+
+        return true;
+
+    }
+
+}RankGroup;
+
+//牌型的最终评价
+typedef struct tag_PokerEvaluate {
+    RankGroup rankGroup;    //一般只用这个
+    MadehandStruct madehandStruct;
+    DrawStruct drawStruct;
+    PublicStruct publicStruct;
+}PokerEvaluate;
+
+
+//多人策略相关定义
+typedef enum { multi_front, multi_between, multi_back, multi_none }Multi_Position; //none代表不做判断
+typedef enum { hero_initiative, hero_passive ,hero_none}Multi_HeroActive; //none代表不做判断
+
+typedef enum { cs_less, cs_less_equal,cs_equal,cs_large,cs_large_equal }CompareSymbol;
+
+typedef struct tag_MultiCondition {
+    Round Round;
+    std::string sActionLine; 
+    int nPlayerCount;
+    double dlBetSize;   //为底池比例
+    double dlSpr;       //为新一轮开始时的筹码底池比，有效筹码为hero和其他玩家最大筹码取较小值
+    Multi_Position Position;
+    Multi_HeroActive HeroActive;
+}MultiCondition;
+
 #endif // !GLOBLEDEF_H_

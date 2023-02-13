@@ -14,6 +14,8 @@
 #include "util.h"
 #include <iterator>
 #include "CWdebug.h"
+#include "CPokerHand.h"
+
 
 using namespace std;
 
@@ -32,6 +34,25 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	string sActionLineTmp = sActionLine;
 	string sBoard;
 	Stacks stacksOri{0,0};
+
+	//记录原始信息,格式 [position]Actionsize,..<>... (allin需要带size,已经allin的要被跳过)
+	auto idx = sActionLine.find_first_of('<');
+	string sAppend;
+	bool blStreet = false;
+	if (idx != string::npos) {
+		sAppend = sActionLine.substr(0, idx);
+		blStreet = true;
+	}
+	else
+		sAppend = sActionLine;
+	char lastc;
+	if (!m_sOriActionInfo.empty())
+		lastc = m_sOriActionInfo[m_sOriActionInfo.size() - 1];
+	if (!m_sOriActionInfo.empty() && lastc != '>')
+		m_sOriActionInfo += ',';
+	m_sOriActionInfo += sAppend;
+	if (blStreet)
+		m_sOriActionInfo += "<>";
 
 	//保存上条街的筹码（用于计算NodeName）
 	stacksOri.dPot = game.m_dPot;
@@ -58,6 +79,12 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		auto idx = sActionLine.find_first_of('<');
 		if (idx != string::npos)
 			sActionLineTmp = sActionLine.substr(0, idx);	 
+
+		//牌型
+		MyCards privates(ToMyCards(game.GetHero()->m_hands.m_sSymbol));
+		MyCards publics(ToMyCards(game.m_board.GetBoardSymbol()));
+		CPokerHand pokerHand;
+		m_pokerEv = pokerHand.getPokerEvaluate(privates, publics);
 	}//end of change round
 
 	//analysis action line（[position]actionsize,","号分割，preflop换圈有"-"）
@@ -95,10 +122,118 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	}
 
 	//记录player最后一次行动
+	Action heroLastAction;
 	for (auto pa : posActions) {
-		if(pa.first!= nonepos) 
+		if (pa.first != nonepos) {
 			game.m_players[pa.first].m_lastAction = pa.second;
+			if(game.m_players[pa.first].m_blIsHero)
+				heroLastAction = pa.second;
+		}
 	}
+
+
+	//判断是否进入多人模式
+	if (blIsChangeRound && game.m_round == preflop) {
+		int nExistPlayerCount = 0;
+		for (auto player : game.m_players) {
+			if (player.second.m_lastAction.actionType != fold)
+				nExistPlayerCount++;
+		}
+
+		if (nExistPlayerCount > 2) {
+			m_blIsMultiPlayer = true;
+		}
+	}
+
+	//处理多人对抗，非多人对抗时offline也要用 MultiCondition m_multiCondition; 
+	m_multiCondition.sActionLine = GetBetCountStr(); //非多人offline时也要用
+
+	//int nPlayerCount;
+	m_multiCondition.nPlayerCount = 0;
+	for (auto player : game.m_players) {
+		if (player.second.m_lastAction.actionType != fold)
+			m_multiCondition.nPlayerCount++;
+	}
+
+	//Multi_Position Position;
+	m_multiCondition.Position = game.GetHeroMultiPosition();
+
+	if (blIsChangeRound) {
+		m_multiCondition.Round = getNextRound(game.m_round); //Round Round;
+		m_multiCondition.HeroActive = heroLastAction.actionType == raise ? hero_initiative : hero_passive; //Multi_HeroActive HeroActive; //前一轮是call还是raise,可以用m_players的lastAction识别
+		//设置round
+		game.m_round = getNextRound(game.m_round);
+		//设置pot
+		reg = R"(pot=(.*);)";
+		if (regex_search(sActionLine, m, reg))
+			game.m_dPot = stod(m[1]);
+		//设置EStack
+		double dHeroEStack = 0;
+		double dMaxEStack = 0;
+		reg = R"(EStack=(.*);)";
+		if (regex_search(sActionLine, m, reg)) {
+			string sEStacks = m[1];
+			regex sep(R"(\s?,\s?)");
+			sregex_token_iterator p(sEStacks.cbegin(), sEStacks.cend(), sep, -1);
+			sregex_token_iterator e;
+			for (; p != e; ++p) {
+				regex regpos(R"(\[(.*)\](.*))");
+				string s = p->str();
+				if (regex_search(s, m, regpos)) {
+					game.m_players[CGame::GetPositionBySymbol(m[1])].m_dEStack = stod(m[2]);
+					if (game.m_players[CGame::GetPositionBySymbol(m[1])].m_blIsHero)
+						dHeroEStack = stod(m[2]);
+					else {
+						if (stod(m[2]) > dMaxEStack)
+							dMaxEStack = stod(m[2]);
+					}
+				}
+			}
+
+			//double dlSpr;
+			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / game.m_dPot;
+		}
+		//去除fold的玩家
+		for (auto it = game.m_players.begin(); it != game.m_players.end();) {
+			if (it->second.m_lastAction.actionType == fold) {
+				it = game.m_players.erase(it);
+			}
+			else {
+				it++;
+			}
+		}
+	}
+	else {
+		//preflop Spr (当preflop脱线时可用)
+		double dHeroEStack = 0;
+		double dMaxEStack = 0;
+		if (game.m_round == preflop) {
+			for (auto player : game.m_players) {
+				if (player.second.m_lastAction.actionType != fold) {
+					if (player.second.m_blIsHero)
+						dHeroEStack = player.second.m_dEStack;
+					else{
+						if (player.second.m_dEStack > dMaxEStack)
+							dMaxEStack = player.second.m_dEStack;
+					}
+				}
+			}
+			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / game.m_dPot;
+		}
+
+		//double dlBetSize;
+		vector<pair<Position, Action>> posActionsMulti = CStrategy::parseMultiActionSquence(m_sOriActionInfo);
+		m_multiCondition.dlBetSize = CStrategy::CalcMultiBetRatio(game.m_dPot, posActionsMulti);
+	}
+
+	if (m_blIsMultiPlayer)
+		return true;
+
+
+
+
+
+
 
 	//将Limp的合成一个
 	if (game.m_round == preflop) {
@@ -338,12 +473,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 
 	if (blIsChangeRound) {
 		//设置round
-		if (game.m_round == preflop)
-			game.m_round = flop;
-		else if (game.m_round == flop)
-			game.m_round = turn;
-		else if (game.m_round == turn)
-			game.m_round = river;
+		game.m_round = getNextRound(game.m_round);
 
 		//设置pot
 		reg = R"(pot=(.*);)";
@@ -653,6 +783,8 @@ int CActionLine::MatchStackDepth(double dEStack)
 				return *(pos + 1);
 		}
 	}
+
+	return 0;
 }
 
 //按候选筹码深度得出游戏类型
@@ -758,4 +890,89 @@ string CActionLine::getRelativePositionString(const RelativePosition rp)
 	default:
 		return "";
 	}
+}
+
+Round CActionLine::getNextRound(const Round round)
+{
+	switch (round) {
+	case preflop:
+		return flop;
+	case flop:
+		return turn;
+	case turn:
+		return river;
+	default:
+		return preflop;
+	}
+}
+
+string CActionLine::GetBetCountStr()
+{
+	string sRet;
+
+	//分街
+	regex sep(R"(\<\>)");
+	vector<string> vRound;
+	sregex_token_iterator p(m_sOriActionInfo.cbegin(), m_sOriActionInfo.cend(), sep, -1);
+	sregex_token_iterator e;
+	for (; p != e; ++p)
+		vRound.push_back(p->str());
+
+	vector<int> counts;
+
+	for (auto one_round : vRound) {
+		//分动作
+		regex sep(R"(\s?,\s?)");
+		sregex_token_iterator p(one_round.cbegin(), one_round.cend(), sep, -1);
+		sregex_token_iterator e;
+		int nRCount = 0;
+		float fLastRaiseSize = 0;
+		for (; p != e; ++p) {
+			if (!p->str().empty()) {
+				regex regAction(R"(\]([FRCAX])(.*))");
+				smatch m;
+				string sSymbol = p->str();
+				if (regex_search(sSymbol, m, regAction)) {
+					if (m[1].str() == "R" || m[1].str() == "A") {
+						double dSize = stof(m[2].str());
+						if (dSize > fLastRaiseSize) {
+							fLastRaiseSize = (float)dSize;
+							nRCount++;
+						}
+					}
+				}
+			}
+		}
+		counts.push_back(nRCount);
+	}
+
+	for (int i = 0; i < counts.size(); i++) {
+		if (counts[i] == 0)
+			sRet += "X";
+		else if (counts[i] == 1)
+			sRet += "B";
+		else
+			sRet = to_string(counts[i] + 1) + "B";
+
+		if (i != counts.size() - 1)
+			sRet += "<>";
+	}
+
+	if (m_sOriActionInfo.back() == '>')
+		sRet += "<>";
+
+	return sRet;
+}
+
+//将字符串格式转为MyCards
+MyCards CActionLine::ToMyCards(const std::string sSymbol)
+{
+	MyCards myCards;
+	for (int i = 0; i < sSymbol.size(); i+=2) {
+		string s;
+		s.append(1,sSymbol[i]);
+		s.append(1, sSymbol[i+1]);
+		myCards.push_back(myCard(s));
+	}
+	return myCards;
 }

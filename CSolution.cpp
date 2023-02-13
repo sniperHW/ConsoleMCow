@@ -11,6 +11,7 @@
 #include <fstream>
 #include "util.h"
 #include "CActionLine.h"
+#include "CMultiStrategy.h"
 
 using namespace std;
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; 
@@ -18,6 +19,7 @@ extern CSolver g_solver;
 extern map<GameType, CFlopDataFromWizardConfig> g_flopDataFromWizardConfigs;
 extern map<GameType, CTurnPresaveSolverConfig> g_turnPresaveSolverConfigs;
 extern map<GameType, CStackByStrategyConfig> g_stackByStrategyConfig;
+extern CMultiStrategy g_multiStrategy;
 
 CSolution::CSolution()
 {
@@ -150,7 +152,7 @@ Action CSolution::HeroAction(const string& sActionLine)
 		cout << "HeroAction multi_players:---------------------------------------------------" << endl << endl;
 #endif 
 
-		break;
+		return g_multiStrategy.GetHeroAction(m_actionLine.m_multiCondition, m_actionLine.m_pokerEv); //这里计算后立即返回
 	}
 	}//end of switch
 
@@ -200,7 +202,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 #endif
 
 	//加载range(round已经为新的,m_strategyFrom为旧的)
-	if (m_game.m_round == flop) { //file模式
+	if (m_game.m_round == flop && m_strategyFrom != multi_players) { //file模式
 
 #ifdef DEBUG_
 		cout << "ChangeRound Load range from_file:----------------------------------------------" << endl;
