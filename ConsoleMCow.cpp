@@ -1,6 +1,6 @@
 ﻿// ConsoleMCow.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
-
+#pragma comment(lib, "ws2_32.lib")
 #include <iostream>
 #include "globledef.h"
 #include "CStrategyNodeConfig.h"
@@ -24,6 +24,7 @@
 #include "CSpecialProcessingMacroConfig.h"
 #include "CPokerHand.h"
 #include "CMultiStrategy.h"
+#include "CNet.h"
 
 using namespace std;
 
@@ -102,6 +103,62 @@ extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 int main()
 {
+
+	{
+		std::string request = std::string("set_pot 50\n");
+		request.append("set_effective_stack 200\n");
+		request.append("set_board Qs,Jh,2h\n");
+		request.append("set_range_ip AA,KK,QQ,JJ,TT,99:0.75,88:0.75,77:0.5,66:0.25,55:0.25,AK,AQs,AQo:0.75,AJs,AJo:0.5,ATs:0.75,A6s:0.25,A5s:0.75,A4s:0.75,A3s:0.5,A2s:0.5,KQs,KQo:0.5,KJs,KTs:0.75,K5s:0.25,K4s:0.25,QJs:0.75,QTs:0.75,Q9s:0.5,JTs:0.75,J9s:0.75,J8s:0.75,T9s:0.75,T8s:0.75,T7s:0.75,98s:0.75,97s:0.75,96s:0.5,87s:0.75,86s:0.5,85s:0.5,76s:0.75,75s:0.5,65s:0.75,64s:0.5,54s:0.75,53s:0.5,43s:0.5\n");
+		request.append("set_range_oop QQ:0.5,JJ:0.75,TT,99,88,77,66,55,44,33,22,AKo:0.25,AQs,AQo:0.75,AJs,AJo:0.75,ATs,ATo:0.75,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQ,KJ,KTs,KTo:0.5,K9s,K8s,K7s,K6s,K5s,K4s:0.5,K3s:0.5,K2s:0.5,QJ,QTs,Q9s,Q8s,Q7s,JTs,JTo:0.5,J9s,J8s,T9s,T8s,T7s,98s,97s,96s,87s,86s,76s,75s,65s,64s,54s,53s,43s\n");
+		request.append("set_bet_sizes oop,flop,bet,50\n");
+		request.append("set_bet_sizes oop,flop,raise,60\n");
+		request.append("set_bet_sizes oop,flop,allin\n");
+		request.append("set_bet_sizes ip,flop,bet,50\n");
+		request.append("set_bet_sizes ip,flop,raise,60\n");
+		request.append("set_bet_sizes ip,flop,allin\n");
+		request.append("set_bet_sizes oop,turn,bet,50\n");
+		request.append("set_bet_sizes oop,turn,raise,60\n");
+		request.append("set_bet_sizes oop,turn,allin\n");
+		request.append("set_bet_sizes ip,turn,bet,50\n");
+		request.append("set_bet_sizes ip,turn,raise,60\n");
+		request.append("set_bet_sizes ip,turn,allin\n");
+		request.append("set_bet_sizes oop,river,bet,50\n");
+		request.append("set_bet_sizes oop,river,donk,50\n");
+		request.append("set_bet_sizes oop,river,raise,60,100\n");
+		request.append("set_bet_sizes oop,river,allin\n");
+		request.append("set_bet_sizes ip,river,bet,50\n");
+		request.append("set_bet_sizes ip,river,raise,60,100\n");
+		request.append("set_bet_sizes ip,river,allin\n");
+		request.append("set_allin_threshold 0.67\n");
+		request.append("build_tree\n");
+		request.append("set_thread_num 8\n");
+		request.append("set_accuracy 0.5\n");
+		request.append("set_max_iteration 200\n");
+		request.append("set_print_interval 10\n");
+		request.append("set_use_isomorphism 1\n");
+		request.append("start_solve\n");
+		request.append("set_dump_rounds 2\n");
+		request.append("dump_result output_result.json\n");
+
+		CNet::InitNetSystem();
+
+		auto resp = CNet::Request(std::string("127.0.0.1"), 8081, request);
+
+		auto jsonStr = resp->GetData();
+
+		Json::Value root;
+		Json::CharReaderBuilder builder;
+		JSONCPP_STRING errs;
+		std::istringstream istr(jsonStr);
+		if (!parseFromStream(builder, istr, &root, &errs)) {
+			std::cout << errs << std::endl;
+		}
+		else {
+			std::cout << "parse json ok" << std::endl;
+		}
+
+	}
+
 
 	if (!LoadConfigs(Max6_NL50_SD100)) {
 		cout << "Load config error!" << endl;
