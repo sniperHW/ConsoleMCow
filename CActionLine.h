@@ -29,6 +29,8 @@ public:
 	static std::string ToActionSymbol(const Action& a, bool blRemainSize = true);
 	static Round getNextRound(const Round round);
 
+	//double GetRemainAfterR(double dSizeByPot); //（用另一算法替代暂时不用）计算如果hero行动为R时，剩余的筹码占底池比例（先行动则要加一个对手call的量），用于判断是否要allin
+
 private:
 	std::string m_sPreflopRowActionSquence;
 	Position m_firstLimperPositionByPresent; //由于limp的玩家只在第一圈计算，所以要记忆到成员变量
@@ -42,8 +44,10 @@ private:
 	std::string GetOOPXSymbol(const Position hero, const Position rival); //对hero
 	OOPX GetOOPX(const CGame& game);	//对游戏
 	
-	std::string GetBetCountStr(); //返回m_sOriActionInfo nB格式
+	std::string GetBetCountStr(const bool blIsChangeRound); //返回m_sOriActionInfo nB格式
 	MyCards ToMyCards(const std::string sSymbol); //将字符串格式转为MyCards
+
+	double GetCurrentSpr(CGame& game, const std::vector<std::pair<Position, Action>>& posActions);
 
 };
 

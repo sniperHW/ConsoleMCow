@@ -226,6 +226,54 @@ inline RankGroup str2rankGroup(const std::string& sSymbol)
 	return rg;
 }
 
+inline PublicConditionToCheck str2pcToCheck(const std::string& sSymbol) 
+{
+	if (sSymbol == "nNeedtoFlush")
+		return pc_flush;
+	else if (sSymbol == "nNeedtoStraight")
+		return pc_straight;
+	else if (sSymbol == "nPair")
+		return pc_pair;
+	else if (sSymbol == "nMaxRank")
+		return pc_high;
+	else
+		return pc_none;
+}
+
+inline LogicCompareSymbol str2LogicComparer(const std::string& sSymbol)
+{
+	if (sSymbol == "&&")
+		return lc_and;
+	else if (sSymbol == "||")
+		return lc_or;
+	else
+		return lc_none;
+}
+
+inline
+
+std::string action2symbol(const Action& a) 
+{
+	std::string ret;
+	if (a.actionType == raise) {
+		ret = "R";
+		ret += double2String(a.fBetSize, 1);
+		ret = ret + "(" + double2String(a.fBetSizeByPot*100, 1) + "%)";
+		return ret;
+	}
+	else if (a.actionType == fold)
+		return "F";
+	else if (a.actionType == check)
+		return "X";
+	else if (a.actionType == allin)
+		return "A";
+	else if (a.actionType == call)
+		return "C";
+
+	return "E"; //¥ÌŒÛ±Í÷æ
+}
+
+
 
 #ifdef MAC 
 

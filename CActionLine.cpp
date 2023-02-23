@@ -34,6 +34,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	string sActionLineTmp = sActionLine;
 	string sBoard;
 	Stacks stacksOri{0,0};
+	double dPotNew = 0;
 
 	//记录原始信息,格式 [position]Actionsize,..<>... (allin需要带size,已经allin的要被跳过)
 	auto idx = sActionLine.find_first_of('<');
@@ -145,10 +146,15 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		}
 	}
 
-	//处理多人对抗，非多人对抗时offline也要用 MultiCondition m_multiCondition; 
-	m_multiCondition.sActionLine = GetBetCountStr(); //非多人offline时也要用
 
-	//int nPlayerCount;
+	//处理多人对抗，非多人对抗时offline也要用 MultiCondition m_multiCondition; 
+	m_multiCondition.sActionLine = GetBetCountStr(blIsChangeRound); //非多人offline时也要用
+	m_multiCondition.sOriActionInfo = m_sOriActionInfo;
+	m_multiCondition.heroPosition = game.GetHero()->m_position;
+	m_multiCondition.dPot = game.m_dPot;
+	m_multiCondition.dHeroEStack = game.GetHero()->m_dEStack;
+
+	//nPlayerCount;
 	m_multiCondition.nPlayerCount = 0;
 	for (auto player : game.m_players) {
 		if (player.second.m_lastAction.actionType != fold)
@@ -156,7 +162,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	}
 
 	//Multi_Position Position;
-	m_multiCondition.Position = game.GetHeroMultiPosition();
+	m_multiCondition.MultiPosition = game.GetHeroMultiPosition();
 
 	if (blIsChangeRound) {
 		m_multiCondition.Round = getNextRound(game.m_round); //Round Round;
@@ -190,7 +196,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 				}
 			}
 
-			//double dlSpr;
+			//dlSpr;
 			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / game.m_dPot;
 		}
 		//去除fold的玩家
@@ -204,6 +210,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		}
 	}
 	else {
+/*
 		//preflop Spr (当preflop脱线时可用)
 		double dHeroEStack = 0;
 		double dMaxEStack = 0;
@@ -220,10 +227,13 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / game.m_dPot;
 		}
-
-		//double dlBetSize;
+*/
+		//dlBetSize;
 		vector<pair<Position, Action>> posActionsMulti = CStrategy::parseMultiActionSquence(m_sOriActionInfo);
 		m_multiCondition.dlBetSize = CStrategy::CalcMultiBetRatio(game.m_dPot, posActionsMulti);
+
+		//dlCurrentSpr
+		m_multiCondition.dlSprCurrent = GetCurrentSpr(game, posActionsMulti);
 	}
 
 	if (m_blIsMultiPlayer)
@@ -906,7 +916,7 @@ Round CActionLine::getNextRound(const Round round)
 	}
 }
 
-string CActionLine::GetBetCountStr()
+string CActionLine::GetBetCountStr(const bool blIsChangeRound)
 {
 	string sRet;
 
@@ -917,6 +927,14 @@ string CActionLine::GetBetCountStr()
 	sregex_token_iterator e;
 	for (; p != e; ++p)
 		vRound.push_back(p->str());
+
+	bool blOpen = false;
+	if(vRound.empty())
+		blOpen = true;
+	else {
+		if(vRound.back().empty())
+			blOpen = true;
+	}
 
 	vector<int> counts;
 
@@ -947,19 +965,28 @@ string CActionLine::GetBetCountStr()
 	}
 
 	for (int i = 0; i < counts.size(); i++) {
-		if (counts[i] == 0)
-			sRet += "X";
+		if (counts[i] == 0) {
+			if(i == counts.size()-1 && blOpen)
+				sRet += "O";
+			else
+				sRet += "X";
+		}
 		else if (counts[i] == 1)
 			sRet += "B";
 		else
-			sRet = to_string(counts[i] + 1) + "B";
+			sRet = sRet + to_string(counts[i] + 1) + "B";
 
 		if (i != counts.size() - 1)
 			sRet += "<>";
 	}
 
-	if (m_sOriActionInfo.back() == '>')
-		sRet += "<>";
+	if (!m_sOriActionInfo.empty()) {
+		if (m_sOriActionInfo.back() == '>') {
+			sRet += "<>";
+			if (!blIsChangeRound)
+				sRet += "O";
+		}
+	}
 
 	return sRet;
 }
@@ -975,4 +1002,29 @@ MyCards CActionLine::ToMyCards(const std::string sSymbol)
 		myCards.push_back(myCard(s));
 	}
 	return myCards;
+}
+
+//计算当前hero的剩余筹码和当前底池的比例
+double CActionLine::GetCurrentSpr(CGame& game, const vector<pair<Position, Action>>& posActions)
+{
+	double dCurrentpot = game.m_dPot;
+	double dHeroEStack = game.GetHero()->m_dEStack;
+	Position heroPosition = game.GetHero()->m_position;
+
+	double dRecentRSize = 0;
+	for (auto one : posActions) {
+		if (one.second.actionType == raise || one.second.actionType == allin) {
+			dRecentRSize = one.second.fBetSize;
+			dCurrentpot += one.second.fBetSize;
+			if (one.first == heroPosition)
+				dHeroEStack -= one.second.fBetSize;
+		}
+		else if (one.second.actionType == call) {
+			dCurrentpot += dRecentRSize;
+			if (one.first == heroPosition)
+				dHeroEStack -= dRecentRSize;
+		}
+	}
+
+	return dHeroEStack / dCurrentpot;
 }

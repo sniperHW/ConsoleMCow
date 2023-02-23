@@ -52,10 +52,10 @@ public:
 	static Action getActionByStr(const std::string &str); 
 	static double CalcBetRatio(const double dPot, const std::vector<Action>& actions, int iLastIdx, const double dEstack = 0); //只有allin才填写dEstack
 
-	//多人对抗函数
-	//static std::vector<std::pair<Position, Action>> parseMultiActionSquence(const std::string& sOriActionInfo, std::vector<std::pair<Position, Action>> posActions);
+	//多人对抗函数(目前仅供CActionLine调用)
 	static std::vector<std::pair<Position, Action>> parseMultiActionSquence(const std::string& sOriActionInfo);
-	static double CalcMultiBetRatio(const double dPot, const std::vector<std::pair<Position, Action>>& posActions);
+	static double CalcMultiBetRatio(const double dPot, const std::vector<std::pair<Position, Action>>& posActions); //pot为换街初始pot
+	static double CalcBetSize(const double dPot, const std::vector<std::pair<Position, Action>>& posActions, const Position heroPosition, const double dSizeByPot); //2人，多人调用同一个,最后一个为对手行动
 
 	void LoadMacro(std::string path);
 

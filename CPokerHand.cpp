@@ -531,6 +531,11 @@ PublicStruct CPokerHand::getPublicStruct(const MyCards& publics)
     ps.nNeedtoStraight = pClasses.m_needtoStraight;
     ps.nPair = (int)pClasses.m_pair.size() / 2;
 
+    for (auto it : publics) { //记录最大高张
+        if (it.m_point > ps.nMaxRank)
+            ps.nMaxRank = it.m_point;
+    }
+
     if (publics.size() == 5) { //river
 
         int nMaxPoint = 0;
@@ -1156,8 +1161,8 @@ bool CPokerHand::isRankCatchBluff(const  MadehandStruct& madehandStruct, const D
         return true;
     }
 
-    //一张或两张成花，花以下，对以上牌型都是
-    if (publicStruct.nNeedtoFlush >= 1 && Rank_PokerClass[madehandStruct.pokerClass] >= Rank_PokerClass[MAX_PAIR] && Rank_PokerClass[madehandStruct.pokerClass] < Rank_PokerClass[MAX_FLUSH]) {
+    //一张成花，花以下，对以上牌型都是
+    if (publicStruct.nNeedtoFlush == 1 && Rank_PokerClass[madehandStruct.pokerClass] >= Rank_PokerClass[MAX_PAIR] && Rank_PokerClass[madehandStruct.pokerClass] < Rank_PokerClass[MAX_FLUSH]) {
         return true;
     }
 
@@ -1177,496 +1182,558 @@ RankGroup CPokerHand::getPokerEvaluate_made(const  MadehandStruct& madehandStruc
 {
     RankGroup rankGroup;
 
-    //A: ev_nuts
+    //A0: ev_nuts
         //ev_nuts - evsub_large
         //
         //2_nuts同花顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //1_nuts同花顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_nuts炸弹
     if (madehandStruct.pokerClass == MAX_FOUR_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //1_nuts炸弹
     if (madehandStruct.pokerClass == MAX_FOUR_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_nuts葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_nuts - evsub_middle
+    //A1: ev_nuts - evsub_middle
     // 
     //2_小同花顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 1) {
         setRankGroup(rankGroup, ev_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_大葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_中葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_nuts - evsub_small
+    //A2: ev_nuts - evsub_small
     // 
     //n_nuts花(无一张成同花顺)
     if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum >= 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
         publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_nuts顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_顶set
     if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 == 0 && publicStruct.nNeedtoStraight == 0) {
         setRankGroup(rankGroup, ev_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //B; ev_sec_nuts
-        //ev_sec_nuts - evsub_large
-        // 
-        //1_nuts公牌炸弹_高张A(控抽水)
+    //B0; ev_sec_nuts
+    //ev_sec_nuts - evsub_large
+    // 
+    //1_nuts公牌炸弹_高张A(控抽水)
     if (madehandStruct.pokerClass == MAX_FOUR_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //1_nuts顺(控抽水)
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_sec_nuts - evsub_middle
+    //B1: ev_sec_nuts - evsub_middle
     // 
     //2_大公牌3条葫芦 
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 2) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_超成手对3条葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_小葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 3 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_中顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_中set(包括顶set)
     if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_sec_nuts - evsub_small
+    //B2: ev_sec_nuts - evsub_small
     // 
     //2_大花(rank <=2)
     if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 0 &&
         publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_小set
     if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_大2对(中2对)
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 0 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_sec_nuts, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //C: ev_large
-            //ev_large - evsub_large
-            // 
-            //1_大葫芦
+    //C0: ev_large
+    //ev_large - evsub_large
+    // 
+    //1_大葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 0) {
         setRankGroup(rankGroup, ev_large, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //1_大踢3条葫芦
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 1) {
         setRankGroup(rankGroup, ev_large, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //1_大顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_large, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
+    }
+    //2_nuts花_有公对
+    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
+        publicStruct.nPair == 1) {
+        setRankGroup(rankGroup, ev_large, evsub_large);
+        goto CHECK_RIVER;
     }
 
-    //ev_large - evsub_middle
+    //C1: ev_large - evsub_middle
     // 
     //1_小同花顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1) {
         setRankGroup(rankGroup, ev_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_小花(rank >2)
     if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank > 2 && madehandStruct.nAppend == 0 &&
         publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_小顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_顺_有公对
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 1) {
         setRankGroup(rankGroup, ev_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
-    //1_3条_小踢（1_3条_大踢）
-    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
-        setRankGroup(rankGroup, ev_large, evsub_middle);
-        return rankGroup;
-    }
-
-    //ev_large - evsub_small
-    // 
-    //2_小2对
-    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 0) {
-        setRankGroup(rankGroup, ev_large, evsub_small);
-        return rankGroup;
-    }
-
-    //大超对 C 
-    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
-        setRankGroup(rankGroup, ev_large, evsub_small);
-        return rankGroup;
-    }
-
-    //D: ev_sec_large
-            //ev_sec_large - evsub_large
-            // 
-            //1_小同花顺
+    //1_小同花顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
-    }
-    //1_小葫芦
-    if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank > 1 && madehandStruct.nAppend == 0) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
-    }
-    //1_大花(<=2)
-    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nPair == 0) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
-    }
-    //1_nuts花_有公对(2_nuts花_有公对)
-    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
-        publicStruct.nPair == 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
-    }
-    //1, 2_nuts花_一张成同花顺
-    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+        setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
     }
     //2_set_2张成顺
     if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 &&
-        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoStraight == 2) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 2) {
+        setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
     }
-    //2_2对_2张成顺
+
+    //C2: ev_large - evsub_small
+    // 
+    //1_3条_小踢（1_3条_大踢）
+    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
+        setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+
+    //2_小2对
+    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 0 && publicStruct.nPair == 0) {
+        setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+
+    //大超对 C(A-Q)
+    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 1 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
+        setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+
+    //D0: ev_sec_large
+    //ev_sec_large - evsub_large
+    // 
+    //1_nuts花_有公对（turn C1,river D0）
+    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
+        publicStruct.nPair == 1) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_large);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
+    }
+    //2_2对_2张成顺（turn C1,river D0）
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoStraight == 2 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight == 2 && publicStruct.nPair == 0) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_large);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
+    }
+    //中超对 D
+    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 5 && madehandStruct.nAppend == 1 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
+    }
+    //2_花_有公对（turn C2,river D0）
+    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
+        publicStruct.nPair == 1) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_large);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+    //1_3条_2张成顺（turn C1,river D0）
+    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 &&
+        (publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoStraight == 2)) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_large);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
+    }
+
+    //D1: ev_sec_large - evsub_middle
+    // 
+    //2_大2对_(中2对)_有公对
+    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 0 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 1) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
     }
     //2_顺_2张成花
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
         publicStruct.nNeedtoFlush == 2) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
     }
-    //中超对 D
-    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 5 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+    //1, 2_nuts花_一张成同花顺
+    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
     }
-    //2_大2对_(中2对)_有公对
-    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_large);
-        return rankGroup;
+    //1_大花(<=2)
+    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 0 &&
+        publicStruct.nPair == 0) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
     }
-
-    //ev_sec_large - evsub_middle
-    // 
-    //2_花_有公对
-    if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
+    //1_小葫芦
+    if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank > 1 && madehandStruct.nAppend == 0) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
+    }
+    //2_2对_2带公对
+    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1 &&
         publicStruct.nPair == 1) {
         setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
-    }
-    //2_set_2张成花(包括2张成顺的)
-    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 &&
-        publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
-    }
-    //1_3条_2张成花（1_3条_2张成顺）
-    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 &&
-        (publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1 || publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoStraight == 2)) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
-    }
-    //2_2对_2张成花(或带公对)
-    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
-        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //超对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //顶对顶T D
-    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend >= 9 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend >= 10 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_sec_large, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
+    }
+    //1_顺_有公对
+    if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank != 2 && madehandStruct.nAppend == 0 &&
+        (publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoFlush != 1 || publicStruct.nPair == 1)) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_middle);
+        goto CHECK_RIVER;
     }
 
-    //ev_sec_large - evsub_small
+    //D2: ev_sec_large - evsub_small
     // 
-    //2_set_1张成顺(2_set_1张成花)
+    //2_set_1张成顺（turn C2,river D1）
     if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND &&
-        (publicStruct.nNeedtoFlush == 1 || publicStruct.nNeedtoStraight == 1)) {
+        (publicStruct.nNeedtoFlush == 1)) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_small);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+    //2_set_1张成花（turn C2,river D1）
+    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND &&
+        (publicStruct.nNeedtoStraight == 1)) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_small);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+    //A对大踢(>=Q)
+    if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 14 &&
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_sec_large, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
+    }
+    //2_2对_2张成花
+    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
+        publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 0) {
+        setRankGroup(rankGroup, ev_sec_large, evsub_small);
+        goto CHECK_RIVER;
+    }
+    //2_set_2张成花（turn C1,river D1）
+    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 2 &&
+        publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_small);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
+    }
+    //1_3条_2张成花（turn C1,river D1）
+    if (madehandStruct.pokerClass == MAX_THREE_OF_A_KIND && madehandStruct.nNeedHandsNum == 1 &&
+        (publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1)) {
+        if (blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_small);
+        else
+            setRankGroup(rankGroup, ev_large, evsub_middle);
+        goto CHECK_RIVER;
     }
 
-    //E: ev_middle
-            //ev_middle - evsub_large
-            // 
-            //1_大花_有公对
+    //ev_middle
+    //E0: ev_middle - evsub_large
+    // 
+    //1_大花_有公对
     if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 0 &&
         publicStruct.nPair == 1) {
         setRankGroup(rankGroup, ev_middle, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
-    //1_顺_有公对(1_顺_2张成花)
+    //1_顺_2张成花
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank != 2 && madehandStruct.nAppend == 0 &&
-        (publicStruct.nNeedtoFlush == 2 || publicStruct.nPair == 1)) {
+        (publicStruct.nNeedtoFlush == 2)) {
         setRankGroup(rankGroup, ev_middle, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_成手中对3条葫芦(1_次对3条葫芦)
     if (madehandStruct.pokerClass == MAX_FULL_HOUSE && madehandStruct.nNeedHandsNum > 0 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 1) {
         setRankGroup(rankGroup, ev_middle, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_middle - evsub_middle
+    //E1: ev_middle - evsub_middle
     // 
     //顶对中T E
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 4 && madehandStruct.nAppend >= 9 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //小超对 E
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank > 5 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_middle - evsub_small
+    //E2: ev_middle - evsub_small
     // 
     //顶对小T E
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank > 4 && madehandStruct.nAppend >= 9 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //顶对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 2 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //小顶对 E
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nAppend < 9 && madehandStruct.nAppend > 4 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //F: ev_small
-            //ev_small - evsub_large
-            // 
-            //1_大花_单张同花顺
+    //F0: ev_small
+    //ev_small - evsub_large
+    // 
+    //1_大花_单张同花顺
     if (madehandStruct.pokerClass == MAX_FLUSH && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 2 && madehandStruct.nAppend == 1) {
         setRankGroup(rankGroup, ev_small, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //超对_2张成花
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 1 &&
         publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //顶对_2张成花
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 &&
         publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_large);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_small - evsub_middle
+    //F1: ev_small - evsub_middle
     // 
     //1_小顺
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nPair == 0) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nPair == 0) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_顺_有3条或2对 ?
     if (madehandStruct.pokerClass == MAX_STRAIGHT && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
         (publicStruct.pokerClass == MAX_THREE_OF_A_KIND || publicStruct.nPair == 2) && publicStruct.nNeedtoFlush != 1) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //超对_2张成花_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 1 &&
         publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //顶对_2张成花_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 2 &&
         publicStruct.nNeedtoFlush == 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //成手次对
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //次对
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_middle);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //ev_small - evsub_small
+    //F2: ev_small - evsub_small
     // 
     //2_2对_1张成花(2_2对_1张成顺)
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nAppend == 0 &&
         (publicStruct.nNeedtoFlush == 1 || publicStruct.nNeedtoStraight == 1)) {
         setRankGroup(rankGroup, ev_small, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //成手次对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //次对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 2 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_small, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //2_小2对_有公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1 && publicStruct.nPair == 1) {
         setRankGroup(rankGroup, ev_small, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
-    //F：ev_catch_bulff
+    //G：ev_catch_bulff
         //ev_catch_bulff - evsub_small
         //
         //成手次次对
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_catch_bulff, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //次次对
     if (madehandStruct.pokerClass == MAX_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 1 && madehandStruct.nAppend == 0 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_catch_bulff, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //成手次次对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 2 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 1 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_catch_bulff, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
     //次次对_带公对
     if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 2 && madehandStruct.nAppend == 2 &&
-        publicStruct.nNeedtoFlush == 0 && publicStruct.nNeedtoStraight != 1) {
+        publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_catch_bulff, evsub_small);
-        return rankGroup;
+        goto CHECK_RIVER;
     }
 
 
+    CHECK_RIVER:
     //river需要把一些排列重置为抓咋牌
     if (blRiver) {
         if (isRankCatchBluff(madehandStruct, drawStruct, publicStruct)) {
             int evsub = evsub_small; //只简单分大和小
             if (Rank_PokerClass[madehandStruct.pokerClass] > Rank_PokerClass[MAX_PAIR]) evsub = evsub_large;
-            setRankGroup(rankGroup, ev_catch_bulff, evsub);
-            return rankGroup;
+                setRankGroup(rankGroup, ev_catch_bulff, evsub);
         }
 
         //river把公牌同花顺、顺 nuts的设为ev_sec_nuts，evsub_large，表示不主动下注，但不fold； river把公牌同花顺、顺、葫芦（对大于3条点数的?）非nuts的设为抓咋牌

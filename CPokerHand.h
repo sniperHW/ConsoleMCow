@@ -104,7 +104,7 @@ public:
             }
         }
         int nLack = 5 - nMaxSameSuit;
-        if (nLack >= 1 && nLack <= 2)
+        if (nLack >= 1 && nLack <= 3) //只有2个同花也要判断
             m_needtoFlush = nLack;
 
         //检查顺子

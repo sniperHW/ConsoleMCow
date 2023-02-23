@@ -634,13 +634,13 @@ double CStrategy::CalcBetRatio(const double dPot, const vector<Action>& actions,
 	return dRatio;
 }
 
-//解析多人格式，和2人不同（allin如果小于R则当C），而且是解析整条当前街（不是增量）
+//解析多人格式，和2人不同（allin如果小于R则当C），而且是解析整条当前街（不是增量）(Open时O没有)
 vector<pair<Position, Action>> CStrategy::parseMultiActionSquence(const string& sOriActionInfo)
 {
 	vector<pair<Position, Action>> posActions;
 	string sOriActionInfoTmp = sOriActionInfo;
 	auto pos = sOriActionInfo.rfind('>');
-	if (pos != string::npos && pos != sOriActionInfo.size() - 1) 
+	if (pos != string::npos) 
 		sOriActionInfoTmp = sOriActionInfo.substr(pos + 1, sOriActionInfo.size());
 
 	if (sOriActionInfoTmp.empty())
@@ -754,6 +754,46 @@ double CStrategy::CalcMultiBetRatio(const double dPot, const vector<pair<Positio
 		cout << "error: CalcMultiBetRatio can't be 0." << endl;
 
 	return ret;
+}
+
+//按下注比例计算具体size,2人，多人调用同一个,最后一个为对手行动,公式为：size = (pot+差额)*比例+差额 (size在客户端精确到int)
+double CStrategy::CalcBetSize(const double dPot, const std::vector<std::pair<Position, Action>>& posActions, const Position heroPosition, const double dSizeByPot)
+{
+	//记录位置对应的累计下注额
+	map<Position, double> posSizes;
+	double dRecentRSize = 0;
+	double dPotTotal = dPot; 
+	for (int i = 0; i < posActions.size(); i++) {
+		if (posActions[i].second.actionType == raise || posActions[i].second.actionType == allin) {
+			dRecentRSize = posActions[i].second.fBetSize;
+			posSizes[posActions[i].first] += posActions[i].second.fBetSize;
+			dPotTotal += posActions[i].second.fBetSize;
+		}
+		else if (posActions[i].second.actionType == call) {
+			posSizes[posActions[i].first] += dRecentRSize;
+			dPotTotal += dRecentRSize;
+		}
+	}
+
+	//最后R的位置
+	Position posLastR;
+	auto p = posActions.rbegin();
+	while (p != posActions.rend()) {
+		if (p->second.actionType == raise || p->second.actionType == allin) {
+			posLastR = p->first;
+			break;
+		}
+		else
+			p++;
+	}
+
+	//差额
+	double dDif = posSizes[posLastR] - posSizes[heroPosition];
+	
+	//size = (pot+差额)*比例+差额
+	double dRet = (dPotTotal + dDif) * dSizeByPot + dDif;
+
+	return dRet;
 }
 
 

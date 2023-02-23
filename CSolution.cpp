@@ -146,13 +146,14 @@ Action CSolution::HeroAction(const string& sActionLine)
 
 		break;
 	}
-	case multi_players: { //flop后多人模式,留待实现
-
+	case multi_players: { 
+		Action a = g_multiStrategy.GetHeroAction(m_actionLine.m_multiCondition, m_actionLine.m_pokerEv); //这里计算后立即返回
 #ifdef DEBUG_
-		cout << "HeroAction multi_players:---------------------------------------------------" << endl << endl;
+		cout << "HeroAction multi_players:---------------------------------------------------" << endl;
+		cout << "action: " << action2symbol(a) << endl << endl;
 #endif 
 
-		return g_multiStrategy.GetHeroAction(m_actionLine.m_multiCondition, m_actionLine.m_pokerEv); //这里计算后立即返回
+		return a;
 	}
 	}//end of switch
 
@@ -256,7 +257,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 #endif
 
 	}
-	else if (m_strategyFrom == multi_players) {
+	else if (m_strategyFrom == multi_players) { //这里不需要做如何事
 
 #ifdef DEBUG_
 		cout << "ChangeRound multi_players:----------------------------------------------------" << endl << endl;
@@ -346,6 +347,8 @@ Action CSolution::CalcHeroAction(const CStrategy& strategy)
 {
 	//备忘：preflop需要检查betsize的合法性
 	//当preflop，hero的手牌无对应策略，直接当fold处理（因为筹码深度可能由大变小）,flop后找牌型最接近的
+	//比例和size都要填写，平台支持比例和默认比例按钮存在则用比例，否则用size，比例转为size调用strategy::CalcBetSize()
+	//当size>hero当前剩余筹码时转为allin
 	return Action{};
 }
 

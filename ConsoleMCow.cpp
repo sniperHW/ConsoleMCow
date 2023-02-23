@@ -104,62 +104,6 @@ extern bool loadFileAsLine(const string& path,vector<string> &lines);
 int main()
 {
 
-	{
-		std::string request = std::string("set_pot 50\n");
-		request.append("set_effective_stack 200\n");
-		request.append("set_board Qs,Jh,2h\n");
-		request.append("set_range_ip AA,KK,QQ,JJ,TT,99:0.75,88:0.75,77:0.5,66:0.25,55:0.25,AK,AQs,AQo:0.75,AJs,AJo:0.5,ATs:0.75,A6s:0.25,A5s:0.75,A4s:0.75,A3s:0.5,A2s:0.5,KQs,KQo:0.5,KJs,KTs:0.75,K5s:0.25,K4s:0.25,QJs:0.75,QTs:0.75,Q9s:0.5,JTs:0.75,J9s:0.75,J8s:0.75,T9s:0.75,T8s:0.75,T7s:0.75,98s:0.75,97s:0.75,96s:0.5,87s:0.75,86s:0.5,85s:0.5,76s:0.75,75s:0.5,65s:0.75,64s:0.5,54s:0.75,53s:0.5,43s:0.5\n");
-		request.append("set_range_oop QQ:0.5,JJ:0.75,TT,99,88,77,66,55,44,33,22,AKo:0.25,AQs,AQo:0.75,AJs,AJo:0.75,ATs,ATo:0.75,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQ,KJ,KTs,KTo:0.5,K9s,K8s,K7s,K6s,K5s,K4s:0.5,K3s:0.5,K2s:0.5,QJ,QTs,Q9s,Q8s,Q7s,JTs,JTo:0.5,J9s,J8s,T9s,T8s,T7s,98s,97s,96s,87s,86s,76s,75s,65s,64s,54s,53s,43s\n");
-		request.append("set_bet_sizes oop,flop,bet,50\n");
-		request.append("set_bet_sizes oop,flop,raise,60\n");
-		request.append("set_bet_sizes oop,flop,allin\n");
-		request.append("set_bet_sizes ip,flop,bet,50\n");
-		request.append("set_bet_sizes ip,flop,raise,60\n");
-		request.append("set_bet_sizes ip,flop,allin\n");
-		request.append("set_bet_sizes oop,turn,bet,50\n");
-		request.append("set_bet_sizes oop,turn,raise,60\n");
-		request.append("set_bet_sizes oop,turn,allin\n");
-		request.append("set_bet_sizes ip,turn,bet,50\n");
-		request.append("set_bet_sizes ip,turn,raise,60\n");
-		request.append("set_bet_sizes ip,turn,allin\n");
-		request.append("set_bet_sizes oop,river,bet,50\n");
-		request.append("set_bet_sizes oop,river,donk,50\n");
-		request.append("set_bet_sizes oop,river,raise,60,100\n");
-		request.append("set_bet_sizes oop,river,allin\n");
-		request.append("set_bet_sizes ip,river,bet,50\n");
-		request.append("set_bet_sizes ip,river,raise,60,100\n");
-		request.append("set_bet_sizes ip,river,allin\n");
-		request.append("set_allin_threshold 0.67\n");
-		request.append("build_tree\n");
-		request.append("set_thread_num 8\n");
-		request.append("set_accuracy 0.5\n");
-		request.append("set_max_iteration 200\n");
-		request.append("set_print_interval 10\n");
-		request.append("set_use_isomorphism 1\n");
-		request.append("start_solve\n");
-		request.append("set_dump_rounds 2\n");
-		request.append("dump_result output_result.json\n");
-
-		CNet::InitNetSystem();
-
-		auto resp = CNet::Request(std::string("127.0.0.1"), 8081, request);
-
-		auto jsonStr = resp->GetData();
-
-		Json::Value root;
-		Json::CharReaderBuilder builder;
-		JSONCPP_STRING errs;
-		std::istringstream istr(jsonStr);
-		if (!parseFromStream(builder, istr, &root, &errs)) {
-			std::cout << errs << std::endl;
-		}
-		else {
-			std::cout << "parse json ok" << std::endl;
-		}
-
-	}
-
-
 	if (!LoadConfigs(Max6_NL50_SD100)) {
 		cout << "Load config error!" << endl;
 		return 0;
@@ -167,12 +111,52 @@ int main()
 	else
 		cout << "Load Config finished." << endl;
 
-	//CWdebug::DeleteDump();
-	CSolution testSolution;
 
-	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[CO];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]R2.5,[HJ]C");
-	testSolution.ChangeRound("[CO]C,[BTN]F,[SB]F,[BB]F<KsKdKc>pot=9;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
+	//CWdebug::DeleteDump();
+
+	CSolution testSolution;
+	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<8h8d>;");
+	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F");
+	testSolution.ChangeRound("[BTN]R2.5,[SB]C,[BB]C<Ts8c2d>pot=7.5;EStack=[BTN]97.5,[SB]97.5,[BB]97.5;");
+	testSolution.HeroAction("");
+	testSolution.ChangeRound("[BTN]R2.5,[SB]C,[BB]C<3h>pot=15;EStack=[BTN]95,[SB]95,[BB]95;");
+	testSolution.HeroAction("");
+	testSolution.ChangeRound("[BTN]X,[SB]X,[BB]X<Kh>pot=15;EStack=[BTN]95,[SB]95,[BB]95;");
+	testSolution.HeroAction("");
+	testSolution.HeroAction("[BTN]R5,[SB]F,[BB]R15");
+
+
+	//testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<Ah5h>;");
+	//testSolution.HeroAction("[UTG]R2.5,[HJ]C,[CO]F");
+	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ts8c9d>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
+	//testSolution.HeroAction("[UTG]X,[HJ]X");
+	//testSolution.ChangeRound("[BTN]X<3h>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
+	//testSolution.HeroAction("[UTG]X,[HJ]X");
+	//testSolution.ChangeRound("[BTN]X<Ad>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
+	//estSolution.HeroAction("[UTG]R4.5,[HJ]C");
+
+	//testSolution.HeroAction("[HJ]R23.7,[CO]F,[BB]R47.4");
+	//testSolution.HeroAction("[BTN]R10,[UTG]R30,[CO]F");
+
+	//testSolution.ChangeRound("[HJ]R7.5,[CO]C,[UTG]C<Kh>pot=45;EStack=[UTG]85.5,[HJ]85.5,[CO]85.5;");
+	//testSolution.HeroAction("[UTG]X");
+
+
+	//testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<7h7d>;");
+	//testSolution.HeroAction("");
+	//testSolution.ChangeRound("[UTG]R2.5,[HJ]C,[CO]C,[BTN]F,[SB]F,[BB]F<As7s8c>pot=9;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
+	//testSolution.HeroAction("");
+	//testSolution.ChangeRound("[UTG]R3,[HJ]C,[CO]C<Kh>pot=18;EStack=[UTG]94.5,[HJ]94.5,[CO]94.5;");
+	//testSolution.HeroAction("");
+
+
+
+
+	//testSolution.HeroAction("[UTG]R2.5,[HJ]C");
+	//testSolution.ChangeRound("[CO]F,[BTN]F,[SB]F,[BB]F<As7d8c>pot=9;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
+	//testSolution.HeroAction("");
+
+
 	//testSolution.HeroAction("[UTG]R3,[HJ]C");
 	//testSolution.HeroAction("[CO]R8,[UTG]R19,[HJ]C");
 
@@ -183,20 +167,10 @@ int main()
 	//testSolution.ChangeRound("[HJ]C,[CO]C,[BTN]F,[SB]F,[BB]F<KsKdKc>pot=6.5;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
+
+
+
 
 /*测试牌型
 MyCards privates;

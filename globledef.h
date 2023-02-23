@@ -24,6 +24,7 @@
 #define DEBUG_
 #endif 
 
+
 const int COMBO_COUNT = 1326;
 const int ISOFLOP_COUNT = 1755;
 const double MIN_ALLIN_EV = 1;	//replace时，目标策略不存在则转为allin,条件是allin的EV>MIN_ALLIN_EV
@@ -35,6 +36,9 @@ const std::array<std::string, 6> PositionSymble{"UTG","HJ","CO","BTN","SB","BB"}
 const std::array<int, 5> CandicateStackDepth{ 20,50,75,100,150 };
 const std::string sDoubleNLimpRAbbr{ "#_vs_nlimp2raise" };
 const std::array<std::string, 169> AbbrComboMapping{ "22","33","44","55","66","77","88","99","AA","KK","QQ","JJ","TT","AKs","AKo","AQs","AJs","AQo","KQs","ATs","AJo","KJs","KQo","QJs","KTs","A9s","ATo","QTs","A8s","JTs","A7s","A5s","KJo","K9s","A4s","A6s","Q9s","A3s","T9s","QJo","J9s","A2s","KTo","A9o","K8s","QTo","K7s","JTo","Q8s","K6s","T8s","A8o","J8s","K5s","98s","A5o","A7o","K4s","K9o","Q7s","K3s","Q6s","A4o","T7s","A6o","K2s","J7s","Q9o","T9o","Q5s","97s","A3o","J9o","87s","Q4s","Q3s","A2o","K8o","76s","Q2s","J6s","T6s","J5s","65s","96s","86s","54s","K7o","J4s","Q8o","T8o","J3s","J8o","K6o","75s","98o","J2s","T5s","K5o","T4s","64s","53s","85s","95s","T3s","K4o","T2s","43s","Q7o","74s","K3o","Q6o","T7o","J7o","97o","63s","87o","K2o","52s","Q5o","93s","84s","94s","42s","92s","Q4o","32s","73s","76o","Q3o","65o","54o","86o","T6o","Q2o","J6o","96o","62s","J5o","83s","82s","J4o","75o","J3o","72s","64o","53o","J2o","85o","T5o","95o","T4o","43o","T3o","T2o","74o","63o","52o","42o","84o","93o","94o","92o","32o","73o","62o","82o","83o","72o" };
+
+const double ALLIN_THRESHOLD_RAISE = 0.4;   //(暂时不用)非river时，当hero动作为raise,raise后剩余筹码占底池比例<ALLIN_THRESHOLD_RAISE,则raise变成allin
+const double ALLIN_THRESHOLD_CALL = 0.2;    //当hero剩余筹码占当时底池<ALLIN_THRESHOLD_CALL时，最差临界牌型也要跟注
 
 typedef enum { Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20}GameType; //SD为筹码深度，每个筹码深度相关配置和数据都独立
 typedef enum { preflop, flop, turn, river }Round;
@@ -57,10 +61,10 @@ typedef std::unordered_map<std::string, double> RangeData;
 typedef std::vector<std::pair<std::string, std::string>> RegexTB; //preflop节点类型匹配表
 
 typedef struct tagAction {
-	ActionType actionType;
-	float fBetSize; //下注bb数，不为0则启用，否则使用fBetSizeByPot，
-	float fBetSizeByPot; //下注占底池比例
-	float fBetSizeByCash; //下注现金数，只用于solution返回时，当 = -1时代表通配
+	ActionType actionType = none;
+	float fBetSize = 0; //下注bb数，不为0则启用，否则使用fBetSizeByPot，
+	float fBetSizeByPot = 0; //下注占底池比例
+	float fBetSizeByCash = 0; //下注现金数，只用于solution返回时，当 = -1时代表通配
 
 	bool operator==(const tagAction& p)//raise 
 	{
@@ -85,6 +89,20 @@ typedef struct tagAction {
 		else
 			return false;
 	}
+
+    bool operator>(const tagAction& p)
+    {
+        std::map<ActionType, int> actionRanks{ {fold, 0}, { check,1 }, { call,2 }, { raise,3 }, { allin,4 }};
+        if (actionRanks[actionType] > actionRanks[p.actionType])
+            return true;
+        else {
+            if (actionType == raise) {
+                if (fBetSizeByPot > p.fBetSizeByPot)
+                    return true;
+            }  
+        }
+        return false;
+    }
 }Action;
 
 typedef struct tagSuitReplace {
@@ -176,10 +194,11 @@ typedef struct tag_MadehandStruct {
 //公牌结构
 typedef struct tag_PublicStruct {
     PokerClass pokerClass; //最大牌型
-    int nNeedtoFlush = 0; //1,2,3
+    int nNeedtoFlush = 0; //1,2,3,4
     int nNeedtoStraight = 0; //1,2
     int nPair = 0;
-    int nAppend = 0; //当river为同花顺、顺、葫芦时，1代表是nuts,2代表转为抓咋牌
+    int nAppend = 0; //当river为同花顺、顺、葫芦时，1代表是nuts,2代表转为抓咋牌（river时公牌为nuts则不可能flod,足够大时对手可能在咋呼）
+    int nMaxRank = 0; //最大张
 }PublicStruct;
 
 typedef struct tag_OnecardToStraight {
@@ -206,6 +225,8 @@ typedef struct tag_RankGroup {
         else if (nMainGroup == p.nMainGroup) {
             if (nSubGroup < p.nSubGroup)
                 return true;
+            else
+                return false;
         }
         else
             return false;
@@ -226,6 +247,8 @@ typedef struct tag_RankGroup {
         else if (nMainGroup == p.nMainGroup) {
             if (nSubGroup <= p.nSubGroup)
                 return true;
+            else
+                return false;
         }
         else
             return false;
@@ -257,8 +280,24 @@ typedef struct tag_MultiCondition {
     int nPlayerCount;
     double dlBetSize;   //为底池比例
     double dlSpr;       //为新一轮开始时的筹码底池比，有效筹码为hero和其他玩家最大筹码取较小值
-    Multi_Position Position;
+    Multi_Position MultiPosition; //对人中的位置，前中后
     Multi_HeroActive HeroActive;
-}MultiCondition;
+    double dlSprCurrent; //hero动作前,当前hero的有效筹码和底池的比例，用于计算raise allin的阈值和最低标准的call
+
+    std::string sOriActionInfo; //用于计算raise的size
+    Position heroPosition;
+    double dPot;        //换街初始的pot
+    double dHeroEStack;    //换街初始的hero剩余筹码
+}MultiCondition;    //hero的位置
+
+//公牌条件相关定义
+typedef enum { pc_flush, pc_straight, pc_pair, pc_high, pc_none }PublicConditionToCheck;
+typedef enum { lc_and, lc_or, lc_none }LogicCompareSymbol;
+typedef struct tag_PublicCondition {
+    PublicConditionToCheck pcToCheck;
+    CompareSymbol rankComparer;
+    int nCount;
+    LogicCompareSymbol lcComparer;
+}PublicCondition;
 
 #endif // !GLOBLEDEF_H_
