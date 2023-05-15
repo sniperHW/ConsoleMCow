@@ -13,6 +13,7 @@ static int getColor(char c){
 	}
 }
 
+//169集合
 vector<string> CCombo::GetCombosByAbbr(const string& sAbbr)
 {
 	string sCard1, sCard2;
@@ -92,7 +93,7 @@ string CCombo::GetAbbrSymble(const string sCombo)
 
 void CCombo::SetHands(const string sCombo)
 {
-	m_sSymbol = Align(sCombo);
+	m_sSymbol = Align(sCombo); //顺序转为1326中一个
 
 	CCard m_Card1;
 	CCard m_Card2;
@@ -102,9 +103,6 @@ void CCombo::SetHands(const string sCombo)
 	sCard2 = m_sSymbol.substr(2, 2);
 	m_Card1.setCard(sCard1);
 	m_Card2.setCard(sCard2);
-
-	//顺序转为1326中一个
-
 }
 
 std::string CCombo::Align(const std::string sSrc)

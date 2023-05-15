@@ -3,8 +3,7 @@ flop	;B<>(X|O)			;	;		;		;		;initiative	;&&nNeedtoFlush=3				;raise	;0.67	;ev_se
 flop	;.*<>(X|O)			;	;		;		;		;initiative	;							;raise	;0.33	;ev_sec_large,evsub_middle	;ev_nuts,evsub_small		;	;	;
 flop	;.*<>B			;	;		;<14		;		;		;							;raise	;0.5	;ev_large,evsub_small		;ev_sec_nuts,evsub_small	;	;	;	
 flop	;.*<>B			;	;		;		;		;		;&&nNeedtoFlush=3				;raise	;0.5	;ev_sec_nuts,evsub_small	;ev_nuts,evsub_small		;	;	;
-flop	;.*<>B			;<3	;<0.35	;		;multi_back	;		;&&nMaxRank<11				;call	;	;ev_small,evsub_small		;					;	;	;
-flop	;.*<>B			;	;<0.55	;		;		;		;							;call	;	;ev_middle,evsub_small		;					;	;	;
+flop	;B<>B			;	;<0.55	;		;		;		;							;call	;	;ev_middle,evsub_middle	;					;	;	;
 flop	;.*<>B			;	;		;		;		;		;							;call	;	;ev_sec_large,evsub_small	;					;	;	;
 flop	;.*<>3B			;	;		;<16		;multi_front	;		;							;raise	;0.5	;ev_sec_nuts,evsub_small	;ev_nuts,evsub_small		;	;	;
 flop	;.*<>3B			;	;		;		;		;		;							;call	;	;ev_sec_large,evsub_small	;					;	;	;
@@ -18,8 +17,8 @@ turn	;.*<>X<>(X|O)		;	;		;		;		;		;							;raise	;0.5	;ev_sec_large,evsub_small	
 turn	;.*<>X<>B			;	;		;<11		;		;		;							;raise	;0.5	;ev_large,evsub_small		;ev_nuts,evsub_small		;	;	;
 turn	;.*<>X<>B			;	;		;>=11		;		;		;							;raise	;0.75	;ev_sec_nuts,evsub_small	;ev_nuts,evsub_small		;	;	;
 turn	;.*<>X<>B			;	;		;		;multi_front	;		;							;raise	;0.5	;ev_nuts,evsub_small		;					;	;	;
-turn	;.*<>X<>B			;	;<0.35	;		;		;		;							;call	;	;ev_small,evsub_middle		;					;	;	;
-turn	;.*<>X<>B			;	;<0.55	;		;		;		;							;call	;	;ev_middle,evsub_small		;					;	;	;	
+turn	;.*<>X<>B			;<3	;<0.35	;		;		;		;							;call	;	;ev_small,evsub_middle		;					;	;	;
+turn	;.*<>X<>B			;	;<0.55	;		;		;		;							;call	;	;ev_middle,evsub_middle	;					;	;	;	
 turn	;.*<>X<>B			;	;<1.1		;		;		;		;							;call	;	;ev_sec_large,evsub_small	;					;	;	;
 turn	;.*<>X<>B			;	;		;		;		;		;							;call	;	;ev_large,evsub_small		;					;	;	;
 turn	;.*<>B<>(X|O)		;	;		;		;		;initiative	;							;raise	;0.5	;ev_large,evsub_small		;					;	;	;	
@@ -44,7 +43,7 @@ turn	;.*<>3B<>[3-9]B		;	;		;		;		;		;							;call	;	;ev_large,evsub_middle		;			
 turn	;.*<>[4-9]B<>.*		;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_middle	;					;	;	;		
 turn	;.*<>[4-9]B<>.*		;	;		;		;		;		;							;call	;	;ev_large,evsub_middle		;					;	;	;
 
-river	;.*<>X<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.33	;ev_middle,evsub_small		;					;	;	;
+river	;.*<>X<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.33	;ev_middle,evsub_middle	;					;	;	;
 river	;.*<>X<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.5	;ev_large,evsub_small		;					;	;	;	
 river	;.*<>X<>X<>(X|O)	;	;		;		;		;		;							;raise	;1	;ev_sec_nuts,evsub_middle	;					;	;	;	
 river	;.*<>X<>X<>B		;	;<0.76	;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_small	;					;	;	;	
@@ -61,7 +60,7 @@ river	;.*<>X<>X<>3B		;	;		;		;		;		;							;call	;	;ev_sec_nuts,evsub_middle	;		
 river	;.*<>X<>X<>[4-9]B	;	;		;		;		;		;							;raise	;1	;ev_nuts,evsub_small		;					;	;	;
 river	;.*<>X<>X<>[4-9]B	;	;		;		;		;		;							;call	;	;ev_sec_nuts,evsub_middle	;					;	;	;
 
-river	;.*<>B<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.33	;ev_middle,evsub_middle	;					;	;	;			
+river	;.*<>B<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.33	;ev_sec_large,evsub_small	;					;	;	;			
 river	;.*<>B<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.5	;ev_large,evsub_small		;					;	;	;		
 river	;.*<>B<>X<>(X|O)	;	;		;		;		;		;							;raise	;1	;ev_sec_nuts,evsub_large		;					;	;	;		
 river	;.*<>B<>X<>B		;	;<0.76	;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_small	;					;	;	;			
@@ -109,10 +108,10 @@ river	;.*<>B<>B<>[4-9]B	;	;		;		;		;		;							;raise	;0.5	;ev_nuts,evsub_small		
 river	;.*<>3B<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.33	;ev_sec_large,evsub_middle	;					;	;	;			
 river	;.*<>3B<>X<>(X|O)	;	;		;		;		;		;							;raise	;0.5	;ev_large,evsub_small		;					;	;	;		
 river	;.*<>3B<>X<>B		;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_small	;					;	;	;			
-river	;.*<>3B<>X<>B		;	;<0.35	;		;		;		;							;call	;	;ev_middle,evsub_middle	;					;	;	;			
+river	;.*<>3B<>X<>B		;	;<0.35	;		;		;		;							;call	;	;ev_sec_large,evsub_small	;					;	;	;			
 river	;.*<>3B<>X<>B		;	;<0.68	;		;		;		;							;call	;	;ev_sec_large,evsub_middle	;					;	;	;			
 river	;.*<>3B<>X<>B		;	;<1.1		;		;		;		;							;call	;	;ev_large,evsub_small		;					;	;	;		
-river	;.*<>3B<>X<>B		;	;		;		;		;		;							;call	;	;ev_sec_nuts,evsub_small	;					;	;	;			
+river	;.*<>3B<>X<>B		;	;		;		;		;		;							;call	;	;ev_large,evsub_large	;					;	;	;			
 river	;.*<>3B<>X<>[3-9]B	;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_large		;					;	;	;		
 river	;.*<>3B<>X<>[3-9]B	;	;		;		;		;		;							;call	;	;ev_large,evsub_large		;					;	;	;	
 
@@ -120,7 +119,7 @@ river	;.*<>3B<>B<>(X|O)	;	;		;		;		;initiative	;							;raise	;0.5	;ev_large,evs
 river	;.*<>3B<>B<>(X|O)	;	;		;		;		;		;							;raise	;0.5	;ev_large,evsub_large		;					;	;	;		
 river	;.*<>3B<>B<>B		;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_middle	;					;	;	;			
 river	;.*<>3B<>B<>B		;	;<0.68	;		;		;		;							;call	;	;ev_sec_large,evsub_middle	;					;	;	;			
-river	;.*<>3B<>B<>B		;	;		;		;		;		;							;call	;	;ev_sec_nuts,evsub_middle	;					;	;	;			
+river	;.*<>3B<>B<>B		;	;		;		;		;		;							;call	;	;ev_large,evsub_large	;					;	;	;			
 river	;.*<>3B<>B<>[3-9]B	;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_middle	;					;	;	;			
 river	;.*<>3B<>B<>[3-9]B	;	;		;		;		;		;							;call	;	;ev_large,evsub_large		;					;	;	;	
 
@@ -131,7 +130,7 @@ river	;.*<>X<>3B<>B		;	;		;		;		;		;							;raise	;0.5	;ev_sec_nuts,evsub_large	
 river	;.*<>X<>3B<>B		;	;<0.35	;		;		;		;							;call	;	;ev_large,evsub_small		;					;	;	;		
 river	;.*<>X<>3B<>B		;	;<0.68	;		;		;		;							;call	;	;ev_large,evsub_small		;					;	;	;		
 river	;.*<>X<>3B<>B		;	;<1.1		;		;		;		;							;call	;	;ev_large,evsub_large		;					;	;	;		
-river	;.*<>X<>3B<>B		;	;		;		;		;		;							;call	;	;ev_sec_nuts,evsub_middle	;					;	;	;			
+river	;.*<>X<>3B<>B		;	;		;		;		;		;							;call	;	;ev_large,evsub_large		;					;	;	;			
 river	;.*<>X<>3B<>[3-9]B	;	;		;		;		;		;							;raise	;0.5	;ev_nuts,evsub_small		;					;	;	;		
 river	;.*<>X<>3B<>[3-9]B	;	;		;		;		;		;							;call	;	;ev_large,evsub_large		;					;	;	;
 

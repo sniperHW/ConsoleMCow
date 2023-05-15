@@ -180,19 +180,7 @@ inline Multi_HeroActive str2heroActive(const std::string& sSymbol)
 	else
 		return hero_none;
 }
-/*
-const int ev_nuts = 0;
-const int ev_sec_nuts = 1;
-const int ev_large = 2;
-const int ev_sec_large = 3;
-const int ev_middle = 4;
-const int ev_small = 5;
-const int ev_catch_bulff = 6;
 
-const int evsub_large = 0;
-const int evsub_middle = 1;
-const int evsub_small = 2;
-*/
 inline RankGroup str2rankGroup(const std::string& sSymbol)
 {
 	RankGroup rg;
@@ -250,9 +238,7 @@ inline LogicCompareSymbol str2LogicComparer(const std::string& sSymbol)
 		return lc_none;
 }
 
-inline
-
-std::string action2symbol(const Action& a) 
+inline std::string action2symbol(const Action& a) 
 {
 	std::string ret;
 	if (a.actionType == raise) {
@@ -273,6 +259,162 @@ std::string action2symbol(const Action& a)
 	return "E"; //错误标志
 }
 
+inline std::string action2str(const Action& a, const bool byRatio = true)
+{
+	std::string ret;
+	if (a.actionType == raise) {
+		ret = "R";
+		if(!byRatio)
+			ret += double2String(a.fBetSize, 1);
+		else
+			ret = ret + double2String(a.fBetSizeByPot * 100, 1) + "%";
+		return ret;
+	}
+	else if (a.actionType == fold)
+		return "F";
+	else if (a.actionType == check)
+		return "X";
+	else if (a.actionType == allin)
+		return "A";
+	else if (a.actionType == call)
+		return "C";
+
+	return "E"; //错误标志
+}
+
+//exploi
+
+inline OP_obj str2OP_obj(const std::string& s)
+{
+	if (s == "op_value")
+		return op_value;
+	else if (s == "op_bluff")
+		return op_bluff;
+	else if (s == "op_all")
+		return op_all;
+	else
+		return op_all;
+}
+
+inline adjust_methord str2adjust_methord(const std::string& s)
+{
+	if (s == "adjust_ascend")
+		return adjust_ascend;
+	else if (s == "adjust_descend")
+		return adjust_descend;
+	else if (s == "adjust_average")
+		return adjust_average;
+	else
+		return adjust_average;
+}
+
+inline ratio_type str2ratio_type(const std::string& s)
+{
+	if (s == "by_whole")
+		return by_whole;
+	else if (s == "by_action")
+		return by_action;
+	else if (s == "by_valid")
+		return by_valid;
+	else
+		return by_valid;
+}
+
+inline PokerClass str2PokerClass(const std::string& s)
+{
+	if (s == "MAX_HIGH_CARD")
+		return MAX_HIGH_CARD;
+	else if(s == "MAX_PAIR")
+		return MAX_PAIR;
+	else if (s == "MAX_TWO_PAIR")
+		return MAX_TWO_PAIR;
+	else if (s == "MAX_THREE_OF_A_KIND")
+		return MAX_THREE_OF_A_KIND;
+	else if (s == "MAX_STRAIGHT")
+		return MAX_STRAIGHT;
+	else if (s == "MAX_FLUSH")
+		return MAX_FLUSH;
+	else if (s == "MAX_FULL_HOUSE")
+		return MAX_FULL_HOUSE;
+	else if (s == "MAX_FOUR_OF_A_KIND")
+		return MAX_FOUR_OF_A_KIND;
+	else if (s == "MAX_STRAIGHT_FLUSH")
+		return MAX_STRAIGHT_FLUSH;
+	else if (s == "DRAW_STRAIGHT")
+		return DRAW_STRAIGHT;
+	else if (s == "DRAW_FLUSH")
+		return DRAW_FLUSH;
+	else if (s == "DRAW_OTHERS")
+		return DRAW_OTHERS;
+	else
+		return DRAW_NONE;
+}
+
+inline Position str2Position(const std::string& s)
+{
+	if (s == "UTG")
+		return UTG;
+	else if (s == "HJ")
+		return HJ;
+	else if (s == "CO")
+		return CO;
+	else if (s == "BTN")
+		return BTN;
+	else if (s == "SB")
+		return SB;
+	else if (s == "BB")
+		return BB;
+
+	return nonepos;
+}
+
+inline GameType str2gmType(const std::string& s)
+{
+	//Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20
+	if (s == "Max6_NL50_SD150")
+		return Max6_NL50_SD150;
+	else if (s == "Max6_NL50_SD100")
+		return Max6_NL50_SD100;
+	else if (s == "Max6_NL50_SD75")
+		return Max6_NL50_SD75;
+	else if (s == "Max6_NL50_SD50")
+		return Max6_NL50_SD50;
+	else if (s == "Max6_NL50_SD20")
+		return Max6_NL50_SD20;
+
+	return Max6_NL50_SD100;
+}
+
+inline std::string strategyFrom2str(const StrategyFrom strategyFrom)
+{
+	switch (strategyFrom)
+	{
+	case from_wizard:
+		return "from_wizard";
+	case from_solver_presave:
+		return "from_solver_presave";
+	case from_solver_realtime:
+		return "from_solver_realtime";
+	case from_solver_calc:
+		return "from_solver_calc";
+	case multi_players:
+		return "multi_players";
+	case from_strategy_file:
+		return "from_strategy_file";
+	default:
+		return "";
+	}
+}
+
+inline int getRandonNum(const int nMin, const int nMax)
+{
+	//unsigned seed;  // Random generator seed
+	//seed = (unsigned)time(0); // Use the time function to get a "seed” value for srand
+	//srand(seed);
+
+	int number = (rand() % (nMax - nMin + 1)) + nMin;
+	return number;
+}
 
 
 #ifdef MAC 

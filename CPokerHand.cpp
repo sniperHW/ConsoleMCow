@@ -530,10 +530,14 @@ PublicStruct CPokerHand::getPublicStruct(const MyCards& publics)
     ps.nNeedtoFlush = pClasses.m_needtoFlush;
     ps.nNeedtoStraight = pClasses.m_needtoStraight;
     ps.nPair = (int)pClasses.m_pair.size() / 2;
+    ps.blOESDpossible = pClasses.m_blOESDpossible;
 
     for (auto it : publics) { //记录最大高张
         if (it.m_point > ps.nMaxRank)
             ps.nMaxRank = it.m_point;
+
+        if (it.m_point >= high_card_point)
+            ps.nHighCardCount++;
     }
 
     if (publics.size() == 5) { //river
@@ -977,7 +981,7 @@ MadehandStruct CPokerHand::getMadehandStruct(const MyCards& privates, const MyCa
     {
         //纯2对：append=0，hands=2并且不同,rank:0:最大张和次大张，1：最大涨和任意，2：其他；
         //成手对_带公对：append=1，hands=2，rank=0:超对，rank=1:次高队，rank=2其他
-        //对_带公对：append=2，hands=1，rank=0:顶对，1次顶对，2其他
+        //对_带公对：append=2，hands=1，rank=0:顶对顶踢，1：顶对，2次顶对，3其他
         //公牌2公对：append=3,hands=0
         //?带公对时无法区分超对和顶对，对的大小，因此可能带公对的要比不带的评价高（outs少也有合理性）
         set<int> publicsS;
@@ -988,6 +992,22 @@ MadehandStruct CPokerHand::getMadehandStruct(const MyCards& privates, const MyCa
         set<int> In2Pair;
         for (auto it : pClasses.m_pair)
             In2Pair.insert(it.m_point);
+
+        int nPrivateNotInpairPoint = 0; //private非成对的点数,用于判断是否是顶踢
+        bool blIsMaxTick = false;
+        for (auto one_private : privates) {
+            if (In2Pair.find(one_private.m_point) == In2Pair.end()) {
+                nPrivateNotInpairPoint = one_private.m_point;
+                int nDis = 14 - nPrivateNotInpairPoint;
+                for (auto one_pairpoint : In2Pair) {
+                    if (one_pairpoint > nPrivateNotInpairPoint)
+                        nDis--;
+                }
+                if (nDis == 0)
+                    blIsMaxTick = true;
+                break;
+            }
+        }
 
         map<int, int> pairInPublic;
         for (auto it : publics)
@@ -1033,12 +1053,16 @@ MadehandStruct CPokerHand::getMadehandStruct(const MyCards& privates, const MyCa
         {
             madehandStruct.nAppend = 2;
             madehandStruct.nNeedHandsNum = 1;
-            madehandStruct.nRank = 2;
+            madehandStruct.nRank = 3;
 
-            if (privates[0].m_point == publicsV[0] || privates[1].m_point == publicsV[0])
-                madehandStruct.nRank = 0;
+            if (privates[0].m_point == publicsV[0] || privates[1].m_point == publicsV[0]) {
+                if (blIsMaxTick)
+                    madehandStruct.nRank = 0;
+                else
+                    madehandStruct.nRank = 1;
+            }
             else if (privates[0].m_point == publicsV[1] || privates[1].m_point == publicsV[1])
-                madehandStruct.nRank = 1;
+                madehandStruct.nRank = 2;
         }
         else if (nPairCountPublic == 2)
         {
@@ -1598,10 +1622,12 @@ RankGroup CPokerHand::getPokerEvaluate_made(const  MadehandStruct& madehandStruc
         setRankGroup(rankGroup, ev_middle, evsub_small);
         goto CHECK_RIVER;
     }
-    //顶对_带公对
-    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank == 0 && madehandStruct.nAppend == 2 &&
+    //顶对_有公对(顶对顶踢river前为D2)
+    if (madehandStruct.pokerClass == MAX_TWO_PAIR && madehandStruct.nNeedHandsNum == 1 && madehandStruct.nRank <= 1 && madehandStruct.nAppend == 2 &&
         publicStruct.nNeedtoFlush != 1 && publicStruct.nNeedtoFlush != 2 && publicStruct.nNeedtoStraight != 1) {
         setRankGroup(rankGroup, ev_middle, evsub_small);
+        if(madehandStruct.nRank == 0 && !blRiver)
+            setRankGroup(rankGroup, ev_sec_large, evsub_small);
         goto CHECK_RIVER;
     }
     //小顶对 E
@@ -1903,6 +1929,11 @@ PokerEvaluate CPokerHand::getPokerEvaluate(const MyCards& privates, const MyCard
     rankGroup_draw = getPokerEvaluate_draw(madehandStruct, drawStruct, publicStruct);
 
     pokerEvaluate.rankGroup = rankGroup_made > rankGroup_draw ? rankGroup_made : rankGroup_draw;
+
+    if (pokerEvaluate.rankGroup.nMainGroup == -1) {
+        pokerEvaluate.rankGroup.nMainGroup = ev_nothing;
+        pokerEvaluate.rankGroup.nSubGroup = 0;
+    }
 
 
     //for test

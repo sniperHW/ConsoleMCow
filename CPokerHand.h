@@ -20,8 +20,9 @@ public:
     MyCards m_pair;
 
     //形成顺花需要的张数，用于公牌评价
-    int m_needtoFlush = 0; //1,2,3
+    int m_needtoFlush = 0; //1,2,3(?4)
     int m_needtoStraight = 0; //1,2
+    bool m_blOESDpossible = false; //两张点数差<=3(不包括A，只用于flop)
 
     possibleClasses() {};
 
@@ -104,7 +105,7 @@ public:
             }
         }
         int nLack = 5 - nMaxSameSuit;
-        if (nLack >= 1 && nLack <= 3) //只有2个同花也要判断
+        if (nLack >= 1 && nLack <= 4) //只有2个同花也要判断
             m_needtoFlush = nLack;
 
         //检查顺子
@@ -136,6 +137,13 @@ public:
                 }
             }
         }
+        for (int i = 1; i < onlyPointsV.size(); i++) {//先检查单张成顺的
+            if (onlyPointsV[i] - onlyPointsV[i - 1] <= 3 && onlyPointsV[i] != 14 && onlyPointsV[i - 1] != 1) {
+                m_blOESDpossible = true;
+                break;
+            }
+        }
+
 
         //检查3条
         if (!threes.empty()) {
@@ -271,7 +279,6 @@ private:
     bool isClosetoFlush(const MyCards& publics);
     bool getPairDraw(const MyCards& privates, const MyCards& publics);
     DrawStruct getHighCardDraw(const MyCards& privates, const MyCards& publics);
-    PublicStruct  getPublicStruct(const MyCards& publics);
     DrawStruct getDrawStruct(const MyCards& privates, const MyCards& publics, const PublicStruct& publicStruct);
     MadehandStruct getMadehandStruct(const MyCards& privates, const MyCards& publics);
     void setEvaluate(PokerEvaluate& pokerEvaluate, const int nMainGroup, const int nSubGroup, const double score = 0);
@@ -283,6 +290,7 @@ private:
     std::map<PokerClass, int> Rank_PokerClass{ {MAX_HIGH_CARD, 0}, { MAX_PAIR,1 }, { MAX_TWO_PAIR,2 }, { MAX_THREE_OF_A_KIND,3 },{ MAX_STRAIGHT,4 },{ MAX_FLUSH,5 },{ MAX_FULL_HOUSE,6 },{ MAX_FOUR_OF_A_KIND,7 },{ MAX_STRAIGHT_FLUSH,8 } };
 public:
     PokerEvaluate getPokerEvaluate(const MyCards& privates, const MyCards& publics);
+    PublicStruct  getPublicStruct(const MyCards& publics);
 
 };
 

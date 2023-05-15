@@ -59,14 +59,14 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeNameTmp);
 	if (sPath.size() == 0){
-		cout << "error:range file not found," << sPath << endl;
+		cout << "error: range file not found," << sPath << endl;
 		return false;
 	}
 
 	//从范围文件加载数据，OOP和IP对应
 	vector<string> lines;
 	if (!loadFileAsLine(sPath, lines)){
-		cout << "error:range file loadFileAsLine return false,path:" << sPath << endl;
+		cout << "error: range file loadFileAsLine return false,path:" << sPath << endl;
 		return false;
 	}
 
@@ -101,12 +101,12 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	 string sComment = "from_file-after_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
-	DumpRange(sComment, OOP);
-	 sComment = "from_file-after_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
-	DumpRange(sComment, IP);
-#endif
+//#ifdef FOR_TEST_DUMP_DETAIL_
+//	 string sComment = "from_file-after_rmBoare-OOP-" + sNodeName + "-" + sBoardNext;
+//	 DumpRange(sComment, OOP);
+//	 sComment = "from_file-after_rmBoare-IP-" + sNodeName + "-" + sBoardNext;
+//	 DumpRange(sComment, IP);
+//#endif
 
 	return true;
 }
@@ -173,7 +173,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& s
 	}
 
 	if (sLastPlayerPosition == "") {
-		cout << "error:sLastPlayerPosition empty" << endl;
+		cout << "error: sLastPlayerPosition empty" << endl;
 		return false;
 	}
 
@@ -234,7 +234,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& s
 		pRangeRatio = &m_IPRange;
 	}
 	else {
-		cout << "error:sRelativePos not OOP IP" << endl;
+		cout << "error: sRelativePos not OOP IP" << endl;
 		return false;
 	}
 
@@ -256,12 +256,12 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& s
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
 
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_wizard-after_rBoard-OOP-" + sNodeName;
-	DumpRange(sComment, OOP);
-	sComment = "from_wizard-after_rBoard-IP-" + sNodeName;
-	DumpRange(sComment, IP);
-#endif
+//#ifdef FOR_TEST_DUMP_DETAIL_
+//	string sComment = "from_wizard-after_rBoard-OOP-" + sNodeName;
+//	DumpRange(sComment, OOP);
+//	sComment = "from_wizard-after_rBoard-IP-" + sNodeName;
+//	DumpRange(sComment, IP);
+//#endif
 
 	return true;
 }
@@ -438,9 +438,7 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		if (p != m_OOPRange.end())
 			p->second *= it.second;
 		else { 
-#ifdef DEBUG_
-			cout << endl << "rangeOOP not find:" << it.first << endl;
-#endif // DEBUG_
+			cout << endl << "error: Load rangeOOP not find:" << it.first << endl;
 		}
 	}
 
@@ -449,25 +447,13 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 		if (p != m_IPRange.end())
 			p->second *= it.second;
 		else { 
-#ifdef DEBUG_
-			cout << endl << "rangeIP not find:" << it.first << endl;
-#endif // DEBUG_
+			cout << endl << "error: Load rangeIP not find:" << it.first << endl;
 		}
 	}
 
 	//范围中去除新的公牌对应的比例(改为0)，sBoardNext中可能是三张或一张，三张每张对应的都有去除
 	RemoveComboByBoard(m_IPRange, sBoardNext);
 	RemoveComboByBoard(m_OOPRange, sBoardNext);
-
-
-
-#ifdef FOR_TEST_DUMP_DETAIL_
-	string sComment = "from_sover-after_rBoard-OOP-" + sActionSquence;
-	DumpRange(sComment, OOP);
-	sComment = "from_sover-after_rBoard-IP-" + sActionSquence;
-	DumpRange(sComment, IP);
-#endif
-
 
 	return true;
 }
@@ -559,6 +545,39 @@ void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosit
 
 }
 
+void CRange::DumpRange(const string& sComment, const RangeData* pRange) {
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\dump\\";
+	string sCommandsPath = sConfigFolder + "commands.txt";
+	time_t t = time(nullptr);
+	t += rand();
+	string sDataPath = sConfigFolder + to_string(t) + ".txt";
+
+	ofstream ofCommands;
+	ofCommands.open(sCommandsPath, ofstream::out | ios_base::app);
+	if (ofCommands.is_open()) {
+		//格式：87969;	rRng; changeRange1;	D:\VCCode\test\ConsoleTestDataManage\ConsoleTestDataManage\data\Rng1.txt
+		string sLine = to_string(t) + "; " + "rRng; " + sComment + "; " + sDataPath;
+		ofCommands << sLine << endl;
+	}
+	ofCommands.close();
+
+	ofstream ofs;
+	ofs.open(sDataPath, ofstream::out);
+	if (ofs.is_open()) {
+		for (auto it = pRange->begin(); it != pRange->end(); it++) {
+			if (it != pRange->begin()) {
+				ofs << "\n";
+			}
+			ofs << it->first << "," << it->second;
+		}
+	}
+	ofs.close();
+
+}
+
 extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 void CRange::ReadRange(const string& sPath, RangeData& range) {
@@ -568,4 +587,34 @@ void CRange::ReadRange(const string& sPath, RangeData& range) {
 		auto r = split(l,',');
 		range[r[0]] = stringToNum<double>(r[1]);
 	}
+}
+
+RangeData CRange::getAverageRange(const RangeData& rangeDataLow, const RangeData& rangeDataUp, const double dSegmentRatio)
+{
+	RangeData rangeData;
+
+	for (auto combo : ComboMapping) {
+		auto pLow = rangeDataLow.find(combo);
+		auto pUp = rangeDataUp.find(combo);
+
+		if (pLow == rangeDataLow.end() && pUp == rangeDataUp.end())
+			break;
+		else {
+			double dLow = 0;
+			double dUp = 0;
+			double dRatio = 0;
+
+			if (pLow != rangeDataLow.end())
+				dLow = pLow->second;
+
+			if (pUp != rangeDataUp.end())
+				dUp = pUp->second;
+
+			dRatio = min(dLow, dUp) + fabs(dLow - dUp) * dSegmentRatio;
+			if (dRatio > 0)
+				rangeData[combo] = dRatio;
+		}
+	}
+
+	return rangeData;
 }

@@ -9,6 +9,7 @@
 using namespace std;
 
 //返回的动作类型：raise，call，check，raise的size和比例同时返回（看平台的raise比例是否计算正确，如果正确并且有默认按钮则按比例，否则按具体size）(客户端可能需要将allin转为call allin)
+//*draw牌的合理性和模式以后完善
 Action CMultiStrategy::GetHeroAction(const MultiCondition& multiCondition, const PokerEvaluate& pokerEv)
 {
 	Action retAction;
@@ -22,11 +23,6 @@ Action CMultiStrategy::GetHeroAction(const MultiCondition& multiCondition, const
 	bool blBluff = false;
 
 	for (auto item : m_MultiStrategyConfigItems) {
-
-		if (item.m_sActionLineCondition == ".*<>3B<>B")
-			cout << "test";
-
-
 		if (multiCondition.Round != item.m_Round)
 			continue;
 		if(!compareBySymbol(multiCondition.nPlayerCount, item.m_PlayerCountComparer, item.m_nPlayerCount))

@@ -25,7 +25,7 @@ extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 //例：[HJ]C,[BTN]C,[SB]F<KsQd7h>pot=15;EStack=[HJ]95.5,[BB]67;
 bool CActionLine::Parse(const string& sActionLine, CGame& game)
 {
-	CWdebug::Log(game.m_sID + " "+ sActionLine);
+	//CWdebug::Log(game.m_sID + " "+ sActionLine);
 
 	regex reg;
 	smatch m;
@@ -86,6 +86,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		MyCards publics(ToMyCards(game.m_board.GetBoardSymbol()));
 		CPokerHand pokerHand;
 		m_pokerEv = pokerHand.getPokerEvaluate(privates, publics);
+		//m_publicStruct = pokerHand.getPublicStruct(publics);
 	}//end of change round
 
 	//analysis action line（[position]actionsize,","号分割，preflop换圈有"-"）
@@ -167,12 +168,15 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	if (blIsChangeRound) {
 		m_multiCondition.Round = getNextRound(game.m_round); //Round Round;
 		m_multiCondition.HeroActive = heroLastAction.actionType == raise ? hero_initiative : hero_passive; //Multi_HeroActive HeroActive; //前一轮是call还是raise,可以用m_players的lastAction识别
-		//设置round
-		game.m_round = getNextRound(game.m_round);
-		//设置pot
+
+		//pot
 		reg = R"(pot=(.*);)";
+		double dPot;
 		if (regex_search(sActionLine, m, reg))
-			game.m_dPot = stod(m[1]);
+			dPot = stod(m[1]);
+		else
+			cout << "error: parase pot failed, in CActionline multi process." << endl;
+	
 		//设置EStack
 		double dHeroEStack = 0;
 		double dMaxEStack = 0;
@@ -197,15 +201,24 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 
 			//dlSpr;
-			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / game.m_dPot;
+			m_multiCondition.dlSpr = min(dHeroEStack, dMaxEStack) / dPot;
 		}
-		//去除fold的玩家
-		for (auto it = game.m_players.begin(); it != game.m_players.end();) {
-			if (it->second.m_lastAction.actionType == fold) {
-				it = game.m_players.erase(it);
-			}
-			else {
-				it++;
+
+		if (m_blIsMultiPlayer) { //避免重复设置
+			//设置round
+			game.m_round = getNextRound(game.m_round);
+
+			//设置pot
+			game.m_dPot = dPot;
+
+			//去除fold的玩家
+			for (auto it = game.m_players.begin(); it != game.m_players.end();) {
+				if (it->second.m_lastAction.actionType == fold) {
+					it = game.m_players.erase(it);
+				}
+				else {
+					it++;
+				}
 			}
 		}
 	}
@@ -238,11 +251,6 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 
 	if (m_blIsMultiPlayer)
 		return true;
-
-
-
-
-
 
 
 	//将Limp的合成一个
@@ -369,8 +377,10 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	}
 
 	//按当前玩家筹码深度确定游戏类型
-	if (game.m_round == preflop)
+	if (game.m_round == preflop) {
 		game.m_gmType = GetCurGameType(game);
+		game.m_gmTypeBound = GetCurGameTypeBound(game, game.m_dSegmentRatio);
+	}
 
 	//生成preflop的m_sActionSquence和m_sAbbrName
 	if (game.m_round == preflop) {
@@ -481,6 +491,8 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		m_sActionSquence = sNodeName;
 	}//end of preflop
 
+	m_sActionSquenceRatio = getActionSquenceRatio(m_sActionSquence, stacksOri);
+
 	if (blIsChangeRound) {
 		//设置round
 		game.m_round = getNextRound(game.m_round);
@@ -543,6 +555,10 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 		//设置oopx
 		game.m_oopx = GetOOPX(game);
 
+		//填写m_sActionSquenceRatio_Round
+		m_sActionSquenceRatio_round = getActionSquenceRatio(m_sActionSquence, stacksOri);
+		m_sActionSquenceRatio_round = m_sActionSquenceRatio_round + "<" + sBoard + ">";
+
 		//拼接<board>
 		m_sActionSquence = m_sActionSquence + "<" + sBoard + ">";
 		m_sNodeName = m_sNodeName + "<" + sBoard + ">";
@@ -573,6 +589,9 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	cout << "ActionSquence:" << m_sActionSquence << endl;
 	cout << "AbbrName:" << m_sAbbrName << endl;
 	cout << "NodeName:" << m_sNodeName << endl;
+	cout << "ActionSquenceRatio:" << m_sActionSquenceRatio << endl;
+
+	
 	cout << endl ;
 #endif
 
@@ -730,7 +749,7 @@ string CActionLine::ToActionSymbol(const Action& a,bool blRemainSize) {
 	if (a.actionType == raise) {
 		if (blRemainSize) {
 			stringstream ss;
-			ss << setiosflags(ios::fixed) << setprecision(1) << "R" << a.fBetSize;
+			ss << setiosflags(ios::fixed) << setprecision(2) << "R" << a.fBetSize;
 			return ss.str();
 		}
 		else
@@ -747,6 +766,38 @@ string CActionLine::ToActionSymbol(const Action& a,bool blRemainSize) {
 
 	return "E"; //错误标志
 
+}
+
+Action CActionLine::strToAction(const string& s)
+{
+	Action a{ fold,0,0,0 };
+
+	regex reg(R"(([RACXF])(.*))");
+	smatch m;
+	if (regex_search(s, m, reg)) {
+		if (m[1] == "A")
+			a.actionType = allin;
+		else if (m[1] == "C")
+			a.actionType = call;
+		else if (m[1] == "X")
+			a.actionType = check;
+		else if (m[1] == "F")
+			a.actionType = fold;
+		else if (m[1] == "R") {
+			a.actionType = raise;
+			string s = m[2];
+			if (s.empty())
+				return a;
+
+			if (s.find('%')) {
+				s.pop_back();
+				a.fBetSizeByPot = float(stod(m[2])) / (float)100.0;
+			}
+			else
+				a.fBetSize = float(stod(m[2]));
+		}
+	}
+	return a;
 }
 
 
@@ -767,11 +818,64 @@ GameType CActionLine::GetCurGameType(const CGame& game)
 	}
 
 	dChose = dHeroEStack <= dRivalMaxEStack ? dHeroEStack : dRivalMaxEStack;
+
 	return GetGameTypeByStackDepth(MatchStackDepth(dChose));
 }
 
+pair<GameType, GameType> CActionLine::GetCurGameTypeBound(const CGame& game, double& dSegmentRatio)
+{
+	//对手中EStack最大值和hero取小值
+	double dHeroEStack = 0;
+	double dRivalMaxEStack = 0;
+	double dChose = 0;
+	for (auto player : game.m_players) {
+		if (player.second.m_blIsHero)
+			dHeroEStack = player.second.m_dEStack;
+		else {
+			if (player.second.m_lastAction.actionType != fold)
+				dRivalMaxEStack = player.second.m_dEStack > dRivalMaxEStack ? player.second.m_dEStack : dRivalMaxEStack;
+		}
+	}
+
+	dChose = dHeroEStack <= dRivalMaxEStack ? dHeroEStack : dRivalMaxEStack;
+
+	pair<GameType, GameType> ret{GAMETYPE_none, GAMETYPE_none};
+	int nLow = 0;
+	int nUp = 0;
+
+	//先查找单一匹配的，误差10%内
+	double dDif = 0.1;
+	for (int i = 0; i < CandicateStackDepth.size(); i++) {
+		if (fabs(dChose - CandicateStackDepth[i]) < CandicateStackDepth[i] * dDif) {
+			nLow = CandicateStackDepth[i];
+			break;
+		}
+	}
+
+	if (nLow == 0) { //不能单一匹配的
+		auto p = upper_bound(CandicateStackDepth.begin(), CandicateStackDepth.end(), dChose);
+		if (p == CandicateStackDepth.begin())
+			nLow = *p;
+		else if (p == CandicateStackDepth.end())
+			nLow = CandicateStackDepth.back();
+		else {
+			nLow = *(p - 1);
+			nUp = *p;
+		}
+	}
+
+	ret.first = GetGameTypeByStackDepth(nLow);
+	if (nUp != 0) {
+		ret.second = GetGameTypeByStackDepth(nUp);
+		dSegmentRatio = (double)(dChose - nLow) / (double)(nUp - nLow);
+	}
+
+	return ret;
+
+}
+
 //按有效筹码匹配候选深度
-int CActionLine::MatchStackDepth(double dEStack)
+int CActionLine::MatchStackDepth(const double dEStack)
 {
 	double dLowbound = 0.4; //匹配小的允许超出
 
@@ -1027,4 +1131,43 @@ double CActionLine::GetCurrentSpr(CGame& game, const vector<pair<Position, Actio
 	}
 
 	return dHeroEStack / dCurrentpot;
+}
+
+string CActionLine::getActionSquenceRatio(const string& sActionSquence, const Stacks& stacks)
+{
+	string sRet;
+
+	string sActionSquenceTmp = sActionSquence;
+	if (sActionSquenceTmp.find('$') != string::npos || sActionSquenceTmp.find('@') != string::npos)
+		sActionSquenceTmp.pop_back();
+
+	vector<Action> actionSquence = {};
+	string sPrefix = "";
+	Round round;
+	string actionStr = "";
+	if (!CStrategy::parseActionSquence(sActionSquenceTmp, sPrefix, round, actionSquence, actionStr)) {
+		cout << "error:getActionSquenceRatioExploi parase failed" << endl;
+		return "";
+	}
+
+	if (round == preflop)
+		return m_sAbbrName;
+
+	if (sActionSquenceTmp.back() == 'O') {
+		sRet = m_sActionSquenceRatio_round + "O";
+		return sRet;
+	}
+
+	for (int i = 0; i < actionSquence.size(); i++) {
+		if (actionSquence[i].actionType == raise) {
+			double dActuallyRatio = CStrategy::CalcBetRatio(stacks.dPot, actionSquence, i);
+			actionSquence[i].fBetSizeByPot = (float)dActuallyRatio / (float)100.0;
+		}
+
+		string sAction = action2str(actionSquence[i]);
+		sRet.empty() ? sRet += sAction : sRet = sRet + "-" + sAction;
+	}
+
+	sRet = m_sActionSquenceRatio_round + sRet;
+	return sRet;
 }

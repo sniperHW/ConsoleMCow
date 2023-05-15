@@ -10,6 +10,9 @@ CGame::CGame()
 	m_dPot = 100;
 	m_round = preflop;
 	m_oopx = OOPA;
+
+	m_gmTypeBound.first = GAMETYPE_none;
+	m_gmTypeBound.second = GAMETYPE_none;
 }
 
 CPlayer* CGame::GetHero()

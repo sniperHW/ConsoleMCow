@@ -1,0 +1,1 @@
+[NeedtoFlush][2,3)|3 ; [MaxRank]10) ; [pokerClass]MAX_PAIR|MAX_HIGH_CARD ;; [hero]_vs[rivals]_srp<>R[30,40]-R[45-R60] ;; [hero]BTN|CO , [rival]UTG|HJ ;; Max6_NL50_SD150|Max6_NL50_SD100 ;; <AdjustFrequency>[actionToMatch]R50% ; [actionToReplace]F ; [opObj]op_all ; [rgLowestValue]ev_sec_large,evsub_small ; [adjust_methord]adjust_average ; [adjustRatio]0.5 ; [ratio_type]by_valid ;

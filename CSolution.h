@@ -32,8 +32,9 @@ private:
 	CGame m_game;
 	StrategyFrom m_strategyFrom; //获取解的模式（放弃先预存再实时模式）
 
-	Json::Value m_solverResult; //当前街的solver解
-	//Stacks m_StacksByStrategy; //solver解对应的筹码数据，预存从配置中取，实时的实际填写(不用，从配置中获取)
+	//Json::Value m_solverResult; //当前街的solver解
+	Json::Value m_solverResultLow; //当前街的solver解
+	Json::Value m_solverResultUp;
 
 	CActionLine m_actionLine;
 	CRange m_range;
@@ -43,9 +44,14 @@ private:
 	Action ProcessingOffline();
 
 	bool IsMultiPlayers();
-	
-	void DumpSelAction(const std::string& sActionLine);
-	void DumpActionBeforeChangeRound();
+
+	//for current range(exploi)
+	RangeData m_heroCurRange;
+	std::vector<std::shared_ptr<CStrategyItem>> m_heroLastStrategy;
+	void updataHeroCurRange(const std::string& sSelA);
+
+	std::string DumpSelAction(const std::string& sActionLine);
+	void DumpActionBeforeChangeRound(const bool blDumpHero = true);
 };
 
 #endif

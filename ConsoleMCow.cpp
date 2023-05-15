@@ -24,6 +24,7 @@
 #include "CSpecialProcessingMacroConfig.h"
 #include "CPokerHand.h"
 #include "CMultiStrategy.h"
+#include "CExploiConfig.h"
 #include "CNet.h"
 
 using namespace std;
@@ -40,6 +41,7 @@ map<GameType, CSpecialProcessingMacroConfig> g_specialProcessingMacroConfig; //�
 
 CSolver g_solver;
 CMultiStrategy g_multiStrategy;
+CExploiConfig g_ExploiConfig;
 
 bool LoadConfigs(GameType gmType)
 {
@@ -61,7 +63,6 @@ bool LoadConfigs(GameType gmType)
 		return false;
 	else
 		g_strategyTreeConfigs[gmType] = StrategyTreeConfig;
-
 
 	CActionMatchConfig ActionMatchConfig;
 	if (!ActionMatchConfig.Init(gmType))
@@ -93,9 +94,6 @@ bool LoadConfigs(GameType gmType)
 	else
 		g_specialProcessingMacroConfig[gmType] = SpecialProcessingMacroConfig;
 
-	if (!g_multiStrategy.Init())
-		return false;
-
 	return true;
 }
 
@@ -103,314 +101,40 @@ extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 int main()
 {
-
-	if (!LoadConfigs(Max6_NL50_SD100)) {
-		cout << "Load config error!" << endl;
-		return 0;
+	//load 所有gmType的config
+	for (auto gmType : GameTypes) {
+		bool blRet = LoadConfigs(gmType);
+		if (!blRet)
+			cout << "error: load config failed: " << GameTypeName[gmType] << endl;
 	}
-	else
-		cout << "Load Config finished." << endl;
+
+	if (!g_multiStrategy.Init()) 
+		cout << "error: load config failed: g_multiStrategy" << endl;
+
+	if (!g_ExploiConfig.Init())
+		cout << "error: load config failed: g_ExploiConfig" << endl;
+
+	CWdebug::DeleteDump();
 
 
-	//CWdebug::DeleteDump();
+
+
 
 	CSolution testSolution;
-	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<8h8d>;");
-	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F");
-	testSolution.ChangeRound("[BTN]R2.5,[SB]C,[BB]C<Ts8c2d>pot=7.5;EStack=[BTN]97.5,[SB]97.5,[BB]97.5;");
-	testSolution.HeroAction("");
-	testSolution.ChangeRound("[BTN]R2.5,[SB]C,[BB]C<3h>pot=15;EStack=[BTN]95,[SB]95,[BB]95;");
-	testSolution.HeroAction("");
-	testSolution.ChangeRound("[BTN]X,[SB]X,[BB]X<Kh>pot=15;EStack=[BTN]95,[SB]95,[BB]95;");
-	testSolution.HeroAction("");
-	testSolution.HeroAction("[BTN]R5,[SB]F,[BB]R15");
+	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<KsJs>;");
+	testSolution.HeroAction("[UTG]F,[HJ]R2,[CO]F");
 
+	testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<9s7h6h>pot=5.5;EStack=[HJ]98,[BTN]98;");
+	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ks7h4c>pot=5.5;EStack=[HJ]98,[BTN]98;");
+		
+	testSolution.HeroAction("[HJ]R1.9");
 
-	//testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<Ah5h>;");
-	//testSolution.HeroAction("[UTG]R2.5,[HJ]C,[CO]F");
-	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ts8c9d>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
-	//testSolution.HeroAction("[UTG]X,[HJ]X");
-	//testSolution.ChangeRound("[BTN]X<3h>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
-	//testSolution.HeroAction("[UTG]X,[HJ]X");
-	//testSolution.ChangeRound("[BTN]X<Ad>pot=9;EStack=[UTG]97.5,[HJ]97.5,[BTN]97.5;");
-	//estSolution.HeroAction("[UTG]R4.5,[HJ]C");
+	//testSolution.ChangeRound("[BTN]R6.3,[HJ]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
 
-	//testSolution.HeroAction("[HJ]R23.7,[CO]F,[BB]R47.4");
-	//testSolution.HeroAction("[BTN]R10,[UTG]R30,[CO]F");
-
-	//testSolution.ChangeRound("[HJ]R7.5,[CO]C,[UTG]C<Kh>pot=45;EStack=[UTG]85.5,[HJ]85.5,[CO]85.5;");
-	//testSolution.HeroAction("[UTG]X");
-
-
-	//testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<7h7d>;");
-	//testSolution.HeroAction("");
-	//testSolution.ChangeRound("[UTG]R2.5,[HJ]C,[CO]C,[BTN]F,[SB]F,[BB]F<As7s8c>pot=9;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
-	//testSolution.HeroAction("");
-	//testSolution.ChangeRound("[UTG]R3,[HJ]C,[CO]C<Kh>pot=18;EStack=[UTG]94.5,[HJ]94.5,[CO]94.5;");
-	//testSolution.HeroAction("");
-
-
-
-
-	//testSolution.HeroAction("[UTG]R2.5,[HJ]C");
-	//testSolution.ChangeRound("[CO]F,[BTN]F,[SB]F,[BB]F<As7d8c>pot=9;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
-	//testSolution.HeroAction("");
-
-
-	//testSolution.HeroAction("[UTG]R3,[HJ]C");
-	//testSolution.HeroAction("[CO]R8,[UTG]R19,[HJ]C");
-
-
-	//testSolution.HeroAction("[UTG]R2.1");
-	//testSolution.HeroAction("[HJ]C<9s>pot=10.7;EStack=[UTG]145.4,[HJ]145.4;");
-
-	//testSolution.ChangeRound("[HJ]C,[CO]C,[BTN]F,[SB]F,[BB]F<KsKdKc>pot=6.5;EStack=[UTG]97.5,[HJ]97.5,[CO]97.5;");
+	testSolution.HeroAction("[BTN]R6.3,[HJ]R13");
+	//testSolution.ChangeRound("[BTN]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
 
 
 }
-
-
-
-
-/*测试牌型
-MyCards privates;
-MyCards publics;
-
-privates.push_back(myCard("Qc"));
-privates.push_back(myCard("Ad"));
-
-publics.push_back(myCard("Ks"));
-publics.push_back(myCard("3h"));
-publics.push_back(myCard("Jd"));
-//publics.push_back(myCard("3s"));
-//publics.push_back(myCard("3d"));
-
-CPokerHand pokerHand;
-PokerEvaluate pe = pokerHand.getPokerEvaluate(privates, publics);
-//PokerEvaluate pe = testPairEvaluate(privates, publics);
-cout << "rankGroup:  " << pe.rankGroup.nMainGroup << "," << pe.rankGroup.nSubGroup << endl;
-*/
-
-/* 测试命令
-	cout << "Please input commands, gameover to finish." << endl;
-	string sCommand, sRequireHead, sRequireContent;
-	char szBuff[1024];
-	cin.getline(szBuff,1024);
-	sCommand = szBuff;
-	cout << endl;
-	CSolution* pSolution = new CSolution;
-	while (1) {
-		if (sCommand == "gameover") {
-			delete pSolution;
-			pSolution = new CSolution;
-			cout << "New game begin, please input input commands." << endl;
-
-			memset(szBuff, 0, sizeof(szBuff));
-			cin.getline(szBuff, 1024);
-			sCommand = szBuff;
-			cout << endl;
-		}
-		else {
-			auto stSpace = sCommand.find(" ");
-			sRequireContent = sCommand.substr(stSpace +1);
-			sRequireHead = sCommand.substr(0, stSpace);
-
-
-			if (sRequireHead == "InitGame") {
-				pSolution->InitGame(sRequireContent);
-				cout << endl;
-				cout << "Please input next commands, gameover to finish." << endl;
-			}
-			else if (sRequireHead == "HeroAction") {
-				pSolution->HeroAction(sRequireContent);
-				cout << endl;
-				cout << "Please input next commands, gameover to finish." << endl;
-			}
-			else if (sRequireHead == "ChangeRound") {
-				pSolution->ChangeRound(sRequireContent);
-				cout << endl;
-				cout << "Please input next commands, gameover to finish." << endl;
-			}
-
-			memset(szBuff, 0, sizeof(szBuff));
-			cin.getline(szBuff, 1024);
-			sCommand = szBuff;
-			cout << endl;
-		}
-	}
-*/
-
-/* test special
-	CStrategy testStrategy;
-
-	vector<string> combosAK = CCombo::GetCombosByAbbr("AK");
-	vector<string> combosAKs = CCombo::GetCombosByAbbr("AKs");
-
-	shared_ptr<CStrategyItem> strategyItemAllin(new CStrategyItem);
-	strategyItemAllin->m_action.actionType = allin;
-	strategyItemAllin->m_action.fBetSize = 0;
-	for (auto it: ComboMapping)
-		strategyItemAllin->m_strategyData[it] = 0;
-	for (auto it : combosAK)
-		strategyItemAllin->m_strategyData[it] = 0.1;
-	//strategyItemAllin->m_strategyData["AcKc"] = 0.009;
-
-	strategyItemAllin->m_evData["AhKh"] = 0.1;
-	strategyItemAllin->m_evData["AcKc"] = 0.2;
-	strategyItemAllin->m_evData["AdKd"] = 0;
-	strategyItemAllin->m_evData["AsKs"] = 0.09;
-
-
-	shared_ptr<CStrategyItem> strategyItemRaise(new CStrategyItem);
-	strategyItemRaise->m_action.actionType = raise;
-	strategyItemRaise->m_action.fBetSize = 2;
-	for (auto it : ComboMapping)
-		strategyItemRaise->m_strategyData[it] = 0;
-	for (auto it : combosAK)
-		strategyItemRaise->m_strategyData[it] = 0.4;
-	strategyItemRaise->m_strategyData["AcKc"] = 0;
-
-	strategyItemRaise->m_evData["AhKh"] = 0.1;
-	strategyItemRaise->m_evData["AcKc"] = 0.2;
-	strategyItemRaise->m_evData["AdKd"] = 0;
-	strategyItemRaise->m_evData["AsKs"] = 0.09;
-
-	shared_ptr<CStrategyItem> strategyItemCall(new CStrategyItem);
-	strategyItemCall->m_action.actionType = call;
-	for (auto it : ComboMapping)
-		strategyItemCall->m_strategyData[it] = 0;
-	for (auto it : combosAK)
-		strategyItemCall->m_strategyData[it] = 0.2;
-
-
-	shared_ptr<CStrategyItem> strategyItemFold(new CStrategyItem);
-	strategyItemFold->m_action.actionType = fold;
-	for (auto it : ComboMapping) {
-		strategyItemFold->m_strategyData[it] = 1;
-	}
-	for (auto it : combosAK)
-	{
-		strategyItemFold->m_strategyData[it] = 0.3;
-	}
-	strategyItemFold->m_strategyData["AcKc"] = 0.7;
-
-
-	testStrategy.m_strategy.push_back(strategyItemAllin);
-	testStrategy.m_strategy.push_back(strategyItemRaise);
-	testStrategy.m_strategy.push_back(strategyItemCall);
-	testStrategy.m_strategy.push_back(strategyItemFold);
-
-
-
-	//for test
-	for (auto it : testStrategy.m_strategy)
-	{
-		int nCount = 0;
-		cout << "actiontype:" << CActionLine::ToActionSymbol(it->m_action) << endl;
-		for (auto e : it->m_strategyData) {
-			if (CCombo::GetAbbrSymble(e.first) == "AKs" || CCombo::GetAbbrSymble(e.first) == "AKo") {
-				cout << e.first << ":" << e.second << ", ";
-				nCount++;
-			}
-		}
-		cout << endl << "Count:" << nCount << endl << endl;
-	}
-
-
-
-
-
-	//string sCommand = "Assign[raise2](AKs)";
-	//string sCommand = "Discard[allin](AKs)<EV+=0.1>";
-	//string sCommand = "Replace[whole][raise](AKs)<EV+=0.1>";
-	string sCommand = "Replace[call][raise](AKs)";
-	testStrategy.SpecialProcessing(Max6_NL50_SD100,sCommand);
-
-
-
-	//for test
-	for (auto it : testStrategy.m_strategy)
-	{
-		int nCount = 0;
-		cout << "actiontype:" << CActionLine::ToActionSymbol(it->m_action) << endl;
-		for (auto e : it->m_strategyData) {
-			if (CCombo::GetAbbrSymble(e.first) == "AKs" || CCombo::GetAbbrSymble(e.first) == "AKo") {
-				cout << e.first << ":" << e.second << ", ";
-				nCount++;
-			}
-		}
-		cout << endl << "Count:" << nCount << endl << endl;
-	}
-
-*/
-
-
-
-//test limp
-/*
-	testSolution.InitGame("GameID=1667099118;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<AhAd>;");
-	testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]F,[SB]C");
-	testSolution.ChangeRound("[BB]X<As9hTh>pot=2.0;EStack=[SB]99.0,[BB]99.0;");
-	testSolution.HeroAction("[SB]R3.0");
-	testSolution.ChangeRound("[BB]C<Ks>pot=8.0;EStack=[SB]96.0,[BB]96.0;");
-*/
-
-
-
-
-
-//test presave
-//testSolution.InitGame("GameID=1666840379;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<AhAd>;");
-//testSolution.HeroAction("[UTG]F,[HJ]R2.0,[CO]F");
-//testSolution.HeroAction("[BTN]R7.5,[SB]F,[BB]F,-,[HJ]R20.0");
-//testSolution.ChangeRound("[BTN]C<AsTh9h>pot=45.5;EStack=[HJ]78.0,[BTN]78.0;");	//pot和estack模拟客户端程序计算有误差，不影响测试
-//testSolution.HeroAction("[HJ]R12");
-//	testSolution.ChangeRound("[BTN]C<Ks>pot=69.5;EStack=[HJ]66.0,[BTN]66.0;");
-
-
-
-
-
-	//test presave
-//	testSolution.InitGame("GameID=1666879573;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]150.0,[HJ]150.0,[CO]150.0,[BTN]150.0,[SB]150.0,[BB]150.0;Hero=[HJ];Hands=<AhAd>;");
-//	testSolution.HeroAction("[UTG]R2.5");
-//	testSolution.ChangeRound("[HJ]C,[CO]F,[BTN]F,[SB]F,[BB]F<KsKdKc>pot=6.5;EStack=[UTG]147.5,[HJ]147.5;");
-//	testSolution.HeroAction("[UTG]R2.1");
-//	testSolution.HeroAction("[HJ]C<9s>pot=10.7;EStack=[UTG]145.4,[HJ]145.4;");
-
-//	testSolution.InitGame("GameID=1666422279;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
-//	testSolution.HeroAction("[UTG]C,[HJ]F,[CO]F,[BTN]F,[SB]C"); 
-//	testSolution.HeroAction("[BB]R2.0,-,[UTG]F,[SB]R4.0");
-// 
-	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<KsKdQc>pot=6.5;EStack=[HJ]97.5,[BTN]97.5;");
-	//testSolution.HeroAction("[HJ]R2.1");
-
-	//test utg_vs_hj_3bet
-	//testSolution.InitGame("GameID=1666359512;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<AhAd>;");
-	//testSolution.HeroAction("");
-	//testSolution.HeroAction("[UTG]R3.0,[HJ]R7.0,[CO]F,[BTN]F,[SB]F,[BB]F,-");
-
-/*
-	CBoard board;
-	string sRowBoard = "KdKcQs";
-	cout << "rowBoard:" << sRowBoard << endl;
-	board.SetFlop(sRowBoard);
-	board.SetTurn("As");
-
-	cout << "Board:" << board.GetBoardSymbol() << endl;
-	cout << "ISO_Board:" << board.GetIsoBoardSymbol() << endl;
-
-	if (IsoFlops.find(board.GetIsoBoardSymbol()) == IsoFlops.end())
-		cout << "not in ISO set" << endl;
-	else
-		cout << "in set" << endl;
-
-	regex reg("<......>");
-	string sReplace = "<" + board.GetIsomorphismSymbol() + ">";
-	string sISONodeName = "EP_UTG_vs_2sqz3bet(HJ,BTN)<KdKcQs>X-X<As>";
-	sISONodeName = regex_replace(sISONodeName, reg, sReplace);
-	cout << sISONodeName;
-*/
-
 
 

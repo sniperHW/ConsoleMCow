@@ -17,10 +17,13 @@ public:
 	bool Load(GameType gmType, const std::string & sNodeName, const SuitReplace& suitReplace, const std::string& sIsoBoard); //wizard模式，同构转换，排除公牌
 	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌
 
+	static RangeData getAverageRange(const RangeData& rangeDataLow ,const RangeData& rangeDataUp, const double dSegmentRatio);
+
 	std::string GetRangeStr(); //转为solver配置文件需要的格式
 	void Clear(); 
 
 	void DumpRange(const std::string& sComment, const RelativePosition heroRPosition);
+	static void DumpRange(const std::string& sComment, const RangeData* pRange);
 	void ReadRange(const std::string& sPath, RangeData& range);	//本系统不用
 
 private:

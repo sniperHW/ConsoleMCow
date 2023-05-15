@@ -80,6 +80,7 @@ bool CActionMatchConfig::Init(GameType gmType)
 	return true;
 }
 
+//?和gmType的关系
 string CActionMatchConfig::GetAbbrName(const ActionMatchMode mode, const string& sActionSquence) //返回NodeName简写
 {
 	regex reg;

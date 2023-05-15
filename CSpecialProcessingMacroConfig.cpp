@@ -17,7 +17,7 @@ bool CSpecialProcessingMacroConfig::Init(GameType gmType)
 	sConfigFolder = sConfigFolder + "\\configs\\" + GameTypeName[gmType] + "\\";
 
 	string sLine, sFilePath;
-	regex sep(R"(\s+)");
+	regex sep(R"(\s*:\s*)");
 	regex reg_blank(R"(^\s*$)");
 	vector<string> vTmp;
 

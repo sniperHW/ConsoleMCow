@@ -14,6 +14,9 @@ public:
 	GameType m_gmType;
 	double m_dBBSize;
 
+	std::pair<GameType, GameType> m_gmTypeBound; 	//只有一个有效则second为GAMETYPE_none
+	double m_dSegmentRatio; //离gmTypeLow的占比
+
 	double m_dPot; //按多少个大盲计
 	Round m_round;
 	CBoard m_board;

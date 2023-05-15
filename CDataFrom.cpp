@@ -98,7 +98,7 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 	return ss.str();
 }
 
-std::string CDataFrom::GetStrategyFilePath(GameType gmType, const std::string& sNodeName)
+string CDataFrom::GetStrategyFilePath(GameType gmType, const string& sNodeName)
 {
 	// \Data\WizardFile\Max6_NL50_SD100\flop\HJ_vsUTG_srp<>R50-R50-R50-A\HJ_vsUTG_srp<KsQs7d>R50-R50-R50-A.txt
 
@@ -127,4 +127,15 @@ std::string CDataFrom::GetStrategyFilePath(GameType gmType, const std::string& s
 	}
 
 	return sReplaceBrackets;
+}
+
+string CDataFrom::GetRTSolverFilePath(const std::string& sGameID)
+{
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	stringstream ss;
+	ss << sConfigFolder << "\\SolverConfigs\\"  << sGameID << ".json";
+
+	return ss.str();
 }
