@@ -412,6 +412,7 @@ Action CSolution::CalcHeroAction(const CStrategy& strategy)
 		cout << "error: CalcHeroAction ratio sum error > 0.01" << endl;
 
 	//随机命中
+	
 	double dRand = getRandonNum(0, 1000) / 1000.0;//0-1
 	int lowBound = 0;
 	for (int i = 0; i < randBounds.size(); i++) {
@@ -442,6 +443,17 @@ Action CSolution::CalcHeroAction(const CStrategy& strategy)
 	}
 	
 	m_heroLastStrategy = strategy.GetStrategy(); //用于exo;oi
+
+
+	#ifdef FOR_FLOW_
+	string sCandicate;
+	for (auto it : handStrategy) {
+		if (!sCandicate.empty())
+			sCandicate += ",";
+		sCandicate = sCandicate + action2symbol(it.first) + ":" + "<" + double2String(it.second * 100, 1) + "%>";
+	}
+	cout << "CalcHeroAction:" << "[" << sCandicate << "]" << " " << " rand:" << double2String(dRand, 2) << " select:" << action2symbol(retAction) << endl;
+	#endif
 
 	return retAction;
 }

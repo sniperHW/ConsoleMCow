@@ -115,23 +115,19 @@ int main()
 		cout << "error: load config failed: g_ExploiConfig" << endl;
 
 	CWdebug::DeleteDump();
-
-
-
+	CWdebug::DeleteDump();
 
 
 	CSolution testSolution;
 	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BTN];Hands=<KsJs>;");
 	testSolution.HeroAction("[UTG]F,[HJ]R2,[CO]F");
-
 	testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<9s7h6h>pot=5.5;EStack=[HJ]98,[BTN]98;");
-	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ks7h4c>pot=5.5;EStack=[HJ]98,[BTN]98;");
-		
 	testSolution.HeroAction("[HJ]R1.9");
 
-	//testSolution.ChangeRound("[BTN]R6.3,[HJ]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
-
 	testSolution.HeroAction("[BTN]R6.3,[HJ]R13");
+	
+	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ks7h4c>pot=5.5;EStack=[HJ]98,[BTN]98;");
+//testSolution.ChangeRound("[BTN]R6.3,[HJ]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
 	//testSolution.ChangeRound("[BTN]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
 
 

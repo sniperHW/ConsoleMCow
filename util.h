@@ -7,6 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include "globledef.h"
+#include <random>
 
 inline ActionType str2ActionType(const std::string &str, const std::string&code = "") {
 	if(str == "CALL" || str == "call") {
@@ -412,8 +413,15 @@ inline int getRandonNum(const int nMin, const int nMax)
 	//seed = (unsigned)time(0); // Use the time function to get a "seed” value for srand
 	//srand(seed);
 
-	int number = (rand() % (nMax - nMin + 1)) + nMin;
-	return number;
+	//int number = (rand() % (nMax - nMin + 1)) + nMin;
+	//return number;
+
+	std::random_device seed;//硬件生成随机数种子
+	std::ranlux48 engine(seed());//利用种子生成随机数引擎
+	std::uniform_int_distribution<> distrib(nMin, nMax);//设置随机数范围，并为均匀分布
+	int random = distrib(engine);//随机数
+
+	return random;
 }
 
 
