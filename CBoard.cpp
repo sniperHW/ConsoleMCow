@@ -649,3 +649,35 @@ bool CBoard::GetIsomorphismNodeName(const char* csFlopOri)
     RevertSuitReplace();
     return true;
 }
+
+//同构后的turn
+const string CBoard::GetIsomorphismSymbolTurn()
+{
+    if (m_flopCards.size() == 4) {
+        
+        CCard cardOri = m_flopCards[3];
+        CCard cardAfterIso = cardOri;
+
+        if (m_suitReplace.blIsNeeded == true) {
+            switch (cardOri.m_cardSuit) {
+            case h:
+                cardAfterIso.m_cardSuit = m_suitReplace.h2;
+                break;
+            case c:
+                cardAfterIso.m_cardSuit = m_suitReplace.c2;
+                break;
+            case d:
+                cardAfterIso.m_cardSuit = m_suitReplace.d2;
+                break;
+            case s:
+                cardAfterIso.m_cardSuit = m_suitReplace.s2;
+                break;
+            }
+        }
+
+        return cardAfterIso.GetCardSymbol();
+    }
+    else
+        return "";
+    
+}

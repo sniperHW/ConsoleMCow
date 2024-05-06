@@ -1,14 +1,18 @@
 
-#_vs#_srpallin//	special//	default(5betallinL)
+UTG_vsBB_5bet//		//Replace[call][allin]<EV+>;Discard[call]
+HJ_vsBB_5bet//		//Replace[call][allin]<EV+>;Discard[call]
+CO_vsBB_5bet//		//Replace[call][allin]<EV+>;Discard[call]
+BTN_vsBB_5bet//		//Replace[call][allin]<EV+>;Discard[call]
+SB_vsBB_5bet//		//Replace[call][allin]<EV+>;Discard[call]
 HJ_vsUTG_6betallin//	special//	default(6bet)
 CO_vsUTG_6betallin//	special//	default(6bet)
 CO_vsHJ_6betallin//	special//	default(6bet)
-BTN_vsUTG_6betallin//	special//	default(6bet)
-BTN_vsHJ_6betallin//	special//	default(6bet)
-SB_vsUTG_6betallin//	special//	default(6bet)
-BB_vsUTG_6betallin//	special//	default(6bet)
+#_vs#_srpallin//	special//	default(5betallinL)
 
 #_vs_nlimp2raise//	special//	default(5betallinL)
+
+LP_#_vs_2sqz3bet_EPraise(OOPA)//	special//	Discard[whole]
+LP_#_vs_2sqz3bet_EPraise(OOPD)//	special//	Discard[whole]
 
 #_vs_cold4bet_EPraise_call//	special//	default(5betallinS)
 #_vs_cold5bet_3BETallin//	special//	default(5betallinS)	
@@ -16,21 +20,27 @@ EP_#_vs_3cyc//	special//	default(5betallinL)
 3BET_#_vs_3cyc//	special//	default(5betallinL)
 #_vs_3cyc//	special//	default(5betallinL)
 
-LP_#_vs_3sqz3betallin//	special//	default(5betallinL)
-LP_#_vs_3sqz3bet_EPallin//	special//	default(5betallinL)
-LP2_#_vs_3sqz3betallin//	special//	default(5betallinL)
-LP2_#_vs_3sqz3bet_EPallin//	special//default(5betallinL)
-LP2_#_vs_3sqz3bet_LPraise//	special//	default(5betallinL)
+LP_#_vs_3sqz3betallin//	special//	Discard[whole]
+LP_#_vs_3sqz3bet_EPallin//	special//	Discard[whole]
+LP2_#_vs_3sqz3betallin//	special//	Discard[whole]
+LP2_#_vs_3sqz3bet_EPallin//	special//Discard[whole]
+LP2_#_vs_3sqz3bet_LPraise//	special//	Discard[whole]
 #_vs_3sqz3bet_FRA_allin//	special//	default(4betL)
 #_vs_3sqz3bet_RRA_allin//	special//	default(5betallinL)
-EP_#_vs_3sqz3bet_RCCA_allin//	special//	default(4betL)
+EP_#_vs_3sqz3bet_RCCA_allin//	special//	default(3bet)
 EP_#_vs_3sqz3bet_RRAA_allin//	special//	default(4betM)
 EP_#_vs_3sqz3bet_RRAF_allin//	special//	default(4betL)
 
 LP_#_vs_call3cold3bet_EPraise//	special//	Discard[whole]
 LP_#_vs_3cold4bet//	special//	Discard[whole]
 
+#_vs_callcold3bet//	special//	default(4betL)
+EP_#_vs_2callcold3bet//	special//	default(4betL)
+EP_#_vs_callcold3bet4betallin//	special//	default(5betallinL)
 3BET_#_vs_callcold3bet4bet_Aallin//	special//	default(5betallinL)
+3BET_#_vs_2callcold3bet_Aallin//	special//	default(5betallinL)
+3BET_#_vs_callcold3bet4betallin_F//	special//	default(4betS)
+3BET_#_vs_callcold3bet4betallin_C//	special//	default(5betallinS)
 
 3BET_#_vs_cold5bet_C//	special//	default(5betallinS)
 3BET_#_vs_cold5bet_A//	special//	default(5betallinS)
@@ -126,10 +136,3 @@ BB_vs_6bet//	special//	default(5betallinS)
 X_#_vs_6betX//	special//	default(5betallinS)
 
 no_match_default//	special//	default(5betallinL)
-
-
-
-
-
-
-

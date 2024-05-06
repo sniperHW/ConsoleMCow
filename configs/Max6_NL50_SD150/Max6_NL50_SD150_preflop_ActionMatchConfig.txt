@@ -1,0 +1,237 @@
+O	[hero]_open
+R	[hero]_vs[rivals]_srp
+RR-	[hero]_vs[rivals]_3bet
+RA-	[hero]_vs[rivals]_3betallin
+RR-R	[hero]_vs[rivals]_4bet
+RR-A	[hero]_vs[rivals]_4betallin
+RR-RR-	[hero]_vs[rivals]_5bet
+RR-RA-	[hero]_vs[rivals]_5betallin
+RR-RR-[RA]	[hero]_vs[rivals]_6betallin
+A	#_vs#_srpallin
+
+C	BB_vsSB_limp
+CR-	SB_vsBB_limpbet
+CR-R	BB_vsSB_limp3bet
+CR-A	BB_vsSB_limp3betallin
+CR-RR-	SB_vsBB_limp4bet
+CR-RA-	SB_vsBB_limp4betallin
+CR-RR-R	BB_vsSB_limp5bet
+CR-RR-A	BB_vsSB_limp5betallin
+
+RC	[hero]_vs_2srp([rivals])
+RCR-	EP_[hero]_vs_2sqz3bet([rivals])
+RCA-	EP_[hero]_vs_2sqz3betallin([rivals])
+RCR-F	LP_[hero]_vs_2sqz3bet_EPfold([rivals])
+RCR-C	LP_[hero]_vs_2sqz3bet_EPcall([rivals])
+RCR-R	LP_[hero]_vs_2sqz3bet_EPraise([rivals])
+RCA-F	LP_[hero]_vs_2sqz3betallin_EPfold([rivals])
+RCA-C	LP_[hero]_vs_2sqz3betallin_EPcall([rivals])
+RCR-A	LP_[hero]_vs_2sqz3bet_EPallin([rivals])
+RCR-RF	[hero]_vs_2sqz4bet_RF([rivals])
+RCR-RC	[hero]_vs_2sqz4bet_RC([rivals])
+RCR-FR	[hero]_vs_2sqz4bet_FR([rivals])
+RCR-CR	[hero]_vs_2sqz4bet_CR([rivals])
+RCR-RR	[hero]_vs_2sqz4bet_RR([rivals])
+RCR-RA	[hero]_vs_2sqz4bet_RA_allin([rivals])
+RCR-FA	[hero]_vs_2sqz4bet_FA_allin([rivals])
+RCR-CA	[hero]_vs_2sqz4bet_CA_allin([rivals])
+RCR-AF	[hero]_vs_2sqz4bet_AF_allin([rivals])
+RCR-AC	[hero]_vs_2sqz4bet_AC_allin([rivals])
+RCR-RFR-	EP_[hero]_vs_2sqz5bet_RFR([rivals])
+RCR-RCR-	EP_[hero]_vs_2sqz5bet_RCR([rivals])
+RCR-RRF-	EP_[hero]_vs_2sqz5bet_RRF([rivals])
+RCR-RRC-	EP_[hero]_vs_2sqz5bet_RRC([rivals])
+RCR-RAF-	EP_[hero]_vs_2sqz_RAF_5betallin([rivals])
+RCR-RAC-	EP_[hero]_vs_2sqz_RAC_5betallin([rivals])
+RCR-RFA-	EP_[hero]_vs_2sqz_RFA_5betallin([rivals])
+RCR-RCA-	EP_[hero]_vs_2sqz_RCA_5betallin([rivals])
+RCR-RRA-	EP_[hero]_vs_2sqz_RRA_5betallin([rivals])
+RCR-CRF-	EP_[hero]_vs_2sqz4bet_CRF([rivals])
+RCR-CRC-	EP_[hero]_vs_2sqz4bet_CRC([rivals])
+RCR-CRR-	EP_[hero]_vs_2sqz5bet_CRR([rivals])
+RCR-CRA-	EP_[hero]_vs_2sqz_CRA_5betallin([rivals])
+RCR-CAC-	EP_[hero]_vs_2sqz_CAC_5betallin([rivals])
+RCR-CAF-	EP_[hero]_vs_2sqz_CAF_5betallin([rivals])
+RCR-FRR-	LP_[hero]_vs_2sqz3bet_EPfold_FRR([rivals])
+RCR-FRA-	LP_[hero]_vs_2sqz3bet_FRA_5betallin([rivals])
+RCR-RFR-A	[hero]_vs_2sqz5bet_RFR_AF_6betallin([rivals])
+RCR-RCR-AF	[hero]_vs_2sqz5bet_RCR_AF_6betallin([rivals])
+RCR-RCR-AC	[hero]_vs_2sqz5bet_RCR_AC_6betallin([rivals])
+RCR-FRR-A	[hero]_vs_2sqz5bet_FRR-FA_6betallin([rivals])
+
+RR	[hero]_vs_cold3bet([rivals])
+RRR-	EP_[hero]_vs_cold4bet([rivals])
+RRC-	EP_[hero]_vs_callcold3bet([rivals])
+RRA-	EP_[hero]_vs_cold4betallin([rivals])
+RRR-C	3BET_[hero]_vs_cold4bet_EPcall([rivals])
+RRR-R	3BET_[hero]_vs_cold4bet_EPraise([rivals])
+RRR-F	3BET_[hero]_vs_cold4bet_EPfold([rivals])
+RRC-R	3BET_[hero]_vs_callcold3bet_EPraise([rivals])
+RRA-C	3BET_[hero]_vs_cold4betallin_EPcall([rivals])
+RRA-F	3BET_[hero]_vs_cold4betallin_EPfold([rivals])
+RRC-A	3BET_[hero]_vs_callcold3bet_EPallin([rivals])
+RRR-A	3BET_[hero]_vs_cold4bet_EPallin([rivals])
+RRR-CR	[hero]_vs_cold4bet_call_3BETraise([rivals])
+RRR-RC	[hero]_vs_cold4bet_EPraise_call([rivals])
+RRR-RF	[hero]_vs_cold4bet_EPraise([rivals])
+RRR-FR	[hero]_vs_cold4bet_3BETraise([rivals])
+RRR-CA	[hero]_vs_cold4bet_call_3BETallin([rivals])
+RRR-FA	[hero]_vs_cold4bet_3BETallin([rivals])
+RRR-AC	[hero]_vs_cold4bet_EPallin_call([rivals])
+RRR-AF	[hero]_vs_cold4bet_EPallin([rivals])
+RRR-RA	#_vs_cold5bet_3BETallin
+RRC-RRF-	EP_[hero]_vs_callcold3bet_RRF([rivals])
+RRC-RRC-	EP_[hero]_vs_callcold3bet_RRC([rivals])
+RRC-RCR-	EP_[hero]_vs_callcold3bet_RCR([rivals])
+RRR-RC[RA]-	EP_[hero]_vs_cold4bet_RCA_6betallin([rivals])
+RRR-RF[RA]-	EP_[hero]_vs_cold4bet_RFA_6betallin([rivals])
+RRR-R[RA]C-	EP_[hero]_vs_cold4bet_RAC_6betallin([rivals])
+RRR-R[RA]F-	EP_[hero]_vs_cold4bet_RAF_6betallin([rivals])
+RRC-RRA-	EP_[hero]_vs_callcold3bet_RRA_6betallin([rivals])
+RRC-RCA-	EP_[hero]_vs_callcold3bet_RCA_6betallin([rivals])
+RRC-RAF-	EP_[hero]_vs_callcold3bet_RAF_6betallin([rivals])
+RRC-RAC-	EP_[hero]_vs_callcold3bet_RAC_6betallin([rivals])
+RRC-RFA-	EP_[hero]_vs_callcold3bet_RFA_6betallin([rivals])
+RRC-RCR-C	3BET_[hero]_vs_callcold3bet_RCR_C([rivals])
+RRC-RCR-F	3BET_[hero]_vs_callcold3bet_RCR_F([rivals])
+RRR-CRC-[RA]	3BET_[hero]_vs_cold4bet_CRC_6betallin([rivals])
+RRR-CRF-[RA]	3BET_[hero]_vs_cold4bet_CRF_6betallin([rivals])
+RRC-RRC-[RA]	3BET_[hero]_vs_callcold3bet_RRC_6betallin([rivals])
+RRC-RRF-[RA]	3BET_[hero]_vs_callcold3bet_RRF_6betallin([rivals])
+RRC-RCR-[RA]	3BET_[hero]_vs_callcold3bet_RCR_6betallin([rivals])
+RRR-RC[RA]-C	3BET_[hero]_vs_cold4bet_RCA_C_6betallin([rivals])
+RRR-RC[RA]-F	3BET_[hero]_vs_cold4bet_RCA_F_6betallin([rivals])
+RRC-RR[RA]-C	3BET_#_vs_callcold3bet_RRA_C_6betallin([rivals])
+RRC-RR[RA]-F	3BET_[hero]_vs_callcold3bet_RRA_F_6betallin([rivals])
+RRC-RC[RA]-C	3BET_[hero]_vs_callcold3bet_RCA_C_6betallin([rivals])
+RRC-RC[RA]-F	3BET_[hero]_vs_callcold3bet_RCA_F_6betallin([rivals])
+RRR-CRC-[RA]C	[hero]_vs_cold4bet_CRC_AC_6betallin([rivals])
+RRR-CRC-[RA]F	[hero]_vs_cold4bet_CRC_AF_6betallin([rivals])
+
+RCC	[hero]_vs_3srp([rivals])
+RCCR-	EP_[hero]_vs_3sqz3bet([rivals])
+RCCA-	EP_[hero]_vs_3sqz3betallin([rivals])
+RCCR-F	LP_[hero]_vs_3sqz3bet_F([rivals])
+RCCR-C	LP_[hero]_vs_3sqz3bet_C([rivals])
+RCCA-.	LP_#_vs_3sqz3betallin
+RCCR-[RA]	LP_#_vs_3sqz3bet_EPallin
+RCCR-FF		LP_[hero]_vs_3sqz3bet_FF([rivals])
+RCCR-FC		LP_[hero]_vs_3sqz3bet_FC([rivals])
+RCCR-CF		LP_[hero]_vs_3sqz3bet_CF([rivals])
+RCCR-CC		LP_[hero]_vs_3sqz3bet_CC([rivals])
+RCCA-..	LP2_#_vs_3sqz3betallin
+RCCR-[RA].	LP2_#_vs_3sqz3bet_EPallin
+RCCR-[CF][RA]	LP2_#_vs_3sqz3bet_LPraise
+RCCR-RFF	[hero]_vs_3sqz3bet_RFF([rivals])
+RCCR-RFC	[hero]_vs_3sqz3bet_RFC([rivals])
+RCCR-RCF	[hero]_vs_3sqz3bet_RCF([rivals])
+RCCR-RCC	[hero]_vs_3sqz3bet_RCC([rivals])
+RCCR-A(FF|FC|CF|CC)	[hero]_vs_3sqz3bet_AFF_allin([rivals])
+RCCR-[CF](R.|A.|.R|.A)	#_vs_3sqz3bet_FRA_allin
+RCCR-[RA](R.|A.|.R|.A)	#_vs_3sqz3bet_RRA_allin
+RCCR-RFFR-	EP_[hero]_vs_3sqz3bet _RFFR([rivals])
+RCCR-RFFA-	EP_[hero]_vs_3sqz3bet _RFFA_allin([rivals])
+RCCR-R(CF|FC|CC)[RA]-	EP_#_vs_3sqz3bet _RCCA_allin
+RCCR-R(R.|.R|A.|.A)[CRA]-	EP_#_vs_3sqz3bet _RRAA_allin
+RCCR-R(R.|.R|A.|.A)[F]-	EP_#_vs_3sqz3bet _RRAF_allin
+RCCR-RFFR-AFF	[hero]_vs_3sqz3bet_RFFR_AFF_allin([rivals])
+
+RCR	[hero]_vs_3cold3bet([rivals])
+RCRR-	EP_[hero]_vs_3cold4bet([rivals])
+RCRC-	EP_[hero]_vs_call3cold3bet([rivals])
+RCRA-	EP_[hero]_vs_3cold4betallin([rivals])
+RCRC-C	LP_[hero]_vs_call3cold3bet_EPcall([rivals])
+RCRC-F	LP_[hero]_vs_call3cold3bet_EPfold([rivals])
+RCRC-[RA]	LP_#_vs_call3cold3bet_EPraise
+RCR[RA]-.	LP_#_vs_3cold4bet
+RCRC-RF		3BET_[hero]_vs_call3cold3bet_RF([rivals])
+RCRC-AF		3BET_[hero]_vs_call3cold3bet_AF_allin([rivals])
+RCRR-RF		3BET_[hero]_vs_3cold4bet_RF([rivals])
+RCRR-CF		3BET_[hero]_vs_3cold4bet_CF([rivals])
+RCRR-FF		3BET_[hero]_vs_3cold4bet_FF([rivals])
+RCRR-AF		3BET_[hero]_vs_3cold4bet_AF_allin([rivals])
+RCRA-CF		3BET_[hero]_vs_3cold4betallin_CF([rivals])
+RCRA-FF		3BET_[hero]_vs_3cold4betallin_FF([rivals])
+RCRR-CFR	[hero]_vs_3cold3bet_CFR([rivals])
+RCRR-FFR	[hero]_vs_3cold3bet_FFR([rivals])
+RCRR-CFA	[hero]_vs_3cold3bet_CFA_allin([rivals])
+RCRR-FFA	[hero]_vs_3cold3bet_FFA_allin([rivals])
+RCRR-RFF	[hero]_vs_3cold3bet_RFF([rivals])
+RCRR-RFC	[hero]_vs_3cold3bet_RFC([rivals])
+RCRR-RFA	[hero]_vs_3cold3bet_RFA_allin([rivals])
+RCRR-AFC	[hero]_vs_3cold3bet_AFC_allin([rivals])
+RCRR-AFF	[hero]_vs_3cold3bet_AFF_allin([rivals])
+RCRC-RFRF-	EP_[hero]_vs_3cold3bet_RFRF([rivals])
+RCRC-RFRC-	EP_[hero]_vs_3cold3bet_RFRC([rivals])
+RCRC-RFAF-	EP_[hero]_vs_3cold3bet_RFAF_allin([rivals])
+RCRC-RFAC-	EP_[hero]_vs_3cold3bet_RFAC_allin([rivals])
+RCRR-RFAF-	EP_[hero]_vs_3cold4bet_RFAF_allin([rivals])
+RCRR-RFAC-	EP_[hero]_vs_3cold4bet_RFAC_allin([rivals])
+RCRR-RFFA-	EP_[hero]_vs_3cold4bet_RFFA_allin([rivals])
+RCRR-RFCA-	EP_[hero]_vs_3cold4bet_RFCA_allin([rivals])
+RCRC-RFRF-A	3BET_[hero]_vs_call3cold3bet_RFRF_AF_allin([rivals])
+RCRR-CFRA-C	3BET_[hero]_vs_3cold4bet_CFRA_CF_allin([rivals])
+RCRR-CFRA-F	3BET_[hero]_vs_3cold4bet_CFRA_FF_allin([rivals])
+RCRR-FFRA-	3BET_[hero]_vs_3cold4bet_FFRA_FF_allin([rivals])
+
+RRC	[hero]_vs_callcold3bet([rivals])
+RRCR-	EP_[hero]_vs_callcold3bet4bet([rivals])
+RRCC-	EP_[hero]_vs_2callcold3bet([rivals])
+RRCA-	EP_[hero]_vs_callcold3bet4betallin([rivals])
+RRCR-F	3BET_[hero]_vs_callcold3bet4bet_F([rivals])
+RRCR-C	3BET_[hero]_vs_callcold3bet4bet_C([rivals])
+RRCR-R	3BET_[hero]_vs_callcold3bet4bet_R([rivals])
+RRCR-A	3BET_[hero]_vs_callcold3bet4bet_Aallin([rivals])
+RRCC-R	3BET_[hero]_vs_2callcold3bet_R([rivals])
+RRCC-A	3BET_[hero]_vs_2callcold3bet_Aallin([rivals])
+RRCA-F	3BET_[hero]_vs_callcold3bet4betallin_F([rivals])
+RRCA-C	3BET_[hero]_vs_callcold3bet4betallin_C([rivals])
+RRCR-RF[FC]	[hero]_vs_callcold3bet4bet_RFF([rivals])
+RRCR-RC[FC]	[hero]_vs_callcold3bet4bet_RCF([rivals])
+RRCR-RA[FC]	[hero]_vs_callcold3bet4bet_RAFallin([rivals])
+RRCR-AF[FC]	[hero]_vs_callcold3bet4bet_AFFallin([rivals])
+RRCR-AC[FC]	[hero]_vs_callcold3bet4bet_ACFallin([rivals])
+RRCR-[FC]R[FC]	[hero]_vs_callcold3bet4bet_FRF([rivals])
+RRCR-[FC]A[FC]	[hero]_vs_callcold3bet4bet_FAFallin([rivals])
+RRCR-..[RA]		#_vs_callcold3bet4bet_LPraise
+RRC[RC]-R...-		EP_#_vs_callcold3bet4bet_2cyc
+RRC[RC]-R...-.		3BET_#_vs_callcold3bet4bet_2cyc
+
+RRR	[hero]_vs_cold4bet([rivals])
+RRRR-	EP_[hero]_vs_cold5bet([rivals])
+RRRC-	EP_[hero]_vs_callcold4bet([rivals])
+RRRA-	EP_[hero]_vs_cold5betallin([rivals])
+RRRR-F	3BET_[hero]_vs_cold5bet_F([rivals])
+RRRR-C	3BET_#_vs_cold5bet_C
+RRRR-A	3BET_#_vs_cold5bet_A
+RRRA-F	3BET_[hero]_vs_cold5betallin_F([rivals])
+RRRA-C	3BET_[hero]_vs_cold5betallin_C([rivals])
+RRRC-C	3BET_#_vs_callcold4bet_C
+RRRC-[RA]	3BET_#_vs_callcold4bet_Aallin
+RRRR-FF		4BET_[hero]_vs_cold5bet_FF([rivals])
+RRRR-CC		4BET_[hero]_vs_cold5bet_CC([rivals])
+RRRR-CF		4BET_[hero]_vs_cold5bet_CF([rivals])
+RRRR-FC		4BET_[hero]_vs_cold5bet_FC([rivals])
+RRRR-AC	4BET_[hero]_vs_cold5bet_ACallin([rivals])
+RRRR-AF		4BET_[hero]_vs_cold5bet_AFallin([rivals])
+RRRR-CA	4BET_[hero]_vs_cold5bet_CAallin([rivals])
+RRRR-FA		4BET_[hero]_vs_cold5bet_FAallin([rivals])
+RRRA-FF		4BET_[hero]_vs_cold5betallin_FF([rivals])
+RRRA-FC		4BET_[hero]_vs_cold5betallin_FC([rivals])
+RRRA-CF		4BET_[hero]_vs_cold5betallin_CF([rivals])
+RRRA-CC	4BET_[hero]_vs_cold5betallin_CC([rivals])
+RRRC-(AC|AF|CA|FA)	4BET_#_vs_callcold4bet_allin
+RRRR-(A..|.A.|..A)	#_vs_cold5bet_allin
+RRRC-R(A..|.A.|..A)-	EP_#_vs_callcold4bet_allin
+
+
+
+
+
+
+
+
+
+
+
+

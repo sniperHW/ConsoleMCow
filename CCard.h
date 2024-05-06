@@ -17,6 +17,7 @@ public:
 	CCard(const std::string& sSymbol);	//构造函数
 	void setCard(const std::string& sSymbol);
 	static void GetCardDetail(int& nCardPoint, Suit& cardSuit, const std::string& sSymbol);
+	std::string GetCardSymbol();
 
 	static Suit  SuitFromChar(char cCardSuit);
 	static  char PointFromChar(char cCard);

@@ -99,6 +99,10 @@ Multi_Position CGame::GetHeroMultiPosition()
 				tmp.push_back(SquenceByPosition[player.first]);
 		}
 	}
+
+	if (tmp.empty())
+		return multi_back;
+
 	if (nHeroIdx > *max_element(tmp.begin(), tmp.end()))
 		return multi_back;
 	else if (nHeroIdx < *min_element(tmp.begin(), tmp.end()))

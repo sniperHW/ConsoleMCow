@@ -26,22 +26,21 @@ RCR-C	LP_[hero]_vs_2sqz3bet_EPcall([rivals])
 RCR-[RA]	LP_#_vs_2sqz3bet_EPraise([oopx])
 RCA-F	LP_[hero]_vs_2sqz3betallin_EPfold([rivals])
 RCA-C	LP_[hero]_vs_2sqz3betallin_EPcall([rivals])
-
 RCR-RF	[hero]_vs_2sqz4bet_RF([rivals])
 RCR-RC	[hero]_vs_2sqz4bet_RC([rivals])
 RCR-FR	[hero]_vs_2sqz4bet_FR([rivals])
 RCR-CR	[hero]_vs_2sqz4bet_CR([rivals])
 RCR-R[RA]	[hero]_vs_2sqz4bet_RA_allin([rivals])
-RCR-F[RA]	[hero]_vs_2sqz4bet_FA_allin([rivals])
-RCR-C[RA]	[hero]_vs_2sqz4bet_CA_allin([rivals])
+RCR-FA	[hero]_vs_2sqz4bet_FA_allin([rivals])
+RCR-CA	[hero]_vs_2sqz4bet_CA_allin([rivals])
 RCR-AF	[hero]_vs_2sqz4bet_AF_allin([rivals])
 RCR-AC	[hero]_vs_2sqz4bet_AC_allin([rivals])
-RCR-R[RA]F-	EP_[hero]_vs_2sqz_RAF_5betallin([rivals])
-RCR-R[RA]C-	EP_[hero]_vs_2sqz_RAC_5betallin([rivals])
+RCR-RAF-	EP_[hero]_vs_2sqz_RAF_5betallin([rivals])
+RCR-RAC-	EP_[hero]_vs_2sqz_RAC_5betallin([rivals])
 RCR-RFA-	EP_[hero]_vs_2sqz_RFA_5betallin([rivals])
 RCR-RCA-	EP_[hero]_vs_2sqz_RCA_5betallin([rivals])
-RCR-C[RA]C-	EP_[hero]_vs_2sqz_CAC_5betallin([rivals])
-RCR-C[RA]F-	EP_[hero]_vs_2sqz_CAF_5betallin([rivals])
+RCR-CAC-	EP_[hero]_vs_2sqz_CAC_5betallin([rivals])
+RCR-CAF-	EP_[hero]_vs_2sqz_CAF_5betallin([rivals])
 
 RR	[hero]_vs_cold3bet([rivals])
 RRR-	EP_[hero]_vs_cold4bet([rivals])
@@ -50,29 +49,24 @@ RRA-	EP_[hero]_vs_cold4betallin([rivals])
 RRR-C	3BET_[hero]_vs_cold4bet_EPcall([rivals])
 RRR-R	3BET_[hero]_vs_cold4bet_EPraise([rivals])
 RRR-F	3BET_[hero]_vs_cold4bet_EPfold([rivals])
-RRC-[RA]	3BET_[hero]_vs_callcold3bet_EPraise([rivals])
+RRC-R	3BET_[hero]_vs_callcold3bet_EPraise([rivals])
 RRA-C	3BET_[hero]_vs_cold4betallin_EPcall([rivals])
 RRA-F	3BET_[hero]_vs_cold4betallin_EPfold([rivals])
-RRC-[RA]	3BET_[hero]_vs_callcold3bet_EPallin([rivals])
+RRC-A	3BET_[hero]_vs_callcold3bet_EPallin([rivals])
 RRR-A	3BET_[hero]_vs_cold4bet_EPallin([rivals])
-RRR-CR	[hero]_vs_cold4bet_call_3BETraise([rivals])
 RRR-RC	[hero]_vs_cold4bet_EPraise_call([rivals])
 RRR-RF	[hero]_vs_cold4bet_EPraise([rivals])
 RRR-FR	[hero]_vs_cold4bet_3BETraise([rivals])
-RRR-CA	[hero]_vs_cold4bet_call_3BETallin([rivals])
+RRR-C[RA]	[hero]_vs_cold4bet_call_3BETallin([rivals])
 RRR-FA	[hero]_vs_cold4bet_3BETallin([rivals])
 RRR-AC	[hero]_vs_cold4bet_EPallin_call([rivals])
 RRR-AF	[hero]_vs_cold4bet_EPallin([rivals])
-RRR-RA	#_vs_cold5bet_3BETallin
 
 RCC	[hero]_vs_3srp([rivals])
 RCCR-	EP_[hero]_vs_3sqz3bet([rivals])
 RCCA-	EP_[hero]_vs_3sqz3betallin([rivals])
-RCCR-F	LP_[hero]_vs_3sqz3bet_F([rivals])
-RCCR-C	LP_[hero]_vs_3sqz3bet_C([rivals])
-RCCA-.	LP_#_vs_3sqz3betallin
 RCCR-[RA]	LP_#_vs_3sqz3bet_EPallin
-RCCR-FF		LP_[hero]_vs_3sqz3bet_FF([rivals])
+RCCR-FF	LP_[hero]_vs_3sqz3bet_FF([rivals])
 RCCR-FC		LP_[hero]_vs_3sqz3bet_FC([rivals])
 RCCR-CF		LP_[hero]_vs_3sqz3bet_CF([rivals])
 RCCR-CC		LP_[hero]_vs_3sqz3bet_CC([rivals])
@@ -91,7 +85,6 @@ RCCR-RFFA-	EP_[hero]_vs_3sqz3bet _RFFA_allin([rivals])
 RCCR-R(CF|FC|CC)[RA]-	EP_#_vs_3sqz3bet _RCCA_allin
 RCCR-R(R.|.R|A.|.A)[CRA]-	EP_#_vs_3sqz3bet _RRAA_allin
 RCCR-R(R.|.R|A.|.A)[F]-	EP_#_vs_3sqz3bet _RRAF_allin
-RCCR-RFFR-AFF	[hero]_vs_3sqz3bet_RFFR_AFF_allin([rivals])
 
 RCR	[hero]_vs_3cold3bet([rivals])
 RCRR-	EP_[hero]_vs_3cold4bet([rivals])
@@ -101,24 +94,28 @@ RCRC-C	LP_[hero]_vs_call3cold3bet_EPcall([rivals])
 RCRC-F	LP_[hero]_vs_call3cold3bet_EPfold([rivals])
 RCRC-[RA]	LP_#_vs_call3cold3bet_EPraise
 RCR[RA]-.	LP_#_vs_3cold4bet
-RCRC-[RA]F	3BET_[hero]_vs_call3cold3bet_AF_allin([rivals])
-RCRR-[RA]F	3BET_[hero]_vs_3cold4bet_AF_allin([rivals])
+RCRC-[RA]F	3BET_[hero]_vs_call3cold3bet_AF_allin([rivals])	
+RCRR-RF	3BET_[hero]_vs_3cold4bet_RF([rivals])
 RCRR-CF	3BET_[hero]_vs_3cold4bet_CF([rivals])
 RCRR-FF	3BET_[hero]_vs_3cold4bet_FF([rivals])
-RCRA-CF		3BET_[hero]_vs_3cold4betallin_CF([rivals])
-RCRA-FF		3BET_[hero]_vs_3cold4betallin_FF([rivals])
+RCRR-[RA]F	3BET_[hero]_vs_3cold4bet_AF_allin([rivals])
+RCRA-CF	3BET_[hero]_vs_3cold4betallin_CF([rivals])
+RCRA-FF	3BET_[hero]_vs_3cold4betallin_FF([rivals])
+RCRR-CFR	[hero]_vs_3cold3bet_CFR([rivals])
+RCRR-FFR	[hero]_vs_3cold3bet_FFR([rivals])
 RCRR-CF[RA]	[hero]_vs_3cold3bet_CFA_allin([rivals])
 RCRR-FF[RA]	[hero]_vs_3cold3bet_FFA_allin([rivals])
 RCRR-[RA]FC	[hero]_vs_3cold3bet_AFC_allin([rivals])
 RCRR-[RA]FF	[hero]_vs_3cold3bet_AFF_allin([rivals])
 
-RRC	[hero]_vs_callcold3bet([rivals])
-RRCC-	EP_[hero]_vs_2callcold3bet([rivals])
-RRC[RA]-	EP_[hero]_vs_callcold3bet4betallin([rivals])
+RRC	#_vs_callcold3bet
+RRCC-	EP_#_vs_2callcold3bet
+RRC[RA]-	EP_#_vs_callcold3bet4betallin
 RRCR-A	3BET_#_vs_callcold3bet4bet_Aallin
-RRCC-[RA]	3BET_[hero]_vs_2callcold3bet_Aallin([rivals])
-RRC[RA]-F	3BET_[hero]_vs_callcold3bet4betallin_F([rivals])
-RRC[RA]-C	3BET_[hero]_vs_callcold3bet4betallin_C([rivals])
+RRCC-[RA]	3BET_#_vs_2callcold3bet_Aallin
+RRC[RA]-F	3BET_#_vs_callcold3bet4betallin_F
+RRC[RA]-C	3BET_#_vs_callcold3bet4betallin_C
+
 
 RRR	[hero]_vs_cold4bet([rivals])
 RRRR-	EP_[hero]_vs_cold5bet([rivals])
@@ -131,7 +128,7 @@ RRRA-F	3BET_[hero]_vs_cold5betallin_F([rivals])
 RRRA-C	3BET_[hero]_vs_cold5betallin_C([rivals])
 RRRC-C	3BET_#_vs_callcold4bet_C
 RRRC-[RA]	3BET_#_vs_callcold4bet_Aallin
-RRRR-FF		4BET_[hero]_vs_cold5bet_FF([rivals])
+RRRR-FF	4BET_[hero]_vs_cold5bet_FF([rivals])
 RRRR-CC		4BET_[hero]_vs_cold5bet_CC([rivals])
 RRRR-CF		4BET_[hero]_vs_cold5bet_CF([rivals])
 RRRR-FC		4BET_[hero]_vs_cold5bet_FC([rivals])
@@ -229,7 +226,6 @@ RCCCCA-	EP_[hero]_vs_5sqz3betallin([rivals])
 RCCCCR-R[^RA]{4}	BB_vs_5sqz4bet([rivals])
 RCCCCR-A....	BB_vs_5sqz4betallin([rivals])
 RCCCCR-R....[RA]-	EP_UTG_vs_5sqz5betallin([rivals])
-
 
 
 

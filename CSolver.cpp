@@ -8,15 +8,71 @@
 #include <numeric>
 #include "CStrategyTreeConfig.h"
 #include "CDataFrom.h"
+#include <regex>
+
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filter/lzma.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/beast/core/detail/base64.hpp>
 
 
 using namespace std;
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略节点配置
 
-bool CSolver::ToSolve(const string& sGameID, const CSolverConfig& config, Json::Value& result, const SolverCalcMode calcMode)
+bool CSolver::Init()
+{
+	ifstream fin;
+
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	sConfigFolder = sConfigFolder + "\\configs\\";
+
+	string sLine, sFilePath;
+	regex sep(R"(\s*,\s*)");
+	smatch m;
+
+	sFilePath = sConfigFolder + "globalConfigs.txt";
+	fin.open(sFilePath, ios_base::in);
+	if (!fin.is_open())
+		return false;
+
+	regex reg_IP(R"(SolverIPs=(.*))");
+	while (getline(fin, sLine)) {
+		if (regex_search(sLine, m, reg_IP)) {
+			string sIPs = m[1];
+
+			sregex_token_iterator p(sIPs.cbegin(), sIPs.cend(), sep, -1);
+			sregex_token_iterator e;
+			for (; p != e; ++p) {
+				string s = p->str();
+				regex reg_item(R"((.*):(.*))");
+				regex_search(s, m, reg_item);
+
+				CSolverNode oneNode{ "",false,false,false };
+				oneNode.m_sIP = m[1];
+				string sNodeType = m[2];
+				oneNode.m_isHighPerformance = sNodeType == "high" ? true : false;
+
+				m_solverNodes[oneNode.m_sIP] = oneNode;
+			}
+			break;
+		}
+	}
+	fin.close();
+
+	return true;
+}
+
+bool CSolver::ToSolve(const string& sGameID, const CSolverConfig& config, Json::Value& result, const SolverCalcMode calcMode, const bool isRiver)
 {
 	string sConfigPath = MakeConfigFile(sGameID, config);
 	string sResultFilePath = CDataFrom::GetRTSolverFilePath(sGameID);
+
+
+
 
 
 	//使用完后删除配置文件和result文件
@@ -25,6 +81,7 @@ bool CSolver::ToSolve(const string& sGameID, const CSolverConfig& config, Json::
 	return true;
 }
 
+//目前不需要
 void CSolver::ToStop(int nGameID)
 {
 
@@ -141,7 +198,7 @@ string CSolver::MakeConfigFile(const string& sGameID, const CSolverConfig& confi
 	sLine = "set_allin_threshold " + double2String(m_fDefaultAllinThreshold, 2);
 	ofs << sLine << endl;
 	//set_raise_limit
-	sLine = "set_allin_threshold " + to_string(m_nDefaultRaiseLimit);
+	sLine = "set_raise_limit " + to_string(m_nDefaultRaiseLimit);
 	ofs << sLine << endl;
 	//build_tree
 	sLine = "build_tree";
@@ -169,7 +226,7 @@ string CSolver::MakeConfigFile(const string& sGameID, const CSolverConfig& confi
 	ofs << sLine << endl;
 	//dump_result
 	//sLine = "dump_result "  + sConfigFolder + sGameID + ".json";
-	sLine = CDataFrom::GetRTSolverFilePath(sGameID);
+	sLine = "dump_result " + CDataFrom::GetRTSolverFilePath(sGameID);
 	ofs << sLine << endl;
 
 	ofs.close();
@@ -355,7 +412,7 @@ string CSolver::MakeConfigFileSimple(const std::string& sGameID, const Round rou
 	sLine = "set_allin_threshold " + double2String(m_fDefaultAllinThreshold, 2);
 	ofs << sLine << endl;
 	//set_raise_limit
-	sLine = "set_allin_threshold " + to_string(m_nDefaultRaiseLimit);
+	sLine = "set_raise_limit " + to_string(m_nDefaultRaiseLimit);
 	ofs << sLine << endl;
 	//build_tree
 	sLine = "build_tree";
@@ -383,7 +440,7 @@ string CSolver::MakeConfigFileSimple(const std::string& sGameID, const Round rou
 	ofs << sLine << endl;
 	//dump_result
 	//sLine = "dump_result " + sConfigFolder + sGameID + ".json";
-	sLine = CDataFrom::GetRTSolverFilePath(sGameID);
+	sLine = "dump_result " + CDataFrom::GetRTSolverFilePath(sGameID);
 
 	ofs << sLine << endl;
 
@@ -435,24 +492,96 @@ bool CSolver::ToSolveSimple(const vector<double>& AbnormalSizes, const Round rou
 	return true;
 }
 
-bool CSolver::LoadSolverFile(const std::string sPath, Json::Value& result)
+bool CSolver::LoadSolverFile(const std::string sPath, Json::Value& result, bool isNeedDecompress)
 {
-	ifstream ifs;
-	ifs.open(sPath);
-	if (ifs.is_open()) {
+	if (isNeedDecompress) {
+		std::ifstream is{ sPath, std::ios::binary | std::ios::ate };
+		if (!is.is_open()) {
+			cout << "error:solver_file open failed，  " << sPath << endl;
+			return false;
+		}
+
+		auto size = is.tellg();
+		std::string str(size, '\0'); // construct string to stream size
+		is.seekg(0);
+		is.read(&str[0], size);
+		is.close();
+
+		std::vector<char> decompressed;
+		decompress(str, decompressed);
+		string s3;
+		s3.assign((const char*)decompressed.data(), decompressed.size());
+
+		stringstream ss;
+		ss << s3;
+
 		JSONCPP_STRING errs;
 		Json::CharReaderBuilder builder;
 		result.clear();
-		if (!parseFromStream(builder, ifs, &result, &errs)) {
-			ifs.close();
+		if (!parseFromStream(builder, ss, &result, &errs)) {
+			is.close();
 			return false;
 		}
-		ifs.close();
 	}
 	else {
-		cout << "error:solver_file open failed，  " << sPath << endl;
-		return false;
+		ifstream ifs;
+		ifs.open(sPath);
+		if (ifs.is_open()) {
+			JSONCPP_STRING errs;
+			Json::CharReaderBuilder builder;
+			result.clear();
+			if (!parseFromStream(builder, ifs, &result, &errs)) {
+				ifs.close();
+				return false;
+			}
+			ifs.close();
+		}
+		else {
+			cout << "error:solver_file open failed，  " << sPath << endl;
+			return false;
+		}
 	}
 
+	return true;
+
+}
+
+void CSolver::compress(const string& in, std::vector<char>& out)
+{
+	using namespace boost::iostreams;
+	filtering_ostream fos;    // 具有filter功能的输出流
+	//fos.push(bzip2_compressor());// gzip_compressor(gzip_params(gzip::best_compression)));  // gzip压缩功能
+	fos.push(lzma_compressor(lzma_params(lzma::best_compression)));
+	fos.push(boost::iostreams::back_inserter(out));     // 输出流的数据的目的地
+	fos.write((const char*)(in.c_str()), in.length());
+	boost::iostreams::close(fos);  // flush. 此函数调用后,存储的是gzip压缩后的数据
+}
+
+void CSolver::decompress(const string& in, std::vector<char>& out)
+{
+	using namespace boost::iostreams;
+	filtering_ostream fos;    // 具有filter功能的输出流
+	//fos.push(bzip2_compressor());// gzip_compressor(gzip_params(gzip::best_compression)));  // gzip压缩功能
+	fos.push(lzma_decompressor(lzma_params(lzma::best_compression)));
+	fos.push(boost::iostreams::back_inserter(out));     // 输出流的数据的目的地
+	fos.write((const char*)(in.c_str()), in.length());
+	boost::iostreams::close(fos);  // flush. 此函数调用后,存储的是gzip压缩后的数据
+}
+
+// 编码
+bool CSolver::Base64Encode(const string& input, string& output)
+{
+	std::size_t len = input.size();
+	output.resize(boost::beast::detail::base64::encoded_size(len));
+	output.resize(boost::beast::detail::base64::encode(&output[0], input.c_str(), len));
+
+	return true;
+}
+
+bool CSolver::Base64Decode(const string& input, string& output)
+{
+	std::size_t len = input.size();
+	output.resize(boost::beast::detail::base64::decoded_size(len));
+	output.resize(boost::beast::detail::base64::decode(&output[0], input.c_str(), len).first);
 	return true;
 }

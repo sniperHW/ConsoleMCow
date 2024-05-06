@@ -371,8 +371,10 @@ inline Position str2Position(const std::string& s)
 
 inline GameType str2gmType(const std::string& s)
 {
-	//Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20
-	if (s == "Max6_NL50_SD150")
+	//Max6_NL50_SD200, Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20
+	if (s == "Max6_NL50_SD200")
+		return Max6_NL50_SD200;
+	else if (s == "Max6_NL50_SD150")
 		return Max6_NL50_SD150;
 	else if (s == "Max6_NL50_SD100")
 		return Max6_NL50_SD100;
@@ -384,6 +386,26 @@ inline GameType str2gmType(const std::string& s)
 		return Max6_NL50_SD20;
 
 	return Max6_NL50_SD100;
+}
+
+inline std::string gmType2str(const GameType gmType)
+{
+	switch (gmType) {
+	case Max6_NL50_SD200:
+		return "Max6_NL50_SD200";
+	case Max6_NL50_SD150:
+		return "Max6_NL50_SD150";
+	case Max6_NL50_SD100:
+		return "Max6_NL50_SD100";
+	case Max6_NL50_SD75:
+		return "Max6_NL50_SD75";
+	case Max6_NL50_SD50:
+		return "Max6_NL50_SD50";
+	case Max6_NL50_SD20:
+		return "Max6_NL50_SD20";
+	default:
+		return "";
+	}
 }
 
 inline std::string strategyFrom2str(const StrategyFrom strategyFrom)

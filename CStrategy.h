@@ -53,8 +53,9 @@ public:
 	std::vector<std::shared_ptr<CStrategyItem>> m_strategy;
 
 	bool Load(GameType gmType, const std::string& sActionSquence); //从自定义策略文件读取
-	bool Load(GameType gmType, const std::string & sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取
-	bool Load(const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace & suitReplace, const bool converToAllin = false); //从solver读取
+	bool Load(GameType gmType, const std::string & sActionSquence, const Stacks& stacks, const OOPX oopx, const SuitReplace & suitReplace, const std::string & sIsoBoard); //从wizard读取，目前不用
+	//bool Load(const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace & suitReplace, const bool converToAllin = false); //从solver读取
+	bool Load(const Json::Value & root, const std::string & sActionSquence, const Stacks & stacks, const SuitReplace & suitReplace, const bool converToAllin = false); //从solver读取（stackBystrategy从json文件里取）
 
 	void AlignmentByBetsize();
 	void AlignmentByStackDepth();

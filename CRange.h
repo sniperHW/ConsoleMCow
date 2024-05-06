@@ -15,7 +15,8 @@ public:
 
 	bool Load(GameType gmType, const std::string & sNodeName); //file模式，同时排除公牌
 	bool Load(GameType gmType, const std::string & sNodeName, const SuitReplace& suitReplace, const std::string& sIsoBoard); //wizard模式，同构转换，排除公牌
-	bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌
+	//bool Load(GameType gmType, const Json::Value & root, const std::string & sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌
+	bool Load(GameType gmType, const Json::Value& root, const std::string& sActionSquence, const Stacks& stacks, const SuitReplace& suitReplace); //solver模式，同构转换，排除公牌(stack从json文件中取)
 
 	static RangeData getAverageRange(const RangeData& rangeDataLow ,const RangeData& rangeDataUp, const double dSegmentRatio);
 

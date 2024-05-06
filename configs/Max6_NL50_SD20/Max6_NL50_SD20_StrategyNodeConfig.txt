@@ -1,0 +1,42 @@
+
+#_vs_nlimp2raise//	special//	default(5betallinL)
+
+3BET_#_vs_cold4bet_EPallin//	special//	 Assign[allin](AA,KK,AKs,QQ)
+
+LP_#_vs_3sqz3betallin//	special//	Discard[whole]
+LP_#_vs_3sqz3bet_EPallin//	special//	Discard[whole]
+LP2_#_vs_3sqz3betallin//	special//	Discard[whole]
+LP2_#_vs_3sqz3bet_EPallin//	special//Discard[whole]
+LP2_#_vs_3sqz3bet_LPraise//	special//	Discard[whole]
+
+#_vs_3sqz3bet_FRA_allin//	special//	default(4betL)
+#_vs_3sqz3bet_RRA_allin//	special//	default(5betallinL)
+
+LP_#_vs_call3cold3bet_EPraise//	special//	Discard[whole]
+LP_#_vs_3cold4bet//	special//	Discard[whole]
+
+#_vs_callcold3bet//	special//	default(4betL)
+EP_#_vs_2callcold3bet//	special//	default(4betL)
+EP_#_vs_callcold3bet4betallin//	special//	default(5betallinL)
+3BET_#_vs_callcold3bet4bet_Aallin//	special//	default(5betallinL)
+3BET_#_vs_2callcold3bet_Aallin//	special//	default(5betallinL)
+3BET_#_vs_callcold3bet4betallin_F//	special//	default(4betS)
+3BET_#_vs_callcold3bet4betallin_C//	special//	default(5betallinS)
+
+no_match_default//	special//	default(3bet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

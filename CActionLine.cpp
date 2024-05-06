@@ -104,11 +104,14 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 	sregex_token_iterator p(sActionLineTmp.cbegin(), sActionLineTmp.cend(), sep, -1);
 	sregex_token_iterator e;
 	for (; p != e; ++p) {
-		if(!p->str().empty())
-			posActions.push_back(ToPosActionPair(p->str()));	//"-"标记为none,nonepos
+		if (!p->str().empty()) {
+			pair<Position, Action> a = ToPosActionPair(p->str());
+			posActions.push_back(a);	//"-"标记为none,nonepos
+		}
 	}
 
-	//检查下一行动是否为hero
+/*
+	//检查下一行动是否为hero ?好像没必要，多人时中间由F的有问题
 	if (!blIsChangeRound) {
 		Position nextPlayerPosition;
 		if (!posActions.empty()) {
@@ -122,6 +125,7 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			}
 		}
 	}
+*/
 
 	//记录player最后一次行动
 	Action heroLastAction;
@@ -372,7 +376,9 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			m_sActionSquence += "O";
 		else if (m_sActionSquence.back() == 'O')	//因为"只用一次"
 			m_sActionSquence.pop_back();
-		else
+		//else
+		//	m_sActionSquence.back() == '>' ? m_sActionSquence += sRowActionSquence : m_sActionSquence = m_sActionSquence + "-" + sRowActionSquence;
+		if(!sRowActionSquence.empty())
 			m_sActionSquence.back() == '>' ? m_sActionSquence += sRowActionSquence : m_sActionSquence = m_sActionSquence + "-" + sRowActionSquence;
 	}
 
@@ -391,14 +397,17 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 			ActionMatchMode match_mode = blIsChangeRound ? match_toflop : match_preflop;
 			m_sAbbrName = g_actionMatchConfigs[game.m_gmType].GetAbbrName(match_mode, m_sPreflopRowActionSquence);
 			if (m_sAbbrName.empty()) {
-				cout << "error: ActionLineParse AbbrName not find," << "GameType:" << GameTypeName[game.m_gmType] << "; " << "m_sPreflopRowActionSquence:" << m_sPreflopRowActionSquence << endl << endl;
-				return false;
+				//cout << "error: ActionLineParse AbbrName not find," << "GameType:" << GameTypeName[game.m_gmType] << "; " << "m_sPreflopRowActionSquence:" << m_sPreflopRowActionSquence << endl << endl;
+				//return false;
+
+				m_sAbbrName = sDefaultPreflopStrategy;
 			}
 		}
 
 		//按AbbrName和position填写完整ActionSquence,limp需要特殊处理
 		sNodeName = m_sAbbrName;
 		
+
 		Position heroPosition = nonepos;//HeroAction时hero为实际hero,changeRound时hero为最后call者
 		if (!blIsChangeRound)
 			heroPosition = game.GetHero()->m_position;
@@ -529,9 +538,14 @@ bool CActionLine::Parse(const string& sActionLine, CGame& game)
 
 		//设置相对位置
 		if (game.m_round == flop) {
-			auto pFirst = game.m_players.begin();
+			int nMinPositionRank = 6;
+			for (auto player : game.m_players) {
+				if (PositionRank.at(player.first) < nMinPositionRank)
+					nMinPositionRank = PositionRank.at(player.first);
+			}
+
 			for (auto pPlay = game.m_players.begin(); pPlay != game.m_players.end(); pPlay++) {
-					pPlay->second.m_positionRelative = pPlay == pFirst ? OOP : IP;
+					pPlay->second.m_positionRelative = PositionRank.at(pPlay->first) == nMinPositionRank ? OOP : IP;
 			}
 		}
 

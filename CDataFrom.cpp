@@ -4,6 +4,7 @@
 #include <sstream>
 #include "util.h"
 #include "CActionLine.h"
+#include <fstream>
 
 using namespace std;
 
@@ -43,9 +44,6 @@ string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName)
 	// \Data\SolverFile\Max6_NL50_SD100\flop\HJ_vsUTG_srp<>\HJ_vsUTG_srp<KsQs7d>.json
 	// \Data\SolverFile\Max6_NL50_SD100\turn\HJ_vsUTG_srp<>X-R33\HJ_vsUTG_srp<KsQs7d>X-R33<8d>.json
 
-	char buffer[_MAX_PATH];
-	_getcwd(buffer, _MAX_PATH);
-	string sConfigFolder = buffer;
 	regex reg(R"((.*\<.*\>.*)\<.*\>)");
 	string sFlop;
 	string sNodeNameWithoutBoard;
@@ -56,12 +54,12 @@ string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName)
 		if (regex_search(sNodeName, m, reg)) {
 			sFlop = m[1];
 			sNodeNameWithoutBoard = CActionLine::GetNodeNameWithoutBoard(sFlop);
-			ss << sConfigFolder << "\\Data\\" << "SolverFile\\" << GameTypeName[gmType] << "\\turn\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".json";
+			ss << m_sDataFolder << "\\Data\\" << "SolverFile\\" << GameTypeName[gmType] << "\\turn\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".json";
 		}
 	}
 	else {	//flop
 		sNodeNameWithoutBoard = CActionLine::GetNodeNameWithoutBoard(sNodeName);
-		ss << sConfigFolder << "\\Data\\" << "SolverFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".json";
+		ss << m_sDataFolder << "\\Data\\" << "SolverFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".json";
 	}
 
 	string sReplaceBrackets = ss.str();
@@ -79,9 +77,7 @@ string CDataFrom::GetSolverFilePath(GameType gmType, const string& sNodeName)
 string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 {
 	//\Data\RangesFile\Max6_NL50_SD100\3BET_#_vs_4callcold3bet4bet_EPfold.txt
-	char buffer[_MAX_PATH];
-	_getcwd(buffer, _MAX_PATH);
-	string sConfigFolder = buffer;
+
 	stringstream ss;
 
 /* 在调用初处理，以保存代码一致性
@@ -93,7 +89,7 @@ string CDataFrom::GetRangesFilePath(GameType gmType, const string& sNodeName)
 		sPreflopNodeName = m[1];
 */
 
-	ss << sConfigFolder << "\\Data\\" << "RangeFile\\" << GameTypeName[gmType] << "\\" << sNodeName << ".txt";
+	ss << m_sDataFolder << "\\Data\\" << "RangeFile\\" << GameTypeName[gmType] << "\\" << sNodeName << ".txt";
 
 	return ss.str();
 }
@@ -102,19 +98,16 @@ string CDataFrom::GetStrategyFilePath(GameType gmType, const string& sNodeName)
 {
 	// \Data\WizardFile\Max6_NL50_SD100\flop\HJ_vsUTG_srp<>R50-R50-R50-A\HJ_vsUTG_srp<KsQs7d>R50-R50-R50-A.txt
 
-	char buffer[_MAX_PATH];
-	_getcwd(buffer, _MAX_PATH);
-	string sConfigFolder = buffer;
 	regex reg(R"(.*\<.*\>.*)");
 	string sNodeNameWithoutBoard;
 	stringstream ss;
 
-	if (regex_match(sNodeName, reg)) {	//flop
+	if (regex_match(sNodeName, reg)) {	//flop(?目前不用)
 		sNodeNameWithoutBoard = CActionLine::GetNodeNameWithoutBoard(sNodeName);
-		ss << sConfigFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".txt";
+		ss << m_sDataFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\flop\\" << sNodeNameWithoutBoard << "\\" << sNodeName << ".txt";
 	}
 	else {	//preflop
-		ss << sConfigFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\preflop\\" << sNodeName << ".txt";
+		ss << m_sDataFolder << "\\Data\\" << "StrategyFile\\" << GameTypeName[gmType] << "\\preflop\\" << sNodeName << ".txt";
 	}
 
 	string sReplaceBrackets = ss.str();
@@ -138,4 +131,40 @@ string CDataFrom::GetRTSolverFilePath(const std::string& sGameID)
 	ss << sConfigFolder << "\\SolverConfigs\\"  << sGameID << ".json";
 
 	return ss.str();
+}
+
+bool CDataFrom::Init()
+{
+	//读取数据目录配置
+	ifstream fin;
+
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	m_sDataFolder = buffer;	//默认为程序目录
+	sConfigFolder = sConfigFolder + "\\configs\\";
+	regex reg_blank(R"(^\s*$)");
+
+	string sLine, sFilePath;
+	sFilePath = sConfigFolder  + "globalConfigs.txt";
+	fin.open(sFilePath, ios_base::in);
+	if (!fin.is_open())
+		return false;
+
+	regex reg_configItem;
+	smatch m;
+	while (getline(fin, sLine)) {
+		if (regex_match(sLine, reg_blank))
+			continue;
+
+		reg_configItem = R"(DataFolder=(.*))";
+		if (regex_search(sLine, m, reg_configItem)) {
+			m_sDataFolder = m[1];
+			continue;
+		}
+	}
+	fin.close();
+
+	return true;
+
 }

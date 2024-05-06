@@ -23,6 +23,72 @@ void CCard::setCard(const std::string& sSymbol)
     GetCardDetail(m_nCardPoint, m_cardSuit, sSymbol);
 }
 
+
+string CCard::GetCardSymbol()
+{
+    string sSymbol;
+
+
+        switch (m_nCardPoint) {
+        case 2:
+            sSymbol.append(1,'2');
+            break;
+        case 3:
+            sSymbol.append(1, '3');
+            break;
+        case 4:
+            sSymbol.append(1, '4');
+            break;
+        case 5:
+            sSymbol.append(1, '5');
+            break;
+        case 6:
+            sSymbol.append(1, '6');
+            break;
+        case 7:
+            sSymbol.append(1, '7');
+            break;
+        case 8:
+            sSymbol.append(1, '8');
+            break;
+        case 9:
+            sSymbol.append(1, '9');
+            break;
+        case 10:
+            sSymbol.append(1, 'T');
+            break;
+        case 11:
+            sSymbol.append(1, 'J');
+            break;
+        case 12:
+            sSymbol.append(1, 'Q');
+            break;
+        case 13:
+            sSymbol.append(1, 'K');
+            break;
+        case 14:
+            sSymbol.append(1, 'A');
+            break;
+        }
+
+        switch (m_cardSuit) {
+        case h:
+            sSymbol.append(1, 'h');
+            break;
+        case d:
+            sSymbol.append(1, 'd');
+            break;
+        case s:
+            sSymbol.append(1, 's');
+            break;
+        case c:
+            sSymbol.append(1, 'c');
+            break;
+        }
+    
+    return sSymbol;
+}
+
 void CCard::GetCardDetail(int& nCardPoint, Suit& cardSuit, const string& sSymbol)
 {
     switch (sSymbol[0])

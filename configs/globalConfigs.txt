@@ -1,0 +1,2 @@
+DataFolder=D:\VCCode\ConsoleMCow
+SolverIPs=192.168.1.11:high	,	192.168.1.12:low

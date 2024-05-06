@@ -14,7 +14,8 @@
 
 using namespace std;
 
-extern map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;
+//extern map<GameType, CRangeNodeConfig> g_rangeNodeConfigs;
+extern CDataFrom g_DataFrom;
 
 
 //加载文件，返回以行分割的内容（不包括空白行）
@@ -57,7 +58,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 	}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
-	string sPath = CDataFrom::GetRangesFilePath(gmType, sNodeNameTmp);
+	string sPath = g_DataFrom.GetRangesFilePath(gmType, sNodeNameTmp);
 	if (sPath.size() == 0){
 		cout << "error: range file not found," << sPath << endl;
 		return false;
@@ -79,7 +80,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 			auto pairsOOP = split(*oopStr, ',');
 			for (auto it = pairsOOP.begin(); it != pairsOOP.end(); it++) {
 				auto v = split(*it, ':');
-				auto name = v[0];
+				auto name = CCombo::Align(v[0]);
 				auto value = stringToNum<double>(v[1]);
 				m_OOPRange[name] = value;
 			}
@@ -90,7 +91,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 			auto pairsIP = split(*ipStr,',');
 			for(auto it = pairsIP.begin();it != pairsIP.end();it++){
 				auto v = split(*it,':');
-				auto name = v[0];
+				auto name = CCombo::Align(v[0]);
 				auto value = stringToNum<double>(v[1]);
 				m_IPRange[name] = value;
 			}
@@ -111,7 +112,7 @@ bool CRange::Load(GameType gmType, const string& sNodeName)
 	return true;
 }
 
-//wizard模式
+//wizard模式（目前不用）
 bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& suitReplace, const string& sIsoBoard)
 {
 	string sNodeNameTmp = sNodeName;
@@ -134,14 +135,11 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& s
 		sNodeNameTmp = regex_replace(sNodeNameTmp, reg, sReplace);
 	}
 
-	//从策略配置中获取替换和replace设置，存在替换则启用替换的名称
-	string sReplace = g_rangeNodeConfigs[gmType].GetReplace(sNodeNameTmp);
-	if (!sReplace.empty()){
-		sNodeNameTmp = sReplace;
-#ifdef _DEBUG
-	cout << "replace:" << sReplace << endl;
-#endif // _DEBUG
-	}
+	//从策略配置中获取替换和replace设置，存在替换则启用替换的名称（目前不用替换）
+	//string sReplace = g_rangeNodeConfigs[gmType].GetReplace(sNodeNameTmp);
+	//if (!sReplace.empty()){
+	//	sNodeNameTmp = sReplace;
+	//}
 
 	//获取节点名称对应的文件路径，未找到则返回false,代表offline
 	sStrategyFilePath = CDataFrom::GetWizardFilePath(gmType, sNodeNameTmp);
@@ -268,7 +266,8 @@ bool CRange::Load(GameType gmType, const string& sNodeName, const SuitReplace& s
 
 
 //solver模式
-bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace)
+//bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace)
+bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const SuitReplace& suitReplace)
 {
 	RangeData OOPRangeRatio; //用于计算range剩余比例，OOP代表第一个行动的玩家
 	RangeData IPRangeRatio; //用于计算range剩余比例，IP代表第二个行动的玩家
@@ -303,6 +302,13 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 	vector<Action> actions = {};
 	vector<Action> actionsByStrategy = {};
 	const Json::Value* node = &root;
+
+	Stacks stacksByStrategy;
+	const Json::Value& nodePot = root["stack"]["pot"];
+	stacksByStrategy.dPot = nodePot.asDouble();
+	const Json::Value& nodeEstack = root["stack"]["estack"];
+	stacksByStrategy.dEStack = nodeEstack.asDouble();
+
 	for (auto i = 0; i<int(actionSquence.size()); i++) {
 		if (i % 2 == 0) 
 			pRangeRatio = &OOPRangeRatio;
@@ -412,10 +418,10 @@ bool CRange::Load(GameType gmType, const Json::Value& root, const string& sActio
 			auto name = *it;
 			auto value = nodeStrategy["strategy"][name][j].asFloat();
 
-			auto mapIt = pRangeRatio->find(name);
+			auto mapIt = pRangeRatio->find(CCombo::Align(name));
 			if (mapIt == pRangeRatio->end()) {
 				//第一次1*value
-				(*pRangeRatio)[name] = value;
+				(*pRangeRatio)[CCombo::Align(name)] = value;
 			}
 			else {
 				mapIt->second *= value;

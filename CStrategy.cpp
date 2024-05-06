@@ -20,6 +20,7 @@ extern map<GameType, CStrategyNodeConfig> g_strategyNodeConfigs; //策略节点�
 extern map<GameType, CStrategyTreeConfig> g_strategyTreeConfigs; //策略树配置
 extern map<GameType, CSpecialProcessingMacroConfig> g_specialProcessingMacroConfig;
 extern CExploiConfig g_ExploiConfig;
+extern CDataFrom g_DataFrom;
 
 bool CStrategy::parseActionSquence(const string& sActionSquence, string& sPrefix, Round &round,vector<Action>& actions,string &actionStr) {
 	//查找最后的>
@@ -108,7 +109,7 @@ bool CStrategy::Load(GameType gmType, const std::string& sActionSquence)
 	if (!blCreateStrategy)
 	{
 		//获取节点名称对应的文件路径，未找到则返回false,代表offline
-		string sStrategyFilePath = CDataFrom::GetStrategyFilePath(gmType, sNodeName);
+		string sStrategyFilePath = g_DataFrom.GetStrategyFilePath(gmType, sNodeName);
 		if (sStrategyFilePath.size() == 0) {
 			cout << "error: GetStrategyFilePath() retrun nothing,gmType:" << gmType << ",sNodeName:" << sNodeName << endl;
 			return false;
@@ -408,7 +409,8 @@ Action CStrategy::getActionByStr(const string &str) {
 //从solver读取(支持夹层调整版本)
 //小于下界，则取下界；夹层则取中间值；高于上界报错（在solution中先重新计算）
 //与边界误差n%(默认5%)内取边界
-bool CStrategy::Load(const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace, const bool converToAllin)
+//bool CStrategy::Load(const Json::Value& root, const string& sActionSquence, const Stacks& stacks, const Stacks& stacksByStrategy, const SuitReplace& suitReplace, const bool converToAllin)
+bool CStrategy::Load(const Json::Value& root, const std::string& sActionSquence, const Stacks& stacks, const SuitReplace& suitReplace, const bool converToAllin) 
 {
 	//解析ActionSquence,取最后一个<>后的序列sCSquence
 	vector<Action> actionSquence = {};
@@ -441,6 +443,12 @@ bool CStrategy::Load(const Json::Value& root, const string& sActionSquence, cons
 	vector<Action> actionsByStrategyUp = {};
 	double dSegmentRatio = 0;
 	int nTemplateBy = -1;
+
+	Stacks stacksByStrategy;
+	const Json::Value& nodePot = root["stack"]["pot"];
+	stacksByStrategy.dPot = nodePot.asDouble();
+	const Json::Value& nodeEstack = root["stack"]["estack"];
+	stacksByStrategy.dEStack = nodeEstack.asDouble();
 
 	//定位到目标节点
 	if (actionStr == "O") {
@@ -1576,7 +1584,6 @@ void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std
 	ofs.close();
 }
 
-//
 bool CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_ptr<CStrategyItem>>& strategy) {
 	vector<string> lines;
 	if (loadFileAsLine(sPath, lines) == false)
@@ -1592,14 +1599,14 @@ bool CStrategy::ReadStrategy(const std::string& sPath,  std::vector<std::shared_
 		auto strategyDatas = split(blocks[1],';');
 		for(auto s : strategyDatas) {
 			auto strategyData = split(s,',');
-			item->m_strategyData[strategyData[0]] = stringToNum<double>(strategyData[1]);
+			item->m_strategyData[CCombo::Align(strategyData[0])] = stringToNum<double>(strategyData[1]);
 		}
 
 		if(blocks[2]!="") {
 			auto evDatas = split(blocks[2],';');
 			for(auto ev : evDatas) {
 				auto evData = split(ev,',');
-				item->m_evData[evData[0]] = stringToNum<double>(evData[1]);
+				item->m_evData[CCombo::Align(evData[0])] = stringToNum<double>(evData[1]);
 			}
 		}
 

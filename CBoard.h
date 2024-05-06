@@ -23,7 +23,8 @@ public:
 	std::string GetBoardSymbol(); //按round拼接
 	std::string GetIsoBoardSymbol(); //flop为Iso，turn和river按原样（目前没用）
 
-	const std::string & GetIsomorphismSymbol(); //同构后的标记
+	const std::string & GetIsomorphismSymbol(); //同构后的flop
+	const std::string GetIsomorphismSymbolTurn(); //同构后的turn
 	const SuitReplace & GetIsomorphismSuitReplace(); //花色替换
 	void ClearSuitReplace();
 private:
