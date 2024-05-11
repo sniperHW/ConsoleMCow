@@ -1,12 +1,11 @@
-#include "CNet.h"
 #include <winsock2.h>
 #include <WinBase.h>
 #include <Winerror.h>
 #include <iostream>
 #include <WS2tcpip.h>
+#include "CNet.h"
 
-
-void Response::emitData(std::string data) {
+void Response::emit(std::string data) {
 	std::lock_guard<std::mutex> guard(this->mtx);
 	if (!this->ready) {
 		this->ready = true;
@@ -15,16 +14,26 @@ void Response::emitData(std::string data) {
 	}
 }
 
-std::string Response::GetData() {
+void Response::error() {
+	std::lock_guard<std::mutex> guard(this->mtx);
+	if (!this->ready) {
+		this->ready = true;
+		this->isError = true;
+		this->cv.notify_all();
+	}
+}
+
+bool Response::GetData(std::string &data) {
 	for (;;) {
 		std::lock_guard<std::mutex> guard(this->mtx);
 		if (this->ready) {
+			data = this->data;
 			break;
 		} else {
 			this->cv.wait(this->mtx);
 		}
 	}
-	return this->data;
+	return isError==false;
 }
 
 void ThreadPool::threadFunc(ThreadPool::TaskQueue* queue_) {
@@ -76,9 +85,9 @@ bool ThreadPool::TaskQueue::Get(ThreadPool::TaskQueue::taskque& out) {
 		}
 		else {
 			if (this->tasks.empty()) {
-				++this->watting;//增加等待数量
+				++this->watting;
 				this->cv.wait(this->mtx);
-				--this->watting;//减少正在等待的线程数量
+				--this->watting;
 			}
 			else {
 				this->tasks.swap(out);
@@ -105,9 +114,9 @@ Task::Ptr ThreadPool::TaskQueue::Get() {
 		else {
 
 			if (this->tasks.empty()) {
-				++this->watting;//增加等待数量
+				++this->watting;
 				this->cv.wait(this->mtx);
-				--this->watting;//减少正在等待的线程数量	
+				--this->watting;	
 			}
 			else {
 				Task::Ptr task = this->tasks.front();
@@ -187,14 +196,13 @@ static SOCKET connect(const std::string &host, int port) {
 	}
 }
 
-static bool sendRequest(SOCKET sock, const std::string& request) {
-	char* buff = (char*)::malloc(4 + request.length());
-	*(unsigned int*)buff = ::htonl(request.length());
-	::memcpy(&buff[4], request.c_str(), request.length());
+bool CNet::SendPacket(SOCKET sock, const std::string& packet) {
+	char* buff = (char*)::malloc(4 + packet.length());
+	*(unsigned int*)buff = ::htonl(packet.length());
+	::memcpy(&buff[4], packet.c_str(), packet.length());
 	int offset = 0;
-	int total = request.length() + 4;
+	int total = packet.length() + 4;
 	for (; offset < total;){
-		//发送请求
 		int n = ::send(sock, &buff[offset],total-offset, 0);
 		if (n <= 0) {
 			free(buff);
@@ -208,7 +216,7 @@ static bool sendRequest(SOCKET sock, const std::string& request) {
 }
 
 
-static bool recvPacket(SOCKET sock,std::string &resp) {
+bool CNet::RecvPacket(SOCKET sock,std::string &packet) {
 	char len[4];
 	int offset = 0;
 	for (;offset < sizeof(len);) {
@@ -236,40 +244,49 @@ static bool recvPacket(SOCKET sock,std::string &resp) {
 		}
 	}
 
-	resp = std::string(buff, payload);
+	packet = std::string(buff, payload);
 	return true;
 }
 
 
 void RequestTask::Do() {
-
-	
+	//for (;;) {
+	SOCKET sock;
 	for (;;) {
-		SOCKET sock;
-		for (;;) {
-			sock = connect(host, port);
-			if (sock != INVALID_SOCKET) {
-				break;
-			}
-			else {
-				::Sleep(100);
-			}
-		}
-
-		if (!sendRequest(sock, request)) {
-			closesocket(sock);
-			continue;
-		}
-
-		std::string resp;
-		if (!recvPacket(sock, resp)) {
-			closesocket(sock);
+		sock = connect(host, port);
+		if (sock != INVALID_SOCKET) {
+			break;
 		}
 		else {
-			this->resp->emitData(resp);
-			return;
+			::Sleep(100);
 		}
 	}
+
+
+	if (!CNet::SendPacket(sock, request)) {
+		closesocket(sock);
+		this->resp->error();
+		return;
+	}
+
+	auto thread = std::thread([](SOCKET sock){
+		::Sleep(10000);
+		closesocket(sock);
+	},sock);
+	thread.detach();
+
+	std::string resp;
+	if (!CNet::RecvPacket(sock, resp)) {
+		closesocket(sock);
+		this->resp->error();
+		return;
+	}
+	else {
+		this->resp->emit(resp);
+		closesocket(sock);
+		return;
+	}
+	//}
 }
 
 ThreadPool CNet::threadpool;
@@ -290,8 +307,66 @@ int CNet::InitNetSystem()
 	return 0;
 }
 
-std::shared_ptr<Response> CNet::Request(const std::string& host, int port, const std::string& request) {
+std::shared_ptr<Response> CNet::Call(const std::string& host, int port, const std::string& request) {
 	std::shared_ptr<Response> resp = std::shared_ptr<Response>(new Response);
 	threadpool.PostTask(RequestTask::New(host,port,request,resp));
 	return resp;
+}
+
+void serveFunc(SOCKET fd,std::function<void(SOCKET,const std::string&)> onPacket) {
+	for (;;) {
+		//recv packet
+		std::string packet;
+		if (!CNet::RecvPacket(fd, packet)) {
+			closesocket(fd);
+			return;
+		}
+		onPacket(fd,packet);
+	}
+}
+
+
+void listenFunc(SOCKET listenFd,std::function<void(SOCKET,const std::string&)> onPacket) {
+	std::cout << "start listen" << std::endl;
+	for (;;) {
+		struct sockaddr sa;	
+		int   addrlen = sizeof(sa);
+		auto fd = ::accept(listenFd,&sa,&addrlen);
+		if(fd == INVALID_SOCKET) {
+			return;
+		}
+		std::cout << "on new client" << std::endl;
+
+    	auto thread = std::thread(serveFunc, fd,onPacket);
+		thread.detach();
+	}
+}
+
+int CNet::Listen(int port,std::function<void(SOCKET,const std::string&)> onPacket) {
+	struct sockaddr_in servaddr;
+	memset((void*)&servaddr,0,sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+	servaddr.sin_port = htons(port);
+
+	SOCKET fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (fd == INVALID_SOCKET)
+	{
+		printf("\nError occurred while opening socket: %d.", WSAGetLastError());
+		return -1;
+	}
+
+	int yes = 1;
+	::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof(yes));
+
+	if(::bind(fd,(const sockaddr *)&servaddr,sizeof(servaddr)) < 0)
+		return -1;
+
+	if(::listen(fd,256) < 0)
+		return -1;
+
+    auto thread = std::thread(listenFunc, fd,onPacket);
+	thread.detach();
+
+	return 0;
 }

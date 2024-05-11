@@ -10,6 +10,8 @@
 #include <atomic>
 #include <deque>
 #include <functional>
+#include <string>
+#include <winsock2.h>
 
 class RequestTask;
 class Response
@@ -17,12 +19,14 @@ class Response
 	friend class RequestTask;
 private:
 	std::string data;
+	bool isError;
 	std::mutex mtx;
 	std::condition_variable_any cv;
 	bool ready;
-	void emitData(std::string data);
+	void error();
+	void emit(std::string data);
 public:
-	std::string GetData();
+	bool GetData(std::string&);
 };
 
 class Task {
@@ -81,7 +85,6 @@ private:
 
 class ThreadPool final {
 
-	//任务队列
 	class TaskQueue {
 
 	public:
@@ -101,7 +104,7 @@ class ThreadPool final {
 		TaskQueue(const TaskQueue&) = delete;
 		TaskQueue& operator = (const TaskQueue&) = delete;
 		bool closed;
-		int  watting;//空闲线程数量
+		int  watting;
 		std::mutex mtx;
 		std::condition_variable_any cv;
 		taskque tasks;
@@ -150,8 +153,10 @@ private:
 	static ThreadPool threadpool;
 public:
 	static int InitNetSystem();
-	static std::shared_ptr<Response> Request(const std::string &host, int port, const std::string &request);
-
+	static std::shared_ptr<Response> Call(const std::string &host, int port, const std::string &request);
+	static bool SendPacket(SOCKET sock, const std::string& packet);
+	static bool RecvPacket(SOCKET sock,std::string &packet);
+	static int Listen(int port,std::function<void(SOCKET,const std::string&)>);
 };
 
 
