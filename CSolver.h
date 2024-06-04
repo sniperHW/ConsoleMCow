@@ -11,7 +11,7 @@
 #include <mutex>
 
 
-using json = nlohmann::json;
+//using json = nlohmann::json;
 //#include <list>
 
 
@@ -72,18 +72,18 @@ private:
 	float m_fDefaultAccuracy = (float)0.15; 
 
 
-	CSolverNode *getSolverNodes(cosnt std::string &id) {
+	std::shared_ptr<CSolverNode> getSolverNode(const std::string &id) {
 		std::lock_guard guard(nodesMtx);
 		auto it = m_solverNodes.find(id);
 		if(it == m_solverNodes.end()) {
 			return nullptr;
 		} else {
-			return &it->second;
+			return it->second;
 		}
 	}
 
 	std::mutex nodesMtx;
-	std::map<std::string, CSolverNode> m_solverNodes; //key:gameID
+	std::map<std::string, std::shared_ptr<CSolverNode>> m_solverNodes; //key:gameID
 	
 	//std::mutex taskMtx;
 	//std::list<CSolverTask> m_SolverTasks; //key:ip
@@ -91,7 +91,7 @@ private:
 	std::mutex finishMtx;
 	std::set<std::string> m_FinishedTasks; //key:gameID
 
-	bool AssignTask(const std::string& sGameID, const CSolverNode *node); 
+	bool AssignTask(const std::string& sGameID, const std::shared_ptr<CSolverNode> &node);
 	void DispatchTask(CSolverTask *task);//触发：新任务，有任务完成，增加计算节点
 	void OnTimerCheck(); //超时节点删除
 	//void AddSolverNode(const std::string& sIP); //加入新的计算节点

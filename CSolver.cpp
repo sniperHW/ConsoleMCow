@@ -13,6 +13,7 @@
 #include <thread>
 #include <chrono>
 #include <io.h>
+#include <any>
 
 
 #include <boost/iostreams/filtering_stream.hpp>
@@ -154,22 +155,19 @@ recalc_actionline CSolver::IsRecalcActionline(const double dPot, const std::stri
 }
 
 //指派一个任务
-bool CSolver::AssignTask(const string& sGameID, const CSolverNode *node)
+bool CSolver::AssignTask(const string& sGameID, const std::shared_ptr<CSolverNode> &node)
 {
 	string sConfigFilePath = CDataFrom::GetRTSolverConfigFilePath(sGameID);
-    if (std::ifstream is{ homepath + task->taskID + ".json", std::ios::binary | std::ios::ate}) {
+    if (std::ifstream is{ sConfigFilePath, std::ios::binary | std::ios::ate}) {
         auto size = is.tellg();
         std::string cfg(size, '\0'); // construct string to stream size
         is.seekg(0);
-        if (is.read(&str[0], size))
-            logfile << __FILE__ << ":" << __LINE__ << " read result ok commitTaskRoutine task:" << task->taskID << endl;
-        else
-            logfile << __FILE__ << ":" << __LINE__ << " read result failed commitTaskRoutine task:" << task->taskID << endl;
+		is.read(&cfg[0], size);
         is.close();
 	
 
 		Json::Value value;
-		value["sGameID"] = gameID;
+		value["TaskID"] = sGameID;
 		value["Cfg"] = cfg;
 		std::stringstream ss;
 		ss << value;
@@ -177,7 +175,7 @@ bool CSolver::AssignTask(const string& sGameID, const CSolverNode *node)
 		auto packet = net::Buffer::New(6 + jsonStr.length());
 		packet->Append(uint32_t(2 + jsonStr.length()));
 		packet->Append(uint16_t(2));
-		packet->Append(jStr);
+		packet->Append(jsonStr);
 		node->conn->Send(packet);
 	}
 
@@ -188,23 +186,24 @@ bool CSolver::AssignTask(const string& sGameID, const CSolverNode *node)
 //调度任务执行
 void CSolver::DispatchTask(CSolverTask *task)
 {
-	std::lock_guard guard(nodesMtx);
-	for (auto oneSolverNode : m_solverNodes) {
-		oneSolverNode.second.lock();
-		if(oneSolverNode.second.m_isBusy) {
+	std::lock_guard<std::mutex> guard(nodesMtx);
+	//for (auto oneSolverNode : m_solverNodes) {
+	for(auto it = m_solverNodes.begin();it != m_solverNodes.end();it++){
+		it->second->mtx.lock();
+		if(it->second->m_isBusy) {
 			continue;
 		}
-		if(AssignTask(task->m_sGameID,&oneSolverNode.second)) {
-			cout << "DispatchTask sucess. IP:" << oneSolverNode.first << " GameID:" << sGameID << endl;
-			oneSolverNode.second.m_isBusy = true;
-			oneSolverNode.second.m_sRunningTaskGameID = sGameID;
-			oneSolverNode.second.unlock();
+		if(AssignTask(task->m_sGameID,it->second)) {
+			cout << "DispatchTask sucess. IP:" << it->first << " GameID:" << task->m_sGameID << endl;
+			it->second->m_isBusy = true;
+			it->second->m_sRunningTaskGameID = task->m_sGameID;
+			it->second->mtx.unlock();
 			return;
 		} else {
-			cout << "DispatchTask failed. IP:" << oneSolverNode.first << endl;
+			cout << "DispatchTask failed. IP:" << it->first << endl;
 		}
-		oneSolverNode.second.unlock();
-		m_solverNodes.erase(oneSolverNode);
+		it->second->mtx.unlock();
+		m_solverNodes.erase(it);
 	}
 }
 
@@ -213,9 +212,9 @@ void CSolver::OnTimerCheck()
 {
 	time_t tCurTm;
 	time(&tCurTm);
-	std::lock_guard guard(this->nodesMtx);
+	std::lock_guard<std::mutex> guard(this->nodesMtx);
 	for (auto it = m_solverNodes.begin(); it != m_solverNodes.end(); ) {
-		if (difftime(it->second.m_tLastConnect, tCurTm) > 120) {
+		if (difftime(it->second->m_tLastConnect, tCurTm) > 120) {
 			it = m_solverNodes.erase(it); 
 		}
 		else {
@@ -490,34 +489,36 @@ bool CSolver::Base64Decode(const string& input, string& output)
 
 void CSolver::onNodeHeartBeat(const net::Connection::Ptr &conn,const Json::Value& packet)
 {
-	auto workerID = packet["WorkerID"].asString();
+	std::string workerID = packet["WorkerID"].asString();
 	auto tasks = packet["Tasks"];
 	conn->SetUserData(workerID);
 	this->nodesMtx.lock();
 	auto it = this->m_solverNodes.find(workerID);
 	if(it!=this->m_solverNodes.end()) {
-		it->second.mtx.lock();
-		it->second.conn = conn;
-		time(&it->second.m_tLastConnect);
+		it->second->mtx.lock();
+		it->second->conn = conn;
+		time(&it->second->m_tLastConnect);
 		if(tasks.size() > 0) {
-			it->second.m_isBusy = true;
+			it->second->m_isBusy = true;
 			auto first = tasks[0];
-			it->second.m_sRunningTaskGameID = first["TaskID"].asString();
+			it->second->m_sRunningTaskGameID = first["TaskID"].asString();
 		} else {
-			it->second.m_isBusy = false;
-			it->second.m_sRunningTaskGameID = "";
+			it->second->m_isBusy = false;
+			it->second->m_sRunningTaskGameID = "";
 		}
-		it->second.mtx.unlock();
+		it->second->mtx.unlock();
 	} else {
-		CSolverNode node;
-		node.conn = conn;
-		time(&node.m_tLastConnect);
+		//CSolverNode node;
+		shared_ptr<CSolverNode> node = make_shared<CSolverNode>();
+		node->conn = conn;
+		time(&node->m_tLastConnect);
 		if(tasks.size() > 0) {
-			node.m_isBusy = true;
+			node->m_isBusy = true;
 			auto first = tasks[0];
-			node.m_sRunningTaskGameID = first["TaskID"].asString();
+			node->m_sRunningTaskGameID = first["TaskID"].asString();
 		}
-		this->m_solverNodes[workerID] = node;
+		//this->m_solverNodes.insert(std::make_pair<std::string,CSolverNode>(workerID,node));
+		//this->m_solverNodes[workerID] = node;
 	}
 	this->nodesMtx.unlock();
 }
@@ -532,7 +533,7 @@ net::Buffer::Ptr makeAcceptJobPacket(const std::string &gameID) {
 	auto packet = net::Buffer::New(6 + jsonStr.length());
     packet->Append(uint32_t(2 + jsonStr.length()));
     packet->Append(uint16_t(4));
-    packet->Append(jStr);
+    packet->Append(jsonStr);
 	return packet;
 }
 
@@ -545,17 +546,17 @@ net::Buffer::Ptr makeCancelJobPacket(const std::string &gameID) {
 	auto packet = net::Buffer::New(6 + jsonStr.length());
     packet->Append(uint32_t(2 + jsonStr.length()));
     packet->Append(uint16_t(5));
-    packet->Append(jStr);
+    packet->Append(jsonStr);
 	return packet;
 }
 
 
-void CSolver::onCommitTask(const net::Connection::Ptr &conn,const Json::Value& packet)
+void CSolver::onCommitTask(const net::Connection::Ptr &conn,const Json::Value& packet){
 	auto sGameID = packet["TaskID"].asString();
 	auto result = packet["Result"].asString();
 	std::any ud = conn->GetUserData();
 	auto workerID = std::any_cast<std::string>(ud);
-	auto node = getSolverNodes(workerID);
+	auto node = getSolverNode(workerID);
 	if(node == nullptr) {
 		//通告取消任务
 		conn->Send(makeCancelJobPacket(sGameID));

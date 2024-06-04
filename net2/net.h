@@ -10,13 +10,14 @@
 #include <atomic>
 #include <functional>
 #include <iostream>
-#include "./buffer.h"
+#include <any>
+#include <net2/buffer.h>
 
 
 namespace net {
 
 	class Connection : public std::enable_shared_from_this<Connection> {
-		friend class SOCKET connect(struct sockaddr_in *addr);
+		//friend class SOCKET connect(struct sockaddr_in *addr);
 	public:
 		typedef std::shared_ptr<Connection> Ptr;
 
@@ -43,8 +44,9 @@ namespace net {
 			struct sockaddr_in servaddr;
 			memset((void*)&servaddr,0,sizeof(servaddr));
 			servaddr.sin_family = AF_INET;
-			servaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+			//servaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
 			servaddr.sin_port = htons(port);
+			inet_pton(AF_INET, "0.0.0.0", &servaddr.sin_addr);
 
 			SOCKET fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (fd == INVALID_SOCKET)
