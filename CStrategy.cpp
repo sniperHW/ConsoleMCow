@@ -142,10 +142,11 @@ bool CStrategy::Load(GameType gmType, const std::string& sActionSquence)
 		SpecialProcessing(gmType,sSpecial);
 	}
 
-	#ifdef FOR_TEST_DUMP_
-	string sComment = "from_file" + sNodeName;
-	DumpStrategy(sComment);
-	#endif
+	//todo:移到solution中
+	//#ifdef FOR_TEST_DUMP_
+	//string sComment = "from_file" + sNodeName;
+	//DumpStrategy(sComment);
+	//#endif
 
 	return true;
 }
@@ -502,10 +503,11 @@ bool CStrategy::Load(const Json::Value& root, const std::string& sActionSquence,
 		SpecialProcessing(sSpecial);
 	}
 
-	#ifdef FOR_TEST_DUMP_
-	string sComment = "from_solver-" + sActionSquence;
-	DumpStrategy(sComment);
-	#endif
+	//加position前的，todo:移到solution中去
+	//#ifdef FOR_TEST_DUMP_
+	//string sComment = "from_solver-" + sActionSquence;
+	//DumpStrategy(sComment);
+	//#endif
 
 //#ifdef FOR_TEST_DUMP_DETAIL_
 //	string sComment = "from_solver-after_iso-" + sActionSquence;
@@ -1537,11 +1539,16 @@ void CStrategy::AlignmentByexploit(const RangeData& heroCurRange, const string& 
 
 }
 
-void CStrategy::DumpStrategy(const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy) {
+void CStrategy::DumpStrategy(const Position position, const std::string& sComment,  const std::vector<std::shared_ptr<CStrategyItem>>* pStrategy) {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	sConfigFolder = sConfigFolder + "\\dump\\";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
+
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();
@@ -2279,10 +2286,11 @@ void CStrategy::ExecuteCommandExploi(const string& sCommand, const RangeData& he
 	cout << "ExploiCommand: " << sCommand << endl;
 	#endif
 
-	#ifdef FOR_TEST_DUMP_
-	string sComment = "after_exploi";
-	DumpStrategy(sComment);
-	#endif
+	//todo:移到solution中
+	//#ifdef FOR_TEST_DUMP_
+	//string sComment = "after_exploi";
+	//DumpStrategy(sComment);
+	//#endif
 }
 
 //AdjustFrequency
@@ -2488,7 +2496,7 @@ const vector<shared_ptr<CStrategyItem>> CStrategy::GetStrategy() const
 	return m_strategy;
 }
 
-//combo两策略都有则平均，缺一个则按总体比例推算(未测试)
+//combo两策略都有则平均
 vector<shared_ptr<CStrategyItem>> CStrategy::getAverageStrategyByStackDepth(const vector<shared_ptr<CStrategyItem>>& strategyLow, const vector<shared_ptr<CStrategyItem>>& strategyUp, const double dSegmentRatio, const int nTemplate, const bool blIgnoreBetsize)
 {
 	vector<shared_ptr<CStrategyItem>> strategy;

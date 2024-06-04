@@ -5,6 +5,8 @@ using namespace std;
 shared_ptr<CSolution> CSolutions::NewSolution(const string& sGameID)
 {
 	shared_ptr<CSolution> pNewSolution = make_shared<CSolution>();
+	if (m_Solutions.find(sGameID) != m_Solutions.end())
+		return nullptr;
 	m_Solutions[sGameID] = pNewSolution;
 
 	return pNewSolution;

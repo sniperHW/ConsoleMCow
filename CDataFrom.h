@@ -15,6 +15,7 @@ public:
 	std::string GetRangesFilePath(GameType gmType, const std::string & sNodeName);
 	std::string GetStrategyFilePath(GameType gmType, const std::string& sNodeName);	//自定义格式
 	static std::string GetRTSolverFilePath(const std::string& sGameID);
+	static std::string GetRTSolverConfigFilePath(const std::string& sGameID);
 
 private:
 	std::string m_sDataFolder;	//Data子目录不包含在该目录中

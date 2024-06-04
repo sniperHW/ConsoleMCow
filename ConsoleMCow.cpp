@@ -137,9 +137,103 @@ bool LoadConfigs(GameType gmType)
 extern bool loadFileAsLine(const string& path,vector<string> &lines);
 
 
-//备忘：增加判断两个hand是同一个的函数（2d2c==2c2d）,用private类
+
+//commands
+//HeroAction:返回: "R/C/A/F/X,fBetSize,fBetSizeByPot"; 参数:sActionLine
+//ChangeRound:返回:"s/f"; 参数:sActionLine
+//InitGame:返回:"s/f"; 参数:sInitGame
+//HeroHands:返回:"s/f"; 参数:sHands
+//EndGame返回:"s/f"; 无参数
+void onPakcet(SOCKET fd, const std::string& packet)
+{
+	auto req = split(packet, ':');
+	auto sGameID = req[0];
+	auto cmd = req[1];
+	std::string arg;
+	if (req.size() > 2) {
+		arg = req[2];
+	}
+
+	if (cmd == cmd_InitGame) {
+		shared_ptr<CSolution> pSolution = g_Solutions.NewSolution(sGameID);
+		if (pSolution == nullptr) {
+			CNet::SendPacket(fd, "InitGame failed, solution ID already exist.");
+			return;
+		}
+
+		bool r = pSolution->InitGame(arg);
+		if(r)
+			CNet::SendPacket(fd, "InitGame sucess.");
+		else
+			CNet::SendPacket(fd, "InitGame failed.");
+
+		CWdebug::DeleteDump(pSolution->GetHeroPosition());
+	}
+	else if (cmd == cmd_HeroAction) { //客户端需要搜索"failed",没有则正常逻辑处理（是否要检查无效action?）
+		shared_ptr<CSolution> pSolution = g_Solutions.GetSolutionByGameID(sGameID);
+		if (pSolution == nullptr) {
+			CNet::SendPacket(fd, "HeroAction failed, solution ID not exist.");
+			return;
+		}
+
+		Action a = pSolution->HeroAction(arg);
+		string sAction = actionType2StringSimple(a.actionType)+","+ double2String(a.fBetSize,1)+","+ double2String(a.fBetSizeByPot,1);
+
+		CNet::SendPacket(fd, sAction);
+	}
+	else if (cmd == cmd_ChangeRound) {
+		shared_ptr<CSolution> pSolution = g_Solutions.GetSolutionByGameID(sGameID);
+		if (pSolution == nullptr) {
+			CNet::SendPacket(fd, "HeroAction failed, solution ID not exist.");
+			return;
+		}
+
+		bool r = pSolution->ChangeRound(arg);
+		if (r)
+			CNet::SendPacket(fd, "ChangeRound sucess.");
+		else
+			CNet::SendPacket(fd, "ChangeRound failed.");
+	}
+	else if (cmd == cmd_HeroHands) {
+		shared_ptr<CSolution> pSolution = g_Solutions.GetSolutionByGameID(sGameID);
+		if (pSolution == nullptr) {
+			CNet::SendPacket(fd, "HeroHands failed, solution ID not exist.");
+			return;
+		}
+
+		bool r = pSolution->HeroHands(arg);
+		if (r)
+			CNet::SendPacket(fd, "HeroHands sucess.");
+		else
+			CNet::SendPacket(fd, "HeroHands failed.");
+	}
+	else if (cmd == cmd_EndGame) {
+		shared_ptr<CSolution> pSolution = g_Solutions.GetSolutionByGameID(sGameID);
+		if (pSolution == nullptr) {
+			CNet::SendPacket(fd, "EndGame failed, solution ID not exist.");
+			return;
+		}
+
+		g_Solutions.FinishSolution(sGameID);
+
+		CNet::SendPacket(fd, "EndGame sucess.");
+	}
+	else {
+		cout << "error: invalid cmd" << "\t" << cmd << endl;
+		CNet::SendPacket(fd, "invalid cmd");
+	}
+}
+
+//todo:
+//*备忘：增加判断两个hand是同一个的函数（2d2c==2c2d）,用private类(确认下已经完成)
+//*preflop不同筹码深度下注量有区别是怎么平均的？（按更接近的模板）
+//.多人dump的处理（未完成移到solution）
+//*turn非标准bet的处理
+//整理屏幕输出，日志和dump(全面测试时)
+//solver端握手，完成任务，定时检查
 int main()
 {
+/*
 	//load 所有gmType的config
 	for (auto gmType : GameTypes) {
 		bool blRet = LoadConfigs(gmType);
@@ -153,14 +247,30 @@ int main()
 	if (!g_ExploiConfig.Init())
 		cout << "error: load config failed: g_ExploiConfig" << endl;
 
-	CWdebug::DeleteDump();
-	CWdebug::DeleteDump();
+	//CWdebug::DeleteDump();
+*/
+
+	//init net
+	int ret = CNet::InitNetSystem();
+	if (ret == -1) {
+		cout << "error:net init failed." << endl;
+		return 0;
+	}
+	int r = CNet::Listen(8000, onPakcet);
+	::getchar();
+
+}
+
+
+
+
+
 
 /*
 	CBoard testBoard;
 	testBoard.SetFlop("7c8c9c");
 	testBoard.SetTurn("Tc");
-	string s1 = testBoard.GetIsoBoardSymbol(); 
+	string s1 = testBoard.GetIsoBoardSymbol();
 	string s2 = testBoard.GetIsomorphismSymbol();
 	string s3 = testBoard.GetBoardSymbol();
 	SuitReplace r= testBoard.GetIsomorphismSuitReplace();
@@ -171,38 +281,35 @@ int main()
 
 
 
-	CSolution testSolution;
-	//testSolution.InitGame("GameID=1712739527;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<8h7h>;");
-	//testSolution.HeroAction("[UTG]R2,[HJ]R7.6");
-	//testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]F,[SB]F");
+//CSolution testSolution;
+//testSolution.InitGame("GameID=1712739527;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[BB];Hands=<8h7h>;");
+//testSolution.HeroAction("[UTG]R2,[HJ]R7.6");
+//testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]F,[SB]F");
 
-	//testSolution.InitGame("GameID=1712739527;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
-	//testSolution.HeroAction("[UTG]R2.5");
-	//testSolution.HeroAction("[HJ]C,[CO]R10.0,[BTN]F,[SB]F,[BB]F,-,[UTG]F");
-	//testSolution.HeroAction("[HJ]R40.0,[CO]R80.0,-");
-
-
-
-	testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<QsJs>;");
-	testSolution.HeroAction("");
-	//testSolution.HeroAction("[UTG]R2");
-	testSolution.ChangeRound("[UTG]R2,[HJ]C,[CO]F,[BTN]F,[SB]F,[BB]F<2d3h4h>pot=5.5;EStack=[UTG]98,[HJ]98;");
-	//testSolution.HeroAction("[UTG]R1.8");
-	//testSolution.ChangeRound("[HJ]C<5h>pot=9.1;EStack=[UTG]96.2,[HJ]96.2;");
+//testSolution.InitGame("GameID=1712739527;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[HJ];Hands=<AhAd>;");
+//testSolution.HeroAction("[UTG]R2.5");
+//testSolution.HeroAction("[HJ]C,[CO]R10.0,[BTN]F,[SB]F,[BB]F,-,[UTG]F");
+//testSolution.HeroAction("[HJ]R40.0,[CO]R80.0,-");
 
 
-	//testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]R2,[SB]F");
-	//testSolution.ChangeRound("[BB]C<8hTdJc>pot=4.5;EStack=[BTN]48,[BB]48;");
-	//testSolution.HeroAction("");
-	//testSolution.HeroAction("[BB]X,[BTN]R1.49");
 
-	//testSolution.HeroAction("[BTN]R6.3,[HJ]R13");
-	
-	//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ks7h4c>pot=5.5;EStack=[HJ]98,[BTN]98;");
+//testSolution.InitGame("GameID=1666879574;GameType=Max6_NL50_SD100;BBSize=1;Pot=1.5;Plays=[UTG]100.0,[HJ]100.0,[CO]100.0,[BTN]100.0,[SB]100.0,[BB]100.0;Hero=[UTG];Hands=<QsJs>;");
+//testSolution.HeroAction("");
+//testSolution.HeroAction("[UTG]R2");
+//testSolution.ChangeRound("[UTG]R2,[HJ]C,[CO]F,[BTN]F,[SB]F,[BB]F<2d3h4h>pot=5.5;EStack=[UTG]98,[HJ]98;");
+//testSolution.HeroAction("[UTG]R1.8");
+//testSolution.ChangeRound("[HJ]C<5h>pot=9.1;EStack=[UTG]96.2,[HJ]96.2;");
+
+
+//testSolution.HeroAction("[UTG]F,[HJ]F,[CO]F,[BTN]R2,[SB]F");
+//testSolution.ChangeRound("[BB]C<8hTdJc>pot=4.5;EStack=[BTN]48,[BB]48;");
+//testSolution.HeroAction("");
+//testSolution.HeroAction("[BB]X,[BTN]R1.49");
+
+//testSolution.HeroAction("[BTN]R6.3,[HJ]R13");
+
+//testSolution.ChangeRound("[BTN]C,[SB]F,[BB]F<Ks7h4c>pot=5.5;EStack=[HJ]98,[BTN]98;");
 //testSolution.ChangeRound("[BTN]R6.3,[HJ]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
 	//testSolution.ChangeRound("[BTN]C<Ks>pot=25.5;EStack=[HJ]78,[BTN]78;");
-
-
-}
 
 

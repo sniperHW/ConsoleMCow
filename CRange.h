@@ -23,8 +23,8 @@ public:
 	std::string GetRangeStr(); //转为solver配置文件需要的格式
 	void Clear(); 
 
-	void DumpRange(const std::string& sComment, const RelativePosition heroRPosition);
-	static void DumpRange(const std::string& sComment, const RangeData* pRange);
+	void DumpRange(const Position position, const std::string& sComment, const RelativePosition heroRPosition);
+	static void DumpRange(const Position position, const std::string& sComment, const RangeData* pRange);
 	void ReadRange(const std::string& sPath, RangeData& range);	//本系统不用
 
 private:

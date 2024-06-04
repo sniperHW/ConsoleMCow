@@ -7,14 +7,36 @@
 #include "json/json.h"
 #include "CRange.h"
 #include "CStrategyTreeConfig.h"
+#include <net2/net.h>
+#include <mutex>
 
+
+using json = nlohmann::json;
+//#include <list>
+
+
+class CSolverTask
+{
+public:
+	std::string m_sGameID;
+	time_t m_tBeginTm;
+	time_t m_tBeginSolveTm;
+};
+	 
 class CSolverNode
 {
 public:
-	std::string m_sIP;
-	bool m_isOnline;
+	void Send(const net::Buffer::Ptr &buff) {
+		mtx.lock();
+		conn->Send(buff);
+		mtx.unlock();
+	}
+
 	bool m_isBusy;
-	bool m_isHighPerformance; //高性能服务器用于非river计算（目前不用）
+	std::string m_sRunningTaskGameID;
+	time_t m_tLastConnect;
+	std::mutex mtx;
+	net::Connection::Ptr conn;
 };
 
 class CSolverConfig
@@ -29,27 +51,54 @@ public:
 class CSolver
 {
 public:
-	bool ToSolve(const std::string& sGameID, const CSolverConfig & config, Json::Value & result, const SolverCalcMode calcMode = calc_sync, const bool isRiver = true); //返回需要定义,isRiver用于控制是否让性能差的服务器执行（目前不用）
+	bool ToSolve(const std::string& sGameID, const CSolverConfig & config);
+	bool GetSolverResult(const std::string& sGameID, Json::Value& result);
 	void ToStop(int nGameID); //停止运算，当turn对抗结束，solver还没除结果时，目前不用
-	//simple solve(AbnormalSize为超纲，一个为oop bet,两个为ip raise，其他都用100)
-	bool ToSolveSimple(const std::vector<double>& AbnormalSizes, const Round round, const std::string& sGameID, const CSolverConfig& config, Json::Value& result, const SolverCalcMode calcMode = calc_sync);
 
-	static bool LoadSolverFile(const std::string sPath, Json::Value& result, bool isNeedDecompress =false);
+	void AdjustTree(CSolverConfig& config, const recalc_actionline recalcMode, const int& nBetBeforeBigRaise, const int& nRaiseSize); ////当常用size需要重新解算时，按模式调整m_pRTTreeConfigItem,dBetBeforeBigRaise,dRaiseSize只有bigraise模式才用
+	static recalc_actionline IsRecalcActionline(const double dPot, const std::string& sActionLine, double& dBetBeforeBigRaise, double& dRaiseSize); //判断是否为turn需要转实时计算的行动线(srp不用判断)，为bigraise模式时填写dBetBeforeBigRaise和dRaiseSize
+
 	bool Init();
+	static bool LoadSolverFile(const std::string sPath, Json::Value& result, bool isNeedDecompress = false);
+
+	void onNodeHeartBeat(const net::Connection::Ptr &conn,const Json::Value& packet);
+	void onCommitTask(const net::Connection::Ptr &conn,const Json::Value& packet);
 
 private:
 	int m_nDefaultThreadNum = 64;
-	int m_nDefaultMaxIteration = 500;
+	int m_nDefaultMaxIteration = 800;
 	int m_nDefaultRaiseLimit = 5;
-	float m_fDefaultAllinThreshold = (float)0.67; //0.85
-	float m_fDefaultAccuracy = (float)0.5; //0.5？
-	float m_fDefaultAccuracySimple = (float)5.0; //0.5？
+	float m_fDefaultAllinThreshold = (float)0.67; 
+	float m_fDefaultAccuracy = (float)0.15; 
 
-	//群集相关
-	std::map<std::string, CSolverNode> m_solverNodes;
 
-	std::string MakeConfigFile(const std::string& sGameID, const CSolverConfig& config); //返回配置文件路径
-	std::string MakeConfigFileSimple(const std::string& sGameID, const Round round, const std::vector<double>& AbnormalSizes, const CSolverConfig& config);
+	CSolverNode *getSolverNodes(cosnt std::string &id) {
+		std::lock_guard guard(nodesMtx);
+		auto it = m_solverNodes.find(id);
+		if(it == m_solverNodes.end()) {
+			return nullptr;
+		} else {
+			return &it->second;
+		}
+	}
+
+	std::mutex nodesMtx;
+	std::map<std::string, CSolverNode> m_solverNodes; //key:gameID
+	
+	//std::mutex taskMtx;
+	//std::list<CSolverTask> m_SolverTasks; //key:ip
+
+	std::mutex finishMtx;
+	std::set<std::string> m_FinishedTasks; //key:gameID
+
+	bool AssignTask(const std::string& sGameID, const CSolverNode *node); 
+	void DispatchTask(CSolverTask *task);//触发：新任务，有任务完成，增加计算节点
+	void OnTimerCheck(); //超时节点删除
+	//void AddSolverNode(const std::string& sIP); //加入新的计算节点
+	//void ReceiveSolverResult(const std::string& sGameID, const std::string& sIP); //收到解算结果
+
+	std::string MakeConfigFile(const std::string& sGameID, const CSolverConfig& config); //返回配置文件路径(默认以GameID命名),recalc_actionline!=recalc_none时按预设tree
+
 	double static GetboostRatio(const double dlSrc);
 	std::string GetSplitBoard(const std::string& sBoardOld);
 

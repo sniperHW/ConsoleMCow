@@ -17,18 +17,19 @@ class CSolution
 public:
 	Action HeroAction(const std::string & sActionLine);
 	bool ChangeRound(const std::string& sActionLine);
-	void InitGame(const std::string & sInitGame);
-	void HeroHands(const std::string & sHands); //某些平台初始不能看到hero的手牌，需要单独接口
+	bool InitGame(const std::string & sInitGame);
+	bool HeroHands(const std::string & sHands); //某些平台初始不能看到hero的手牌，需要单独接口
 
-	time_t GetBeginTm();
 	static std::string getDataFromString(const StrategyFrom fr); //for test
+
+	Position GetHeroPosition();
 
 	CSolution();
 
 
 private:
 	bool m_blNotOffline;	//数据异常作脱线处理
-	time_t m_tmBegin;
+	//time_t m_tmBegin;
 
 	CGame m_game;
 	StrategyFrom m_strategyFrom; //获取解的模式（放弃先预存再实时模式）
@@ -51,8 +52,8 @@ private:
 	std::vector<std::shared_ptr<CStrategyItem>> m_heroLastStrategy;
 	void updataHeroCurRange(const std::string& sSelA);
 
-	std::string DumpSelAction(const std::string& sActionLine);
-	void DumpActionBeforeChangeRound(const bool blDumpHero = true);
+	std::string DumpSelAction(const Position position, const std::string& sActionLine);
+	void DumpActionBeforeChangeRound(const Position position, const bool blDumpHero = true);
 };
 
 #endif

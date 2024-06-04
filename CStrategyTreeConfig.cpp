@@ -47,7 +47,6 @@ bool CStrategyTreeConfig::Init(GameType gmType)
 	}
 	fin.close();
 
-	//����ʵʱ��������
 	sFilePath = sConfigFolder + GameTypeName[gmType] + "_RTTreeConfig.txt";
 	fin.open(sFilePath, ios_base::in);
 	if (!fin.is_open())
@@ -137,6 +136,17 @@ shared_ptr<CRTTreeConfigItem> CStrategyTreeConfig::GetRTTreeConfig(const Stacks&
 	}
 	else
 		return m_RTTreeConfigItems.back().second;
+}
+
+//查询特殊的常用size
+shared_ptr<CRTTreeConfigItem> CStrategyTreeConfig::GetRTTreeConfig(const double& dlSrp)
+{
+	for (auto pos = m_RTTreeConfigItems.begin(); pos != m_RTTreeConfigItems.end(); ++pos) {
+		if(fabs(pos->first - dlSrp) < 0.1)
+			return pos->second;
+	}
+
+	return nullptr;
 }
 
 void CStrategyTreeConfig::ParseDigitals(const string& sDigitals, vector<double>& v)

@@ -30,6 +30,14 @@
 //#define DEBUG_
 //#endif 
 
+//用于模拟多个AI的客户端测试
+//#ifndef FOR_TESTCLIENT_DUMP__
+//#define FOR_TESTCLIENT_DUMP__
+//#endif 
+
+//注：只有测试单个solution或客户端模拟AI时要dump，正式使用时无法dump，应该每个solution都对应单独的，管理太麻烦
+//测试单一solution放dump目录下，测试客户端模拟则按position存放，同时开5个窗口，设置dump目录，单独指向看每个position的
+
 
 const int COMBO_COUNT = 1326;
 const int ISOFLOP_COUNT = 1755;
@@ -53,7 +61,7 @@ const double SELECT_PRECISION_SRC = 0.001; //匹配exploi actionToMatch %0.1
 const double SELECT_PRECISION_DES = 0.005; //匹配exploi actionToReplace %0.5
 const double EXPLOI_MATCH_DIS = 0.03;       //匹配size的误差 3%
 
-
+const int SOLVE_OVERTIME = 60; //秒
 
 typedef enum { Max6_NL50_SD200, Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20, GAMETYPE_none}GameType; //SD为筹码深度，每个筹码深度相关配置和数据都独立
 const std::array<GameType, 6>GameTypes{ Max6_NL50_SD200, Max6_NL50_SD150, Max6_NL50_SD100, Max6_NL50_SD75, Max6_NL50_SD50, Max6_NL50_SD20 };
@@ -72,6 +80,9 @@ typedef enum { op_value, op_bluff, op_all }OP_obj; //作用的对象
 typedef enum { adjust_average, adjust_ascend, adjust_descend }adjust_methord; //调整方法,平均、升序、降序
 typedef enum { by_whole, by_action, by_valid }ratio_type; //按总范围，按调整的动作总范围，按符合条件的范围和
 
+typedef enum { recalc_bet66, recalc_bet100, recalc_raisebig, recalc_none }recalc_actionline; //turn常用但预存策略没有的行动线，为提供精度，需要重新计算,bet100包括XR100
+const std::unordered_map<recalc_actionline, double> recalc_mode_spr{ {recalc_bet66,66},{recalc_bet100,100},{recalc_raisebig,1000}}; //模式对应按spr查询的值
+const std::map<int, std::vector<double>> possible_bets{ {33,{33,100}},{50,{50,100}}, {75,{33,75}},  {125,{50,125}} };//前位(自己)实际下注比例对应可能的简化树的下注组合
 
 typedef std::unordered_map<std::string, double> StrategyData;
 typedef std::unordered_map<std::string, double> EVData;
@@ -84,6 +95,13 @@ typedef std::vector<std::pair<std::string, std::string>> RegexTB; //preflop节�
 const std::unordered_map<Position, int> PositionRank{ {SB,0},{BB,1},{UTG,2},{HJ,3},{CO,4},{BTN,5} };
 
 const std::string sDefaultPreflopStrategy{ "no_match_default" };
+
+//网络命令定义
+const std::string cmd_HeroAction{ "HeroAction" };
+const std::string cmd_ChangeRound{ "ChangeRound" };
+const std::string cmd_InitGame{ "InitGame" };
+const std::string cmd_HeroHands{ "HeroHands" };
+const std::string cmd_EndGame{ "EndGame" };
 
 typedef struct tagAction {
 	ActionType actionType = none;

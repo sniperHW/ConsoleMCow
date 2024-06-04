@@ -23,13 +23,17 @@ void CWdebug::Log(const string& sLog)
 	fout.close();
 }
 
-void CWdebug::DeleteDump()
+void CWdebug::DeleteDump(const Position position)
 {
 
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sFolder = buffer;
 	sFolder = sFolder + "\\dump";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
 
 	intptr_t hFile;
 	struct _finddata_t fileinfo;

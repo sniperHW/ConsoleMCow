@@ -45,6 +45,23 @@ inline std::string actionType2String(ActionType a) {
 	}
 }
 
+inline std::string actionType2StringSimple(ActionType a) {
+	switch (a) {
+	case call:
+		return "C";
+	case fold:
+		return "F";
+	case raise:
+		return "R";
+	case allin:
+		return "A";
+	case check:
+		return "X";
+	default:
+		return "NONE";
+	}
+}
+
 inline std::string double2String(const double dlValue, const int nFixed) {
 	char buffer[100];
 #ifdef MAC

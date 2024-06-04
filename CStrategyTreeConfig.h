@@ -38,6 +38,7 @@ public:
 	bool Init(GameType gmType);
 	void GetFlopCandidateRatios(const std::string& sPreflopName, std::vector<double>& candidateRatios, const SpaceMode mode);	//flop wizard模式和turn solve presave模式下才用，返回空代表不会被使用的数据
 	std::shared_ptr<CRTTreeConfigItem> GetRTTreeConfig(const Stacks& stack);	//按spr匹配
+	std::shared_ptr<CRTTreeConfigItem> GetRTTreeConfig(const double& dlSrp);
 };
 
 #endif

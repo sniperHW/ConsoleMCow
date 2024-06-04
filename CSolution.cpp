@@ -26,7 +26,7 @@ CSolution::CSolution()
 {
 	m_strategyFrom = from_strategy_file;
 	m_blNotOffline = true;
-	time(&m_tmBegin);
+	//time(&m_tmBegin);
 
 	for (auto combo : ComboMapping) 
 		m_heroCurRange[combo] = 1;
@@ -47,7 +47,7 @@ Action CSolution::HeroAction(const string& sActionLine)
 	if (!m_blNotOffline) 
 		return ProcessingOffline();
 
-	string sHeroAction = DumpSelAction(sActionLine);	//添加 SelA
+	string sHeroAction = DumpSelAction(m_game.GetHero()->m_position, sActionLine);	//添加 SelA
 	if(!sHeroAction.empty())
 		updataHeroCurRange(sHeroAction);
 
@@ -63,11 +63,6 @@ Action CSolution::HeroAction(const string& sActionLine)
 	switch (m_strategyFrom)
 	{
 	case from_strategy_file: {
-
-		//for test
-		//m_blNotOffline = true; 
-
-
 		if (m_game.m_gmTypeBound.first != GAMETYPE_none) 
 			m_blNotOffline = m_blNotOffline && strategyLow.Load(m_game.m_gmTypeBound.first, m_actionLine.m_sActionSquence);
 		else
@@ -81,6 +76,7 @@ Action CSolution::HeroAction(const string& sActionLine)
 				strategy = strategyLow;
 			else {
 				int nTemplate = m_game.m_gmType == m_game.m_gmTypeBound.first ? 0 : 1;
+				//preflop betsize可能不同，按更接近的作为模板，以模板的betsize为准
 				strategy.m_strategy = CStrategy::getAverageStrategyByStackDepth(strategyLow.m_strategy, strategyUp.m_strategy, m_game.m_dSegmentRatio, nTemplate,true);
 			}
 		}
@@ -92,81 +88,77 @@ Action CSolution::HeroAction(const string& sActionLine)
 		m_blNotOffline = strategy.Load(m_game.m_gmType, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_oopx, m_game.m_board.GetIsomorphismSuitReplace(), m_game.m_board.GetIsomorphismSymbol());
 		break;
 	}
-	case from_solver_presave: {
-		if (m_actionLine.m_sActionSquence.find('$') != string::npos) //动作序列最后是-A时会加该标记，但solver模式不需要处理
-			m_actionLine.m_sActionSquence.pop_back();
+	case from_solver_presave: { 
+		//如果turn属于常用行动线，则转为实时计算，from_solver_presave保持不变，后续行动线不匹配重新计算则会沿用已经计算好的结果
+		recalc_actionline recaleMode = recalc_none;
+		double dBetBeforeBigRaise = 0;
+		double dRaiseSize = 0;
+		if(m_game.m_round == turn)
+			recalc_actionline recaleMode = CSolver::IsRecalcActionline(m_game.m_dPot,m_actionLine.m_sActionSquence, dBetBeforeBigRaise, dRaiseSize);
 
-		if (m_game.m_gmTypeBound.first != GAMETYPE_none) {
-			m_blNotOffline = m_blNotOffline && strategyLow.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
+		if (recaleMode != recalc_none) { //需要实时计算(未测试)
+			CSolverConfig solverConfig;
+			solverConfig.m_stacks = GetStacks();
+			solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
+			solverConfig.m_pRange = &m_range;
+			solverConfig.m_pRTTreeConfigItem = g_strategyTreeConfigs[m_game.m_gmType].GetRTTreeConfig(recalc_mode_spr.at(recaleMode));
+
+			g_solver.AdjustTree(solverConfig, recaleMode, (int)dBetBeforeBigRaise, (int)dRaiseSize); //只有本presave的转实时计算需要简化树
+			m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
+
+			m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig);
+
+			if (m_blNotOffline)
+				m_blNotOffline = g_solver.GetSolverResult(m_game.m_sID, m_solverResultLow);
+
+			if (m_blNotOffline)
+				m_blNotOffline = strategy.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
 		}
-		else
-			cout << "error: m_gmTypeBound.first can't be GAMETYPE_none" << endl;
-	
-		if (m_game.m_gmTypeBound.second != GAMETYPE_none) {
-			m_blNotOffline = m_blNotOffline && strategyUp.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
-		}
-		
-		if (m_blNotOffline) {
-			if (m_game.m_gmTypeBound.second == GAMETYPE_none)
-				strategy = strategyLow;
-			else {
-				int nTemplate = m_game.m_gmType == m_game.m_gmTypeBound.first ? 0 : 1;
-				strategy.m_strategy = CStrategy::getAverageStrategyByStackDepth(strategyLow.m_strategy, strategyUp.m_strategy, m_game.m_dSegmentRatio, nTemplate);
+		else {
+
+			if (m_actionLine.m_sActionSquence.find('$') != string::npos) //动作序列最后是-A时会加该标记，但solver模式不需要处理
+				m_actionLine.m_sActionSquence.pop_back();
+
+			if (m_game.m_gmTypeBound.first != GAMETYPE_none) {
+				m_blNotOffline = m_blNotOffline && strategyLow.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
 			}
-		}
+			else
+				cout << "error: m_gmTypeBound.first can't be GAMETYPE_none" << endl;
 
-		if (!m_blNotOffline) { //生成配置文件并重新加载,如果无法重新计算则当allin处理（call allin转allin）
-			vector<double> abnormalSizes; //1:opp bet size  2:ip raise size
-			bool blSupportRecalc = strategy.GetAbnormalSizes(GetStacks().dPot, m_actionLine.m_sActionSquence, abnormalSizes);
+			if (m_game.m_gmTypeBound.second != GAMETYPE_none) {
+				m_blNotOffline = m_blNotOffline && strategyUp.Load(m_solverResultUp, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
+			}
 
-			if (blSupportRecalc) {
-				#ifdef FOR_FLOW_
-				cout << "abnormalSize recalc: " <<  m_actionLine.m_sActionSquence << endl;
-				#endif
-
-				CSolverConfig solverConfig;
-				solverConfig.m_stacks = GetStacks();
-				solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
-				solverConfig.m_pRange = &m_range;
-				solverConfig.m_pRTTreeConfigItem = nullptr;
-				m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
-
-				m_blNotOffline = g_solver.ToSolveSimple(abnormalSizes, m_game.m_round, m_game.m_sID, solverConfig, m_solverResultLow);
-				if (m_blNotOffline) {
-					m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
-					m_blNotOffline = strategy.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
+			if (m_blNotOffline) {
+				if (m_game.m_gmTypeBound.second == GAMETYPE_none)
+					strategy = strategyLow;
+				else {
+					int nTemplate = m_game.m_gmType == m_game.m_gmTypeBound.first ? 0 : 1;
+					strategy.m_strategy = CStrategy::getAverageStrategyByStackDepth(strategyLow.m_strategy, strategyUp.m_strategy, m_game.m_dSegmentRatio, nTemplate);
 				}
-
-				m_strategyFrom = from_solver_calc;
-			}
-			else {
-				#ifdef FOR_FLOW_
-				cout << "abnormalSize failed to recalc, convert to allin: " << m_actionLine.m_sActionSquence << endl;
-				#endif
-
-				//重组m_actionLine.m_sActionSquence，按allin处理
-				m_blNotOffline = strategy.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace(), true);
 			}
 		}
+
 		break;
 	}
 	case from_solver_calc: {
-//检查并等待运算完成（需要添加代码）
-//for test
-		//m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());	//策略筹码即实际筹码
+		m_blNotOffline = g_solver.GetSolverResult(m_game.m_sID, m_solverResultLow);
+		if(m_blNotOffline)
+			m_blNotOffline = strategy.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());	//策略筹码即实际筹码
 	}
 	case from_solver_realtime: {
-
 		CSolverConfig solverConfig;
 		solverConfig.m_stacks = GetStacks();
 		solverConfig.m_sBoard = m_game.m_board.GetBoardSymbol();
 		solverConfig.m_pRange = &m_range;
 		m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
 
-//for test
-		//m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResultLow);
-		//if (m_blNotOffline)
-		//	m_blNotOffline = strategy.Load(m_game.m_gmType, m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
+		m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig);
+		if (m_blNotOffline)
+			m_blNotOffline = g_solver.GetSolverResult(m_game.m_sID, m_solverResultLow);
+
+		if (m_blNotOffline)
+			m_blNotOffline = strategy.Load(m_solverResultLow, m_actionLine.m_sActionSquence, GetStacks(), m_game.m_board.GetIsomorphismSuitReplace());
 		break;
 	}
 	case multi_players: {
@@ -272,29 +264,32 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 
 	#ifdef FOR_TEST_DUMP_ 
-	DumpActionBeforeChangeRound(); //hero
+	DumpActionBeforeChangeRound(m_game.GetHero()->m_position); //hero
 	string sComment = "herorange" + m_actionLine.m_sActionSquence;
 	RelativePosition rpHero = m_game.GetHero()->m_positionRelative;
 
-	m_range.DumpRange(sComment, rpHero);
+	m_range.DumpRange(m_game.GetHero()->m_position, sComment, rpHero);
 	#endif
 
 
 	//设置本街数据来源
-	if (m_game.m_round == flop) {
-		if (g_flopDataFromSolverCalcConfigs[m_game.m_gmType].IsFrSolverCalc(m_actionLine.m_sAbbrName))
-			m_strategyFrom = from_solver_calc;
-		else
-			m_strategyFrom = from_solver_presave;
+	if (m_strategyFrom != multi_players) { //如果多人或因意外变为多人则保持多人策略
+		if (m_game.m_round == flop) {
+			if (g_flopDataFromSolverCalcConfigs[m_game.m_gmType].IsFrSolverCalc(m_actionLine.m_sAbbrName))
+				m_strategyFrom = from_solver_calc;
+			else
+				m_strategyFrom = from_solver_presave;
+		}
+		else if (m_game.m_round == turn) {
+			if (g_turnPresaveSolverConfigs[m_game.m_gmType].IsPresaveSolver(m_actionLine.m_sAbbrName))
+				m_strategyFrom = from_solver_presave;
+			else
+				m_strategyFrom = from_solver_calc;
+		}
+		else if (m_game.m_round == river)
+			m_strategyFrom = from_solver_realtime;
 	}
-	else if (m_game.m_round == turn) {
-		if (g_turnPresaveSolverConfigs[m_game.m_gmType].IsPresaveSolver(m_actionLine.m_sAbbrName))
-			m_strategyFrom = from_solver_presave;
-		else
-			m_strategyFrom = from_solver_calc;
-	}
-	else if (m_game.m_round == river)
-		m_strategyFrom = from_solver_realtime;
+
 
 	//加载solver presave
 	if (m_strategyFrom == from_solver_presave) {
@@ -315,7 +310,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 		if (m_game.m_gmTypeBound.first != GAMETYPE_none) {
 			string sFilePath = g_DataFrom.GetSolverFilePath(m_game.m_gmTypeBound.first, sISONodeName);
-			if (!g_solver.LoadSolverFile(sFilePath, m_solverResultLow, isNeedDecompress)) {
+			if (!CSolver::LoadSolverFile(sFilePath, m_solverResultLow, isNeedDecompress)) {
 				m_blNotOffline = false;
 				return false;
 			}
@@ -323,7 +318,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 
 		if (m_game.m_gmTypeBound.second != GAMETYPE_none) {
 			string sFilePath = g_DataFrom.GetSolverFilePath(m_game.m_gmTypeBound.second, sISONodeName);
-			if (!g_solver.LoadSolverFile(sFilePath, m_solverResultUp, isNeedDecompress)) {
+			if (!CSolver::LoadSolverFile(sFilePath, m_solverResultUp, isNeedDecompress)) {
 				m_blNotOffline = false;
 				return false;
 			}
@@ -337,9 +332,7 @@ bool CSolution::ChangeRound(const string& sActionLine)
 		solverConfig.m_pRTTreeConfigItem = g_strategyTreeConfigs[m_game.m_gmType].GetRTTreeConfig(GetStacks());
 		m_game.m_board.ClearSuitReplace(); //实时计算不需要同构转换
 
-		//for test
-		bool isRiver = m_game.m_round == river ? true : false;
-		//m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig, m_solverResultLow, calc_async, isRiver);
+		m_blNotOffline = g_solver.ToSolve(m_game.m_sID, solverConfig);
 	}
 
 	m_heroCurRange = m_game.GetHero()->m_positionRelative == OOP ? m_range.m_OOPRange : m_range.m_IPRange;
@@ -422,7 +415,7 @@ Action CSolution::CalcHeroAction(const CStrategy& strategy)
 		retAction = handStrategy[lowBound].first;
 
 	//检查betsize的合法性(最少为对手下注的两倍，preflop由于存在对手下注特别大的情况下会发生)
-	if(retAction.actionType == raise){
+	if(retAction.actionType == raise && m_game.m_round == preflop){
 		double dRivalMaxRaiseSize = 0;
 		for (auto player : m_game.m_players) {
 			if (!player.second.m_blIsHero) {
@@ -456,7 +449,8 @@ Action CSolution::CalcHeroAction(const CStrategy& strategy)
 }
 
 //格式：GameID=353545;BBSize=0.1;Pot=1.5;Plays=[UTG]98,[HJ]67,[CO]34,[BTN]120,[SB]78,[BB]286;Hero=[UTG];Hands=<KsKd>;//位置上玩家缺席则没有
-void CSolution::InitGame(const string& sInitGame)
+//不满6人，则SB，BB固定，其他按UTG..顺序以此，运行位置少人
+bool CSolution::InitGame(const string& sInitGame)
 {
 	regex reg;
 	smatch m;
@@ -549,11 +543,13 @@ void CSolution::InitGame(const string& sInitGame)
 	}
 	cout << endl << endl;
 #endif
+	return true;
 }
 
-void CSolution::HeroHands(const string& sHands)
+bool CSolution::HeroHands(const string& sHands)
 {
 	m_game.GetHero()->m_hands.SetHands(CCombo::Align(sHands));
+	return true;
 }
 
 Stacks CSolution::GetStacks()
@@ -610,12 +606,17 @@ string CSolution::getDataFromString(const StrategyFrom fr)
 }
 
 //是增量，所以hero只会有一个
-string CSolution::DumpSelAction(const std::string& sActionLine)
+string CSolution::DumpSelAction(const Position position, const std::string& sActionLine)
 {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	sConfigFolder = sConfigFolder + "\\dump\\";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
+
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();
@@ -658,12 +659,17 @@ string CSolution::DumpSelAction(const std::string& sActionLine)
 
 }
 
-void CSolution::DumpActionBeforeChangeRound(const bool blDumpHero)
+void CSolution::DumpActionBeforeChangeRound(const Position position, const bool blDumpHero)
 {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	sConfigFolder = sConfigFolder + "\\dump\\";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
+
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();
@@ -723,6 +729,11 @@ void CSolution::updataHeroCurRange(const string& sSelA)
 		else
 			p->second = 0;
 	}
+}
+
+Position CSolution::GetHeroPosition()
+{
+	return m_game.GetHero()->m_position;
 }
 
 

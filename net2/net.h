@@ -91,6 +91,14 @@ namespace net {
 			std::cout << "~Connection()" << std::endl;
 		}
 
+		void SetUserData(const std::any &data) {
+			user_data = data;
+		}
+
+		std::any GetUserData() {
+			return user_data;
+		}
+
 	private:
 
 		static void listenFunc(SOCKET listenFd,const std::function<void(const Connection::Ptr &conn, const Buffer::Ptr&)> onPacket,const std::function<void(const Connection::Ptr &conn)> onDisconnected) {
@@ -147,10 +155,9 @@ namespace net {
 
 
 		struct sockaddr_in serverAddr;
-		SOCKET             socket;
-		std::mutex		   mtx;
+		SOCKET                    socket;
+		std::mutex		          mtx;
 		std::list<Buffer::Ptr>    sendqueue;
-		//std::thread        thread;
 		std::function<void(const Connection::Ptr &conn,const Buffer::Ptr&)> onPacket;
 		char  readbuff[1024*64];
 		int   w;
@@ -158,5 +165,6 @@ namespace net {
 		std::atomic_bool die;
 		std::function<void(const Connection::Ptr &conn)> onReconnectOK;
 		std::function<void(const Connection::Ptr &conn)> onDisconnected;
+		std::any user_data;
 	};
 }

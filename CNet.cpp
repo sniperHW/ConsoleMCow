@@ -335,7 +335,7 @@ void listenFunc(SOCKET listenFd,std::function<void(SOCKET,const std::string&)> o
 		if(fd == INVALID_SOCKET) {
 			return;
 		}
-		std::cout << "on new client" << std::endl;
+		//std::cout << "on new client" << std::endl;
 
     	auto thread = std::thread(serveFunc, fd,onPacket);
 		thread.detach();
@@ -346,7 +346,10 @@ int CNet::Listen(int port,std::function<void(SOCKET,const std::string&)> onPacke
 	struct sockaddr_in servaddr;
 	memset((void*)&servaddr,0,sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+	//servaddr.sin_addr.s_addr = inet_addr("0.0.0.0"); 
+	//inet_pton(AF_INET,"0.0.0.0", &servaddr.sin_addr.s_addr);
+	inet_pton(AF_INET, "0.0.0.0", &servaddr.sin_addr);
+
 	servaddr.sin_port = htons(port);
 
 	SOCKET fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

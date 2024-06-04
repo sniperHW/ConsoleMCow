@@ -517,11 +517,16 @@ void CRange::RemoveComboByBoard(RangeData& rangeRatio, const std::string& sBoard
 	}
 }
 
-void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosition) {
+void CRange::DumpRange(const Position position, const string& sComment, const RelativePosition heroRPosition) {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	sConfigFolder = sConfigFolder + "\\dump\\";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
+
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();
@@ -551,11 +556,16 @@ void CRange::DumpRange(const string& sComment, const RelativePosition heroRPosit
 
 }
 
-void CRange::DumpRange(const string& sComment, const RangeData* pRange) {
+void CRange::DumpRange(const Position position, const string& sComment, const RangeData* pRange) {
 	char buffer[_MAX_PATH];
 	_getcwd(buffer, _MAX_PATH);
 	string sConfigFolder = buffer;
 	sConfigFolder = sConfigFolder + "\\dump\\";
+
+	#ifdef FOR_TESTCLIENT_DUMP__ 
+	sConfigFolder = sConfigFolder + PositionSymble[position] + "\\";
+	#endif
+
 	string sCommandsPath = sConfigFolder + "commands.txt";
 	time_t t = time(nullptr);
 	t += rand();

@@ -133,6 +133,17 @@ string CDataFrom::GetRTSolverFilePath(const std::string& sGameID)
 	return ss.str();
 }
 
+string CDataFrom::GetRTSolverConfigFilePath(const std::string& sGameID)
+{
+	char buffer[_MAX_PATH];
+	_getcwd(buffer, _MAX_PATH);
+	string sConfigFolder = buffer;
+	stringstream ss;
+	ss << sConfigFolder << "\\SolverConfigs\\" << sGameID << ".txt";
+
+	return ss.str();
+}
+
 bool CDataFrom::Init()
 {
 	//读取数据目录配置

@@ -11,7 +11,7 @@ class CWdebug
 {
 public:
 	static void Log(const std::string & sLog);
-	static void DeleteDump();
+	static void DeleteDump(const Position position);
 };
 
 #endif
